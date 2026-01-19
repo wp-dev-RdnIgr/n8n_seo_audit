@@ -1,0 +1,3915 @@
+{
+  "name": "Sheet 8 - Traffic Pages Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seo-organic-traffic-v74",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "87f8f663-63db-4316-9def-ae0f3aa60e9b",
+      "name": "Webhook - Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        336
+      ],
+      "webhookId": "seo-organic-traffic-v74"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $json.body.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "date_from",
+              "name": "date_from",
+              "value": "={{ $json.body.date_from || $now.minus(1, 'year').format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "date_to",
+              "name": "date_to",
+              "value": "={{ $json.body.date_to || $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "country",
+              "name": "country",
+              "value": "={{ $json.body.country || 'ua' }}",
+              "type": "string"
+            },
+            {
+              "id": "doc_name",
+              "name": "doc_name",
+              "value": "=SEO Audit - {{ $json.body.domain }} - {{ $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "top_pages_limit",
+              "name": "top_pages_limit",
+              "value": "={{ $json.body.top_pages_limit || 50 }}",
+              "type": "number"
+            },
+            {
+              "id": "browse_ai_robot_id",
+              "name": "browse_ai_robot_id",
+              "value": "019b7e18-760a-73cf-8d7c-237ef5fa0d2a",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fad7ddff-3a2b-42d9-a755-0560a4bf7735",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1296,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Set Variables').item.json.doc_name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1088,
+        336
+      ],
+      "id": "4d21cda2-88ac-4355-ac97-d91c22ed2608",
+      "name": "Create Spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2",
+          "mode": "list",
+          "cachedResultName": "SEO - аудит"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -896,
+        336
+      ],
+      "id": "3025504a-b5b5-4440-8b6b-1b11254e7125",
+      "name": "Move to Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Nl36H51nJBoCaf67",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Органічний_трафік",
+        "options": {}
+      },
+      "id": "69007d27-2539-4bfe-b2e7-31c97b2453c7",
+      "name": "Create Sheet 1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -688,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Ключові_запити",
+        "options": {}
+      },
+      "id": "4baa303e-cd51-4a81-b0ba-c989fb7297ee",
+      "name": "Create Sheet 2",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -496,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.browse.ai/v2/robots/{{ $('Set Variables').item.json.browse_ai_robot_id }}/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputParameters\": {\n    \"originUrl\": \"https://pro.similarweb.com/#/digitalsuite/websiteanalysis/search-overview/*/804/2024.12-2025.11?webSource=Total&key={{ $('Set Variables').item.json.domain }}&performanceOverTimeChartCurrency=USD\",\n    \"sites\": \"{{ $('Set Variables').item.json.domain }}\"\n  }\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "98891db1-1bca-44a3-bd75-f5641c7d31d2",
+      "name": "Browse AI - Run Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        336
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4IkSClA1cWUZRGFP",
+          "name": "Browse AI 2.1"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"processing\",\n  \"message\": \"SEO Audit started. Browse AI task launched. Results will be processed via webhook callback.\",\n  \"domain\": \"{{ $('Set Variables').item.json.domain }}\",\n  \"spreadsheet_id\": \"{{ $('Create Spreadsheet').item.json.spreadsheetId }}\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Create Spreadsheet').item.json.spreadsheetId }}\",\n  \"browse_ai_task_id\": \"{{ $json.result?.id || '' }}\",\n  \"note\": \"Data will be populated when Browse AI completes (usually 30-60 seconds)\"\n}",
+        "options": {}
+      },
+      "id": "2afd01da-fc4b-4680-afec-69b955ee130d",
+      "name": "Respond - Processing Started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1216,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "browse-ai-callback-v74",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "04fcbc46-4641-475a-bad6-314b497e7f71",
+      "name": "Webhook - Browse AI Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        736
+      ],
+      "webhookId": "browse-ai-callback-v74"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PARSE BROWSE AI CALLBACK - v5.0\n// ВИПРАВЛЕНО: regex під реальну структуру HTML\n// Оновлено: 2026-01-07\n// ============================================\n\nconst webhookData = $input.first().json;\n\nconst task = webhookData.task || webhookData.body?.task || webhookData;\nconst capturedTexts = task.capturedTexts || {};\n\n// ========== 1. LEGEND (Branded/Non-Branded) ==========\n\nconst legendHtml = capturedTexts.Legend || '';\nlet brandedPercent = 0;\nlet nonBrandedPercent = 0;\n\n// Шукаємо: Branded Traffic</label>...data-automation-value...>XX.XX%\nconst brandedMatch = legendHtml.match(/Branded Traffic<\\/label>.*?data-automation-value[^>]*>([0-9.]+)%/s);\nconst nonBrandedMatch = legendHtml.match(/Non-Branded Traffic<\\/label>.*?data-automation-value[^>]*>([0-9.]+)%/s);\n\nif (brandedMatch) brandedPercent = parseFloat(brandedMatch[1]);\nif (nonBrandedMatch) nonBrandedPercent = parseFloat(nonBrandedMatch[1]);\n\nconst svgContent = capturedTexts.Grafic || '';\nconst hasData = brandedPercent > 0 || nonBrandedPercent > 0;\n\n// ========== 2. ENGAGEMENT OVERVIEW ==========\n\nconst engagementHtml = capturedTexts['Engagement overview'] || '';\nconst engagementData = {\n  monthlyVisits: '',\n  monthlyUniqueVisitors: '',\n  deduplicatedAudience: '',\n  visitDuration: '',\n  pagesPerVisit: '',\n  bounceRate: ''\n};\n\n// ВИПРАВЛЕНО: шукаємо MetricName + MetricValue в блоках\nconst engPatterns = [\n  { key: 'monthlyVisits', regex: /Monthly visits<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i },\n  { key: 'monthlyUniqueVisitors', regex: /Monthly Unique Visitors<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i },\n  { key: 'deduplicatedAudience', regex: /Deduplicated audience<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i },\n  { key: 'visitDuration', regex: /Visit Duration<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i },\n  { key: 'pagesPerVisit', regex: /Pages \\/ Visit<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i },\n  { key: 'bounceRate', regex: /Bounce Rate<\\/div>[\\s\\S]*?MetricValue[^>]*>([^<]+)</i }\n];\n\nengPatterns.forEach(({ key, regex }) => {\n  const match = engagementHtml.match(regex);\n  if (match) engagementData[key] = match[1].trim();\n});\n\n// ========== 3. CHANNEL TRAFFIC ==========\n\nconst channelHtml = capturedTexts['Channel traffic'] || '';\nconst channelsData = [];\n\n// ВИПРАВЛЕНО: шукаємо data-automation-title + data-automation-value\nconst channelNames = ['Direct', 'Organic Search', 'Paid Search', 'Referrals', 'Display Ads', 'Social', 'Email'];\n\nchannelNames.forEach(name => {\n  // Шукаємо: >Channel Name</label>...data-automation-value...>XX.XX%\n  const regex = new RegExp(`>${name}<\\\\/label>[\\\\s\\\\S]*?data-automation-value[^>]*>([0-9.]+)%`, 'i');\n  const match = channelHtml.match(regex);\n  if (match) {\n    channelsData.push({ channel: name, share: match[1] + '%' });\n  }\n});\n\n// Сортуємо за часткою\nchannelsData.sort((a, b) => parseFloat(b.share) - parseFloat(a.share));\n\n// ========== 4. DEVICE DISTRIBUTION ==========\n\nconst deviceHtml = capturedTexts.Device || '';\nconst deviceData = { desktop: '', mobile: '', total: '' };\n\n// ВИПРАВЛЕНО: шукаємо LabelName + LabelValue\nconst desktopMatch = deviceHtml.match(/LabelName[^>]*>Desktop<\\/span>[\\s\\S]*?LabelValue[^>]*>([0-9.]+%)/i);\nconst mobileMatch = deviceHtml.match(/LabelName[^>]*>Mobile Web<\\/span>[\\s\\S]*?LabelValue[^>]*>([0-9.]+%)/i);\n\nif (desktopMatch) deviceData.desktop = desktopMatch[1];\nif (mobileMatch) deviceData.mobile = mobileMatch[1];\n\nif (deviceData.desktop && deviceData.mobile) {\n  const deskVal = parseFloat(deviceData.desktop);\n  const mobVal = parseFloat(deviceData.mobile);\n  if (!isNaN(deskVal) && !isNaN(mobVal)) {\n    deviceData.total = (deskVal + mobVal).toFixed(2) + '%';\n  }\n}\n\n// ========== 5. SOCIAL TRAFFIC ==========\n\nconst socialHtml = capturedTexts['Social traffic'] || '';\nconst socialData = [];\n\n// ВИПРАВЛЕНО: шукаємо назви соцмереж та відсотки в data-labels\n// Формат: >Youtube</span>...>69.25%</span>\nconst socialNetworks = [\n  { name: 'Youtube', searchName: 'Youtube' },\n  { name: 'Facebook', searchName: 'Facebook' },\n  { name: 'Telegram', searchName: 'Telegram' },\n  { name: 'Instagram', searchName: 'Instagram' },\n  { name: 'X-twitter', searchName: 'X-twitter' },\n  { name: 'Tiktok', searchName: 'Tiktok' },\n  { name: 'Other', searchName: 'Other' }\n];\n\n// Шукаємо відсотки в highcharts-data-label блоках\nconst percentMatches = socialHtml.match(/text-align: center[^>]*>([0-9.]+%)<\\/span>/g) || [];\nconst percents = percentMatches.map(m => {\n  const p = m.match(/([0-9.]+%)/);\n  return p ? p[1] : null;\n}).filter(Boolean);\n\n// Шукаємо назви мереж\nconst networkMatches = socialHtml.match(/>([A-Za-z-]+)<\\/span><\\/span><\\/div>/g) || [];\nconst foundNetworks = [];\n\nsocialNetworks.forEach(net => {\n  const idx = socialHtml.indexOf(`>${net.searchName}<`);\n  if (idx > 0) {\n    foundNetworks.push({ name: net.name, position: idx });\n  }\n});\n\nfoundNetworks.sort((a, b) => a.position - b.position);\n\n// Матчимо\nfoundNetworks.forEach((net, i) => {\n  if (i < percents.length) {\n    socialData.push({ network: net.name, share: percents[i] });\n  }\n});\n\n// ========== 6. TOP REFERRING WEBSITES ==========\n\nconst referringWebsitesHtml = capturedTexts['Top referring websites'] || '';\nconst referringWebsites = [];\n\n// ВИПРАВЛЕНО: шукаємо core-website-cell--text-container та min-value\nconst refSiteMatches = referringWebsitesHtml.match(/core-website-cell--text-container\">([^<]+)<\\/span>/g) || [];\nconst refShareMatches = referringWebsitesHtml.match(/min-value\">([0-9.]+%)<\\/span>/g) || [];\n\nrefSiteMatches.forEach((match, i) => {\n  const siteMatch = match.match(/core-website-cell--text-container\">([^<]+)/);\n  const shareMatch = refShareMatches[i]?.match(/min-value\">([0-9.]+%)/);\n  if (siteMatch) {\n    referringWebsites.push({\n      site: siteMatch[1].trim(),\n      share: shareMatch ? shareMatch[1] : ''\n    });\n  }\n});\n\n// ========== 7. TOP REFERRING INDUSTRIES ==========\n\nconst industriesHtml = capturedTexts['Top referring industries'] || '';\nconst referringIndustries = [];\n\n// ВИПРАВЛЕНО: шукаємо title в посиланнях та min-value\nconst industryLinks = industriesHtml.match(/title=\"([^\"]+)\"[^>]*href=\"[^\"]*referralsCategory/g) || [];\nconst industryShares = industriesHtml.match(/min-value\">([0-9.]+%)<\\/span>/g) || [];\n\nindustryLinks.forEach((match, i) => {\n  const titleMatch = match.match(/title=\"([^\"]+)\"/);\n  const shareMatch = industryShares[i]?.match(/min-value\">([0-9.]+%)/);\n  if (titleMatch) {\n    referringIndustries.push({\n      industry: titleMatch[1].trim(),\n      share: shareMatch ? shareMatch[1] : ''\n    });\n  }\n});\n\n// ========== 8. TOP LINK DESTINATIONS ==========\n\nconst linkDestHtml = capturedTexts['Top link destinations'] || '';\nconst linkDestinations = [];\n\nconst linkDomains = linkDestHtml.match(/core-website-cell--text-container\">([^<]+)<\\/span>/g) || [];\nconst linkShares = linkDestHtml.match(/min-value\">([0-9.]+%)<\\/span>/g) || [];\n\nlinkDomains.forEach((match, i) => {\n  const domainMatch = match.match(/core-website-cell--text-container\">([^<]+)/);\n  const shareMatch = linkShares[i]?.match(/min-value\">([0-9.]+%)/);\n  if (domainMatch) {\n    linkDestinations.push({\n      url: domainMatch[1].trim(),\n      share: shareMatch ? shareMatch[1] : ''\n    });\n  }\n});\n\n// ========== 9. TOP AD DESTINATIONS ==========\n\nconst adDestHtml = capturedTexts['Top ad destinations'] || '';\nconst adDestinations = [];\n\nconst adDomains = adDestHtml.match(/core-website-cell--text-container\">([^<]+)<\\/span>/g) || [];\nconst adShares = adDestHtml.match(/min-value\">([0-9.]+%)<\\/span>/g) || [];\n\nadDomains.forEach((match, i) => {\n  const domainMatch = match.match(/core-website-cell--text-container\">([^<]+)/);\n  const shareMatch = adShares[i]?.match(/min-value\">([0-9.]+%)/);\n  if (domainMatch) {\n    adDestinations.push({\n      url: domainMatch[1].trim(),\n      share: shareMatch ? shareMatch[1] : ''\n    });\n  }\n});\n\n// ========== 10. TOP PUBLISHERS ==========\n\nconst publishersHtml = capturedTexts['Top publishers'] || '';\nconst topPublishers = [];\n\n// ВИПРАВЛЕНО: шукаємо TextContainer + min-value\nconst pubDomains = publishersHtml.match(/TextContainer[^>]*>([^<]+)<\\/span>/g) || [];\nconst pubShares = publishersHtml.match(/min-value\">([0-9.]+%)<\\/span>/g) || [];\n\npubDomains.forEach((match, i) => {\n  const domainMatch = match.match(/TextContainer[^>]*>([^<]+)/);\n  const shareMatch = pubShares[i]?.match(/min-value\">([0-9.]+%)/);\n  if (domainMatch && domainMatch[1].includes('.')) { // Тільки домени (містять крапку)\n    topPublishers.push({\n      publisher: domainMatch[1].trim(),\n      share: shareMatch ? shareMatch[1] : ''\n    });\n  }\n});\n\n// ========== ДОМЕН ==========\n\nconst inputParams = task.inputParameters || {};\nlet domain = inputParams.sites || '';\n\nif (!domain && inputParams.originUrl) {\n  const keyMatch = inputParams.originUrl.match(/key=([^&]+)/);\n  if (keyMatch) domain = keyMatch[1];\n}\n\n// ========== РЕЗУЛЬТАТ ==========\n\nreturn [{\n  json: {\n    browseAiTaskId: task.id || '',\n    browseAiStatus: task.status || 'unknown',\n    domain: domain,\n    \n    // Дані для Sheet 2 (Брендовий трафік)\n    brandedPercent,\n    nonBrandedPercent,\n    svgContent,\n    hasData,\n    \n    // Дані для Sheet 6 (Поведінкові метрики)\n    engagementData,\n    channelsData,\n    deviceData,\n    socialData,\n    referringWebsites,\n    referringIndustries,\n    linkDestinations,\n    adDestinations,\n    topPublishers,\n    \n    // Флаги наявності даних\n    hasEngagementData: engagementData.monthlyVisits !== '',\n    hasChannelsData: channelsData.length > 0,\n    hasDeviceData: deviceData.desktop !== '' || deviceData.mobile !== '',\n    hasSocialData: socialData.length > 0,\n    hasReferringWebsites: referringWebsites.length > 0,\n    hasReferringIndustries: referringIndustries.length > 0,\n    hasLinkDestinations: linkDestinations.length > 0,\n    hasAdDestinations: adDestinations.length > 0,\n    hasTopPublishers: topPublishers.length > 0,\n    \n    // Debug\n    _debug: {\n      hasEngagementHtml: engagementHtml.length > 0,\n      hasChannelHtml: channelHtml.length > 0,\n      hasDeviceHtml: deviceHtml.length > 0,\n      hasSocialHtml: socialHtml.length > 0\n    },\n    \n    rawTask: task\n  }\n}];"
+      },
+      "id": "c58f8620-3af0-41b5-9460-32f3b80f6b83",
+      "name": "Parse Browse AI Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-domain",
+              "leftValue": "={{ $json.domain }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6db06b9-4944-4f9b-a691-dabae70721fb",
+      "name": "Has Domain?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files?q=name contains 'SEO Audit - {{ $json.domain }}' and mimeType='application/vnd.google-apps.spreadsheet'&orderBy=createdTime desc&pageSize=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "b865cdd9-53e3-437b-a680-18fc449b67d4",
+      "name": "Search Spreadsheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -896,
+        736
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Nl36H51nJBoCaf67",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем spreadsheetId из результатов поиска\nconst searchResult = $input.first().json;\nconst files = searchResult.files || [];\n\nif (files.length === 0) {\n  throw new Error('Spreadsheet not found for domain: ' + $('Parse Browse AI Callback').first().json.domain);\n}\n\nconst spreadsheetId = files[0].id;\nconst spreadsheetName = files[0].name;\n\n// Получаем ВСЕ данные Browse AI\nconst browseAI = $('Parse Browse AI Callback').first().json;\n\nreturn [{\n  json: {\n    spreadsheetId,\n    spreadsheetName,\n    domain: browseAI.domain,\n    \n    // Дані для Sheet 2 (Брендовий трафік)\n    brandedPercent: browseAI.brandedPercent,\n    nonBrandedPercent: browseAI.nonBrandedPercent,\n    svgContent: browseAI.svgContent,\n    hasData: browseAI.hasData,\n    browseAiTaskId: browseAI.browseAiTaskId,\n    \n    // ✅ ДОДАНО: Дані для Sheet 6 (Поведінкові метрики)\n    engagementData: browseAI.engagementData || {},\n    channelsData: browseAI.channelsData || [],\n    deviceData: browseAI.deviceData || {},\n    socialData: browseAI.socialData || [],\n    referringWebsites: browseAI.referringWebsites || [],\n    referringIndustries: browseAI.referringIndustries || [],\n    linkDestinations: browseAI.linkDestinations || [],\n    adDestinations: browseAI.adDestinations || [],\n    topPublishers: browseAI.topPublishers || [],\n    \n    // Флаги\n    hasEngagementData: browseAI.hasEngagementData || false,\n    hasChannelsData: browseAI.hasChannelsData || false,\n    hasDeviceData: browseAI.hasDeviceData || false,\n    hasSocialData: browseAI.hasSocialData || false,\n    hasReferringWebsites: browseAI.hasReferringWebsites || false,\n    hasReferringIndustries: browseAI.hasReferringIndustries || false,\n    hasLinkDestinations: browseAI.hasLinkDestinations || false,\n    hasAdDestinations: browseAI.hasAdDestinations || false,\n    hasTopPublishers: browseAI.hasTopPublishers || false\n  }\n}];"
+      },
+      "id": "e507f673-dcbe-4534-b1b2-95f30fff9d6e",
+      "name": "Extract Spreadsheet ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-svg",
+              "leftValue": "={{ $json.svgContent }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "26ed9023-82dc-428e-8edc-545b009789b8",
+      "name": "Has SVG?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst svgContent = data.svgContent || '';\n\nif (!svgContent) {\n  return [{\n    json: {\n      ...data,\n      dataUrl: '',\n      hasChart: false\n    }\n  }];\n}\n\nconst base64Svg = Buffer.from(svgContent).toString('base64');\n\nreturn [{\n  json: {\n    ...data,\n    dataUrl: 'data:image/svg+xml;base64,' + base64Svg\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        640
+      ],
+      "id": "054bd721-1bb5-4bcd-810d-d5cf6a34d06d",
+      "name": "Prepare SVG Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudinary.com/v1_1/dkz1yxgwa/image/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $json.dataUrl }}"
+            },
+            {
+              "name": "upload_preset",
+              "value": "n8n_upload"
+            },
+            {
+              "name": "public_id",
+              "value": "=seo_{{ $json.domain.replace(/\\./g, '_') }}_{{ Date.now() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -80,
+        640
+      ],
+      "id": "812f7a12-5411-45ef-9600-05d3c4e25e82",
+      "name": "Upload to Cloudinary"
+    },
+    {
+      "parameters": {},
+      "id": "24879801-4916-42d6-8b19-efd8efa6245a",
+      "name": "Merge Chart Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        336,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}?fields=sheets(properties(sheetId,title))&includeGridData=false",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "58ea9cff-672d-41e4-acd0-d9db7f010c70",
+      "name": "Get Sheet IDs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        736
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Merge Chart Data').first().json.spreadsheetId }}/values/Органічний_трафік!A:A?majorDimension=ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "e76a836a-d12f-405e-90e2-4d50a020f723",
+      "name": "Get Row Count",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        736
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// EXTRACT SHEET IDs - v5.0\n// Виправлено: отримуємо дані з правильних нод\n// ============================================\n\n// Отримуємо sheets metadata з Get Sheet IDs\nconst sheetsData = $('Get Sheet IDs').first().json;\nconst sheets = sheetsData.sheets || [];\n\n// Отримуємо browseAI дані з Merge Chart Data\nconst browseAI = $('Merge Chart Data').first().json;\n\n// Отримуємо row count\nconst rowCount = $input.first().json;\nconst values = rowCount.values || [];\nconst startRow = values.length > 0 ? values.length : 0;\n\n// Витягуємо sheet IDs з metadata\nconst sheetIds = {};\nsheets.forEach(sheet => {\n  const title = sheet.properties?.title || '';\n  const sheetId = sheet.properties?.sheetId || 0;\n  \n  if (title === 'Органічний_трафік') sheetIds.sheet1Id = sheetId;\n  else if (title === 'Ключові_запити') sheetIds.sheet2Id = sheetId;\n  else if (title === 'Посилальний_профіль') sheetIds.sheet3Id = sheetId;\n  else if (title === 'Всі_беклінки') sheetIds.sheet4Id = sheetId;\n  else if (title === 'Топ_сторінки_за_посиланнями') sheetIds.sheet5Id = sheetId;\n  else if (title === 'Поведінкові_метрики') sheetIds.sheet6Id = sheetId;\n  else if (title === 'Ключові_фрази') sheetIds.sheet7Id = sheetId;\n  else if (title === 'Трафікогенеруючі_сторінки') sheetIds.sheet8Id = sheetId;\n});\n\nreturn [{\n  json: {\n    // Sheet IDs\n    spreadsheetId: browseAI.spreadsheetId,\n    sheet1Id: sheetIds.sheet1Id || 0,\n    sheet2Id: sheetIds.sheet2Id || 0,\n    sheet3Id: sheetIds.sheet3Id || 0,\n    sheet4Id: sheetIds.sheet4Id || 0,\n    sheet5Id: sheetIds.sheet5Id || 0,\n    sheet6Id: sheetIds.sheet6Id || 0,\n    sheet7Id: sheetIds.sheet7Id || 0,\n    sheet8Id: sheetIds.sheet8Id || 0,\n    startRow: startRow,\n    \n    // Дані для Sheet 2\n    domain: browseAI.domain,\n    brandedPercent: browseAI.brandedPercent,\n    nonBrandedPercent: browseAI.nonBrandedPercent,\n    hasData: browseAI.hasData,\n    hasChart: browseAI.hasChart,\n    chartUrl: browseAI.chartUrl,\n    \n    // ✅ Дані для Sheet 6 (SimilarWeb)\n    engagementData: browseAI.engagementData || {},\n    channelsData: browseAI.channelsData || [],\n    deviceData: browseAI.deviceData || {},\n    socialData: browseAI.socialData || [],\n    referringWebsites: browseAI.referringWebsites || [],\n    referringIndustries: browseAI.referringIndustries || [],\n    linkDestinations: browseAI.linkDestinations || [],\n    adDestinations: browseAI.adDestinations || [],\n    topPublishers: browseAI.topPublishers || [],\n    \n    // Флаги\n    hasEngagementData: browseAI.hasEngagementData || false,\n    hasChannelsData: browseAI.hasChannelsData || false,\n    hasDeviceData: browseAI.hasDeviceData || false,\n    hasSocialData: browseAI.hasSocialData || false\n  }\n}];"
+      },
+      "id": "46baaaa5-55df-499c-9bee-4f58a610fa9b",
+      "name": "Extract Sheet IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst startRow = data.startRow;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet localRow = 0;\n\n// ========== СЕКЦІЯ: БРЕНДОВИЙ VS НЕБРЕНДОВИЙ ТРАФІК ==========\nrows.push(['', '', '', '', '', '']); localRow++;\nrows.push(['', '', '', '', '', '']); localRow++;\n\n// Заголовок секції (зелений фон)\nheaderRows.push(startRow + localRow);\nrows.push(['🏷️ БРЕНДОВИЙ VS НЕБРЕНДОВИЙ ПОШУКОВИЙ ТРАФІК', '', '', '', '', '']); localRow++;\nrows.push(['Джерело: SimilarWeb (12 місяців)', '', '', '', '', '']); localRow++;\nrows.push(['', '', '', '', '', '']); localRow++;\n\n// Заголовок таблиці (світло-зелений фон)\ntableHeaderRows.push(startRow + localRow);\nrows.push(['Тип трафіку', 'Частка', 'Опис', '', '', '']); localRow++;\n\nif (data.hasData) {\n  rows.push(['Брендовий трафік', data.brandedPercent + '%', 'Запити з назвою бренду', '', '', '']); localRow++;\n  rows.push(['Небрендовий трафік', data.nonBrandedPercent + '%', 'Запити без назви бренду', '', '', '']); localRow++;\n} else {\n  rows.push(['Брендовий трафік', 'Н/Д', 'Дані недоступні (потрібен SimilarWeb Pro)', '', '', '']); localRow++;\n  rows.push(['Небрендовий трафік', 'Н/Д', 'Дані недоступні (потрібен SimilarWeb Pro)', '', '', '']); localRow++;\n}\n\nrows.push(['', '', '', '', '', '']); localRow++;\n\n// Графік (якщо є URL)\nlet chartRowIndex = -1;\nif (data.hasChart && data.chartUrl) {\n  chartRowIndex = startRow + localRow;\n  rows.push(['=IMAGE(\"' + data.chartUrl + '\")', '', '', '', '', '']); localRow++;\n  // Пусті рядки для висоти графіка\n  for (let i = 0; i < 12; i++) {\n    rows.push(['', '', '', '', '', '']); localRow++;\n  }\n}\n\nreturn [{\n  json: {\n    rows: rows,\n    headerRows: headerRows,\n    tableHeaderRows: tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    // ✅ ЗМІНЕНО: використовуємо sheet1Id замість sheet2Id\n    sheet1Id: data.sheet1Id,\n    startRow: startRow,\n    totalRows: localRow,\n    chartRowIndex: chartRowIndex,\n    hasChart: data.hasChart && data.chartUrl,\n    chartUrl: data.chartUrl || '',\n    domain: data.domain,\n    brandedPercent: data.brandedPercent,\n    nonBrandedPercent: data.nonBrandedPercent\n  }\n}];"
+      },
+      "id": "70828991-467e-483f-9424-0fbaf6dab7ac",
+      "name": "Prepare Branded Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Органічний_трафік!A{{ $json.startRow + 1 }}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "4a46571b-6187-4d37-99b0-807c125c8d39",
+      "name": "Write Branded Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1376,
+        736
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Branded Data').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \n  requests: $('Prepare Branded Data').first().json.headerRows.map(row => ({ \n    repeatCell: { \n      range: { \n        sheetId: $('Prepare Branded Data').first().json.sheet1Id,  // ✅ ЗМІНЕНО з sheet2Id\n        startRowIndex: row, \n        endRowIndex: row + 1, \n        startColumnIndex: 0, \n        endColumnIndex: 6 \n      }, \n      cell: { \n        userEnteredFormat: { \n          backgroundColor: { red: 0.2, green: 0.5, blue: 0.3 }, \n          textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } \n        } \n      }, \n      fields: 'userEnteredFormat(backgroundColor,textFormat)' \n    } \n  })).concat($('Prepare Branded Data').first().json.tableHeaderRows.map(row => ({ \n    repeatCell: { \n      range: { \n        sheetId: $('Prepare Branded Data').first().json.sheet1Id,  // ✅ ЗМІНЕНО з sheet2Id\n        startRowIndex: row, \n        endRowIndex: row + 1, \n        startColumnIndex: 0, \n        endColumnIndex: 6 \n      }, \n      cell: { \n        userEnteredFormat: { \n          backgroundColor: { red: 0.9, green: 0.95, blue: 0.9 }, \n          textFormat: { bold: true, fontSize: 10 } \n        } \n      }, \n      fields: 'userEnteredFormat(backgroundColor,textFormat)' \n    } \n  }))).concat([{ \n    updateDimensionProperties: { \n      range: { \n        sheetId: $('Prepare Branded Data').first().json.sheet1Id,  // ✅ ЗМІНЕНО з sheet2Id\n        dimension: 'COLUMNS', \n        startIndex: 0, \n        endIndex: 1 \n      }, \n      properties: { pixelSize: 350 }, \n      fields: 'pixelSize' \n    } \n  }]).concat($('Prepare Branded Data').first().json.chartRowIndex >= 0 ? [{ \n    updateDimensionProperties: { \n      range: { \n        sheetId: $('Prepare Branded Data').first().json.sheet1Id,  // ✅ ЗМІНЕНО з sheet2Id\n        dimension: 'ROWS', \n        startIndex: $('Prepare Branded Data').first().json.chartRowIndex, \n        endIndex: $('Prepare Branded Data').first().json.chartRowIndex + 1 \n      }, \n      properties: { pixelSize: 280 }, \n      fields: 'pixelSize' \n    } \n  }] : []) \n}) }}",
+        "options": {}
+      },
+      "id": "39eaa556-b6ef-4bb8-b2bc-7bd57e20cff3",
+      "name": "Format Branded Section",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        736
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/seo-audit-full-v74",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"domain\": $('Merge Chart Data').first().json.domain,\n  \"spreadsheetId\": $('Merge Chart Data').first().json.spreadsheetId,\n  \"sheet1Id\": $('Extract Sheet IDs').first().json.sheet1Id,\n  \"sheet2Id\": $('Extract Sheet IDs').first().json.sheet2Id,\n  \"sheet3Id\": $('Extract Sheet IDs').first().json.sheet3Id,\n  \"sheet4Id\": $('Extract Sheet IDs').first().json.sheet4Id,\n  \"sheet5Id\": $('Extract Sheet IDs').first().json.sheet5Id,\n  \"sheet6Id\": $('Extract Sheet IDs').first().json.sheet6Id,\n  \"sheet7Id\": $('Extract Sheet IDs').first().json.sheet7Id,\n \"sheet8Id\": $('Extract Sheet IDs').first().json.sheet8Id\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2624,
+        736
+      ],
+      "id": "d9675b93-685e-47a9-892c-550598826fd9",
+      "name": "Trigger Full Audit"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Branded/Non-Branded data added. Full audit triggered.\",\n  \"spreadsheetId\": \"{{ $('Merge Chart Data').first().json.spreadsheetId }}\"\n}",
+        "options": {}
+      },
+      "id": "3f34e10d-8e0c-4dab-b7b2-4be19ecde299",
+      "name": "Respond - Callback Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2832,
+        736
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"error\",\n  \"message\": \"Domain not found in Browse AI callback\",\n  \"raw_data\": {{ JSON.stringify($('Parse Browse AI Callback').first().json) }}\n}",
+        "options": {}
+      },
+      "id": "321d0192-06a4-4e3b-a656-22792e2f0360",
+      "name": "Respond - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -880,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seo-audit-full-v74",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "10f35b6b-253f-47a9-9789-c386ee1bb791",
+      "name": "Webhook - Full Audit",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        1392
+      ],
+      "webhookId": "seo-audit-full-v74"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $json.body.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "date_from",
+              "name": "date_from",
+              "value": "={{ $json.body.date_from || $now.minus(1, 'year').format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "date_to",
+              "name": "date_to",
+              "value": "={{ $json.body.date_to || $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "country",
+              "name": "country",
+              "value": "={{ $json.body.country || 'ua' }}",
+              "type": "string"
+            },
+            {
+              "id": "top_pages_limit",
+              "name": "top_pages_limit",
+              "value": "={{ $json.body.top_pages_limit || 50 }}",
+              "type": "number"
+            },
+            {
+              "id": "spreadsheetId",
+              "name": "spreadsheetId",
+              "value": "={{ $json.body.spreadsheetId }}",
+              "type": "string"
+            },
+            {
+              "id": "sheet1Id",
+              "name": "sheet1Id",
+              "value": "={{ $json.body.sheet1Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "sheet2Id",
+              "name": "sheet2Id",
+              "value": "={{ $json.body.sheet2Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "79c23a8e-6981-4157-9916-fb5ee0c3e3e2",
+              "name": "sheet3Id",
+              "value": "={{ $json.body.sheet3Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "0da1a4bb-559e-41dc-9487-4832d557b628",
+              "name": "sheet4Id",
+              "value": "={{ $json.body.sheet4Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "d126275f-ddf1-4e6a-a5da-79273d111caf",
+              "name": "sheet5Id",
+              "value": "={{ $json.body.sheet5Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "bf8eca41-8855-425b-a143-fff169f746ef",
+              "name": "sheet7Id",
+              "value": "={{ $json.body.sheet7Id || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "8e2e92ea-8b77-4d24-b25e-15a77d060a91",
+              "name": "sheet8Id",
+              "value": "={{ $json.body.sheet8Id || 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5c2c60e9-8cf6-423d-af4b-2544871e2448",
+      "name": "Set Variables (Full)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1280,
+        1392
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-metrics",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date": "={{ $('Set Variables (Full)').item.json.date_to }}",
+            "country": "={{ $('Set Variables (Full)').item.json.country }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "a0328352-878a-4436-b924-42eddf092f32",
+      "name": "Get Current Metrics (Full)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-metrics-history",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date_from": "={{ $('Set Variables (Full)').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables (Full)').item.json.date_to }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "4d959995-20ad-48a5-8feb-2ebc8ca6f144",
+      "name": "Get Metrics History (Full)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-metrics-by-country",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date": "={{ $('Set Variables (Full)').item.json.date_to }}",
+            "country": "={{ $('Set Variables (Full)').item.json.country }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "9317a890-d189-4e2e-8a79-c55c42152e91",
+      "name": "Get Metrics by Country (Full)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-top-pages",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "country": "={{ $('Set Variables (Full)').item.json.country }}",
+            "limit": "={{ $('Set Variables (Full)').item.json.top_pages_limit }}",
+            "date": "={{ $('Set Variables (Full)').item.json.date_to }}",
+            "select": "url,sum_traffic,keywords,top_keyword,top_keyword_best_position,top_keyword_volume,value"
+          }
+        },
+        "options": {}
+      },
+      "id": "dfe9881b-4378-4a82-811b-24d84cdc352a",
+      "name": "Get Top Pages (Full)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-pages-history",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date_from": "={{ $('Set Variables (Full)').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables (Full)').item.json.date_to }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "bb6ce525-4ae9-4cc9-9897-6229fc0f7880",
+      "name": "Get Pages History (Full)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// FORMAT DATA (FULL) - v10.0\n// ОНОВЛЕНО: Додано агрегацію URL для Sheet 8\n// ============================================\n\nconst domain = $('Set Variables (Full)').first().json.domain;\nconst country = $('Set Variables (Full)').first().json.country;\nconst dateFrom = $('Set Variables (Full)').first().json.date_from;\nconst dateTo = $('Set Variables (Full)').first().json.date_to;\nconst spreadsheetId = $('Set Variables (Full)').first().json.spreadsheetId;\nconst sheet1Id = $('Set Variables (Full)').first().json.sheet1Id;\nconst sheet2Id = $('Set Variables (Full)').first().json.sheet2Id;\nconst sheet3Id = $('Set Variables (Full)').first().json.sheet3Id;\nconst sheet4Id = $('Set Variables (Full)').first().json.sheet4Id;\nconst sheet5Id = $('Set Variables (Full)').first().json.sheet5Id;\nconst sheet7Id = $('Set Variables (Full)').first().json.sheet7Id || 0;\nconst sheet8Id = $('Set Variables (Full)').first().json.sheet8Id || 0;\n\n// Універсальний парсер MCP відповідей\nconst parseContent = (data) => {\n  if (!data) return null;\n  if (data.content && Array.isArray(data.content)) {\n    const textContent = data.content.find(c => c.type === 'text');\n    if (textContent && textContent.text) {\n      if (typeof textContent.text === 'object') return textContent.text;\n      try { return JSON.parse(textContent.text); } catch { return textContent.text; }\n    }\n  }\n  return data;\n};\n\n// Отримуємо сирі дані з усіх MCP нод\nlet currentMetricsRaw, metricsHistoryRaw, metricsByCountryRaw, topPagesRaw, pagesHistoryRaw;\nlet backlinksStatsRaw, backlinksStatsYearAgoRaw, drHistoryRaw, refdomainsHistoryRaw, anchorsRaw, backlinksRaw, topPagesByLinksRaw;\nlet serpstatRaw;\n\ntry { currentMetricsRaw = $('Get Current Metrics (Full)').first().json; } catch (e) {}\ntry { metricsHistoryRaw = $('Get Metrics History (Full)').first().json; } catch (e) {}\ntry { metricsByCountryRaw = $('Get Metrics by Country (Full)').first().json; } catch (e) {}\ntry { topPagesRaw = $('Get Top Pages (Full)').first().json; } catch (e) {}\ntry { pagesHistoryRaw = $('Get Pages History (Full)').first().json; } catch (e) {}\ntry { backlinksStatsRaw = $('Get Backlinks Stats1').first().json; } catch (e) {}\ntry { backlinksStatsYearAgoRaw = $('Get Backlinks Stats (Year Ago)').first().json; } catch (e) {}\ntry { drHistoryRaw = $('Get DR History').first().json; } catch (e) {}\ntry { refdomainsHistoryRaw = $('Get Refdomains History').first().json; } catch (e) {}\ntry { anchorsRaw = $('Get External Anchors').first().json; } catch (e) {}\ntry { backlinksRaw = $('Get All Backlinks').first().json; } catch (e) {}\ntry { topPagesByLinksRaw = $('Get Top Pages By Links').first().json; } catch (e) {}\ntry { serpstatRaw = $('Serpstat Prepare Output').first().json; } catch (e) {}\n\n// Парсимо всі відповіді\nconst currentMetrics = parseContent(currentMetricsRaw);\nconst metricsHistory = parseContent(metricsHistoryRaw);\nconst metricsByCountry = parseContent(metricsByCountryRaw);\nconst topPages = parseContent(topPagesRaw);\nconst pagesHistory = parseContent(pagesHistoryRaw);\nconst backlinksStats = parseContent(backlinksStatsRaw);\nconst backlinksStatsYearAgo = parseContent(backlinksStatsYearAgoRaw);\nconst drHistory = parseContent(drHistoryRaw);\nconst refdomainsHistory = parseContent(refdomainsHistoryRaw);\nconst anchors = parseContent(anchorsRaw);\nconst backlinks = parseContent(backlinksRaw);\nconst topPagesByLinks = parseContent(topPagesByLinksRaw);\n\n// ========== SERPSTAT KEYWORDS ==========\nconst serpstatKeywordsRaw = serpstatRaw?.result?.data || [];\nconst domainName = domain.replace(/\\.(com|ua|org|net|io|co).*$/i, '').toLowerCase();\n\n// SERP features mapping\nconst serpFeaturesMap = {\n  'pic': 'Thumbnail',\n  'ai_overview': 'AI Overview',\n  'snip_breadcrumbs': 'Sitelinks',\n  'snip_faq': 'People also ask',\n  'video': 'Video preview',\n  'featured_snippet': 'Featured snippet',\n  'knowledge_panel': 'Knowledge panel',\n  'knowledge_card': 'Knowledge card',\n  'local_pack': 'Local pack',\n  'reviews': 'Reviews',\n  'shopping': 'Shopping results'\n};\n\n// Intent classification function\nconst classifyIntent = (kw) => {\n  const k = kw.toLowerCase();\n  \n  const isBranded = k.includes(domainName) || k.includes('technolex') || k.includes('техно');\n  \n  const localPatterns = ['купити', 'купить', 'ціна', 'цена', 'магазин', 'доставка', 'київ', 'киев', 'харків', 'львів', 'одеса', 'near me'];\n  const isLocal = localPatterns.some(p => k.includes(p));\n  \n  const navPatterns = ['офіційний', 'официальный', 'сайт', 'site', 'login', 'вхід'];\n  const isNavigational = navPatterns.some(p => k.includes(p)) || isBranded;\n  \n  const infoPatterns = ['що таке', 'что такое', 'як ', 'как ', 'чому', 'почему', 'скільки', 'сколько', 'коли', 'когда', 'де ', 'где ', 'який', 'какой', 'різниця', 'разница'];\n  const isInformational = infoPatterns.some(p => k.includes(p));\n  \n  const commercialPatterns = ['кращий', 'лучший', 'best', 'top', 'рейтинг', 'порівняння', 'сравнение', 'vs', 'огляд', 'обзор', 'відгуки', 'отзывы', 'review'];\n  const isCommercial = commercialPatterns.some(p => k.includes(p));\n  \n  const transPatterns = ['купити', 'купить', 'buy', 'замовити', 'заказать', 'order', 'ціна', 'цена', 'price', 'скидка', 'знижка', 'акція', 'акция', 'sale'];\n  const isTransactional = transPatterns.some(p => k.includes(p));\n  \n  return { isBranded, isLocal, isNavigational, isInformational, isCommercial, isTransactional };\n};\n\n// Process Serpstat keywords\nconst serpstatKeywords = serpstatKeywordsRaw.map(kw => {\n  const intent = classifyIntent(kw.keyword || '');\n  const types = kw.types || [];\n  const serpFeatures = types.map(t => serpFeaturesMap[t] || t).join(', ');\n  \n  return {\n    keyword: kw.keyword || '',\n    volume: kw.region_queries_count || 0,\n    kd: kw.difficulty || 0,\n    organic_traffic: kw.traff || 0,\n    position: kw.position || 0,\n    serp_features: serpFeatures,\n    url: kw.url || '',\n    branded: intent.isBranded ? 'TRUE' : 'FALSE',\n    local: intent.isLocal ? 'TRUE' : 'FALSE',\n    navigational: intent.isNavigational ? 'TRUE' : 'FALSE',\n    informational: intent.isInformational ? 'TRUE' : 'FALSE',\n    commercial: intent.isCommercial ? 'TRUE' : 'FALSE',\n    transactional: intent.isTransactional ? 'TRUE' : 'FALSE'\n  };\n});\n\n// Serpstat statistics\nconst serpstatStats = {\n  total: serpstatKeywords.length,\n  totalVolume: serpstatKeywords.reduce((sum, k) => sum + (k.volume || 0), 0),\n  avgPosition: serpstatKeywords.length > 0 \n    ? (serpstatKeywords.reduce((sum, k) => sum + (k.position || 0), 0) / serpstatKeywords.length).toFixed(1)\n    : '-',\n  top3: serpstatKeywords.filter(k => k.position >= 1 && k.position <= 3).length,\n  top10: serpstatKeywords.filter(k => k.position >= 1 && k.position <= 10).length,\n  top20: serpstatKeywords.filter(k => k.position >= 1 && k.position <= 20).length\n};\n\n// ========== АГРЕГАЦІЯ URL ДЛЯ SHEET 8 ==========\nconst pagesByUrl = {};\nserpstatKeywords.forEach(kw => {\n  const url = kw.url || '';\n  if (!url) return;\n  \n  if (!pagesByUrl[url]) {\n    pagesByUrl[url] = {\n      url: url,\n      traffic: 0,\n      keywords: [],\n      keywordCount: 0\n    };\n  }\n  \n  pagesByUrl[url].traffic += (kw.organic_traffic || 0);\n  pagesByUrl[url].keywordCount++;\n  pagesByUrl[url].keywords.push({\n    keyword: kw.keyword,\n    volume: kw.volume || 0,\n    position: kw.position || 0,\n    traffic: kw.organic_traffic || 0\n  });\n});\n\nconst serpstatTrafficPages = Object.values(pagesByUrl)\n  .map(page => {\n    const topKw = page.keywords.sort((a, b) => b.traffic - a.traffic)[0] || {};\n    return {\n      url: page.url,\n      traffic: page.traffic,\n      keywordCount: page.keywordCount,\n      topKeyword: topKw.keyword || '',\n      topKeywordVolume: topKw.volume || 0,\n      topKeywordPosition: topKw.position || 0\n    };\n  })\n  .sort((a, b) => b.traffic - a.traffic);\n\n// ========== ОСНОВНІ МЕТРИКИ ДОМЕНУ (Ahrefs) ==========\nconst trafficMetrics = currentMetrics?.metrics || currentMetrics || {};\nconst linkMetrics = backlinksStats?.metrics || backlinksStats || {};\nconst linkMetricsYearAgo = backlinksStatsYearAgo?.metrics || backlinksStatsYearAgo || {};\n\n// DR з історії\nconst drArray = drHistory?.domain_ratings || drHistory?.domain_rating || [];\nconst drFirst = drArray.length > 0 ? drArray[0] : {};\nconst drLast = drArray.length > 0 ? drArray[drArray.length - 1] : {};\n\n// Refdomains з історії\nconst refArray = refdomainsHistory?.refdomains || [];\nconst refFirst = refArray.length > 0 ? refArray[0] : {};\nconst refLast = refArray.length > 0 ? refArray[refArray.length - 1] : {};\n\n// Форматування змін\nconst formatChange = (value) => {\n  if (value > 0) return '+' + value.toLocaleString();\n  if (value < 0) return value.toLocaleString();\n  return '0';\n};\n\n// Поточні значення\nconst drCurrent = drLast.domain_rating || 0;\nconst drYearAgo = drFirst.domain_rating || 0;\nconst drChange = drCurrent - drYearAgo;\n\nconst backlinksCurrent = linkMetrics.live || 0;\nconst backlinksYearAgo = linkMetricsYearAgo.live || 0;\nconst backlinksChange = backlinksCurrent - backlinksYearAgo;\n\nconst refdomainsCurrent = refLast.refdomains || linkMetrics.live_refdomains || 0;\nconst refdomainsYearAgo = refFirst.refdomains || linkMetricsYearAgo.live_refdomains || 0;\nconst refdomainsChange = refdomainsCurrent - refdomainsYearAgo;\n\nconst domainMetrics = {\n  organic_traffic: trafficMetrics.org_traffic || 0,\n  organic_keywords: trafficMetrics.org_keywords || 0,\n  organic_keywords_1_3: trafficMetrics.org_keywords_1_3 || 0,\n  organic_cost: trafficMetrics.org_cost || 0,\n  \n  domain_rating: drCurrent,\n  domain_rating_year_ago: drYearAgo,\n  domain_rating_change: drChange,\n  domain_rating_formatted: `${drCurrent} (${formatChange(drChange)} за рік)`,\n  \n  backlinks: backlinksCurrent,\n  backlinks_year_ago: backlinksYearAgo,\n  backlinks_change: backlinksChange,\n  backlinks_all_time: linkMetrics.all_time || 0,\n  backlinks_formatted: `${backlinksCurrent.toLocaleString()} (${formatChange(backlinksChange)} за рік)`,\n  \n  refdomains: refdomainsCurrent,\n  refdomains_year_ago: refdomainsYearAgo,\n  refdomains_change: refdomainsChange,\n  refdomains_all_time: linkMetrics.all_time_refdomains || 0,\n  refdomains_formatted: `${refdomainsCurrent.toLocaleString()} (${formatChange(refdomainsChange)} за рік)`\n};\n\n// ========== ІСТОРІЯ ТРАФІКУ ==========\nconst trafficHistory = [];\nconst histArray = metricsHistory?.metrics || [];\nif (Array.isArray(histArray)) {\n  histArray.forEach(h => {\n    trafficHistory.push({\n      date: h.date ? h.date.split('T')[0] : '',\n      organic_traffic: h.org_traffic || 0,\n      traffic_value: h.org_cost || 0\n    });\n  });\n}\n\n// ========== ГЕО ДАНІ ==========\nconst geoData = [];\nconst countryArray = metricsByCountry?.metrics || [];\nconst totalGeoTraffic = countryArray.reduce((sum, c) => sum + (c.org_traffic || 0), 0);\nif (Array.isArray(countryArray)) {\n  countryArray.sort((a, b) => (b.org_traffic || 0) - (a.org_traffic || 0));\n  countryArray.forEach(c => {\n    const traffic = c.org_traffic || 0;\n    const share = totalGeoTraffic > 0 ? ((traffic / totalGeoTraffic) * 100).toFixed(1) : '0';\n    geoData.push({ \n      country: c.country || '', \n      traffic, \n      traffic_share: share + '%', \n      keywords: c.org_keywords || 0 \n    });\n  });\n}\n\n// ========== ТОП СТОРІНКИ ЗА ТРАФІКОМ ==========\nconst topPagesData = [];\nconst topKeywordsData = [];\nconst pagesArray = topPages?.pages || [];\nconst totalPagesTraffic = pagesArray.reduce((sum, p) => sum + (p.sum_traffic || 0), 0);\n\nif (Array.isArray(pagesArray)) {\n  pagesArray.forEach(p => {\n    const traffic = p.sum_traffic || 0;\n    const share = totalPagesTraffic > 0 ? ((traffic / totalPagesTraffic) * 100).toFixed(1) : '0';\n    \n    topPagesData.push({ \n      url: p.url || '', \n      traffic, \n      traffic_share: share + '%', \n      keywords: p.keywords || 0, \n      top_keyword: p.top_keyword || '' \n    });\n    \n    if (p.top_keyword) {\n      topKeywordsData.push({\n        keyword: p.top_keyword,\n        position: p.top_keyword_best_position || '-',\n        volume: p.top_keyword_volume || 0,\n        traffic: traffic,\n        value: p.value ? (p.value / 100).toFixed(2) : '0.00',\n        url: p.url || ''\n      });\n    }\n  });\n}\n\n// ========== ПОЗИЦІЇ ==========\nconst positionsData = {\n  pos_1_3: domainMetrics.organic_keywords_1_3 || 0,\n  top_10: domainMetrics.organic_keywords_1_3 || 0\n};\n\n// ========== ІСТОРІЯ СТОРІНОК ==========\nconst pagesHistoryData = [];\nconst pagesHistArray = pagesHistory?.pages || [];\nif (Array.isArray(pagesHistArray)) {\n  pagesHistArray.forEach(h => {\n    pagesHistoryData.push({ \n      date: h.date ? h.date.split('T')[0] : '', \n      organic_pages: h.pages || 0 \n    });\n  });\n}\n\nconst currentOrgPages = pagesHistoryData.length > 0 \n  ? pagesHistoryData[pagesHistoryData.length - 1].organic_pages \n  : topPagesData.length;\n\n// ========== ІСТОРІЯ DR ==========\nconst drHistoryData = [];\nif (Array.isArray(drArray)) {\n  drArray.forEach(h => {\n    drHistoryData.push({\n      date: h.date ? h.date.split('T')[0] : '',\n      domain_rating: h.domain_rating || 0\n    });\n  });\n}\n\n// ========== ІСТОРІЯ РЕФЕРАЛЬНИХ ДОМЕНІВ ==========\nconst refdomainsHistoryData = [];\nif (Array.isArray(refArray)) {\n  refArray.forEach(h => {\n    refdomainsHistoryData.push({\n      date: h.date ? h.date.split('T')[0] : '',\n      refdomains: h.refdomains || 0\n    });\n  });\n}\n\n// ========== АНКОРИ ==========\nconst anchorsData = [];\nconst anchorsArray = anchors?.linkedanchors || anchors?.anchors || [];\nconst totalAnchorsLinks = anchorsArray.reduce((sum, a) => sum + (a.linked_domains || 0), 0);\nif (Array.isArray(anchorsArray)) {\n  anchorsArray.forEach(a => {\n    const linkedDomains = a.linked_domains || 0;\n    const share = totalAnchorsLinks > 0 ? ((linkedDomains / totalAnchorsLinks) * 100).toFixed(1) : '0';\n    anchorsData.push({\n      anchor: a.anchor || '',\n      linked_domains: linkedDomains,\n      links_from_target: a.links_from_target || 0,\n      share: share + '%'\n    });\n  });\n}\n\n// ========== ВСІ БЕКЛІНКИ ==========\nconst backlinksData = [];\nconst backlinksArray = backlinks?.backlinks || [];\nif (Array.isArray(backlinksArray)) {\n  backlinksArray.forEach(b => {\n    backlinksData.push({\n      title: b.title || '',\n      url_from: b.url_from || '',\n      http_code: b.http_code || 200,\n      domain_rating_source: b.domain_rating_source || 0,\n      url_rating_source: b.url_rating_source || 0,\n      traffic_domain: b.traffic_domain || 0,\n      refdomains_source: b.refdomains_source || 0,\n      linked_domains_source_page: b.linked_domains_source_page || 0,\n      links_external: b.links_external || 0,\n      traffic: b.traffic || 0,\n      positions: b.positions || 0,\n      url_to: b.url_to || '',\n      anchor: b.anchor || '',\n      link_type: b.link_type || 'text',\n      is_content: b.is_content || false,\n      is_nofollow: b.is_nofollow || false,\n      is_ugc: b.is_ugc || false,\n      is_sponsored: b.is_sponsored || false,\n      discovered_status: b.discovered_status || ''\n    });\n  });\n}\n\n// ========== ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ ==========\nconst topPagesByLinksData = [];\nconst topPagesByLinksArray = topPagesByLinks?.pages || [];\nif (Array.isArray(topPagesByLinksArray)) {\n  topPagesByLinksArray.forEach(p => {\n    topPagesByLinksData.push({\n      url: p.url || '',\n      referring_domains: p.referring_domains || 0,\n      ur: p.ur || 0,\n      sum_traffic: p.sum_traffic || 0,\n      keywords: p.keywords || 0\n    });\n  });\n}\n\n// ========== ПОВЕРТАЄМО ВСІ ДАНІ ==========\nreturn [{\n  json: {\n    // Базові параметри\n    domain, \n    country, \n    dateFrom, \n    dateTo, \n    spreadsheetId, \n    sheet1Id, \n    sheet2Id,\n    sheet3Id,\n    sheet4Id,\n    sheet5Id,\n    sheet7Id,\n    sheet8Id,\n    \n    // Ahrefs дані (Sheet 1-5)\n    domainMetrics, \n    positionsData, \n    trafficHistory, \n    geoData, \n    topPagesData, \n    pagesHistoryData, \n    topKeywordsData, \n    currentOrgPages,\n    drHistoryData,\n    refdomainsHistoryData,\n    anchorsData,\n    backlinksData,\n    topPagesByLinksData,\n    totalBacklinksLive: domainMetrics.backlinks,\n    totalBacklinksAllTime: domainMetrics.backlinks_all_time,\n    totalRefdomainsLive: domainMetrics.refdomains,\n    \n    // Serpstat дані (Sheet 7)\n    serpstatKeywords,\n    serpstatStats,\n    \n    // Serpstat Traffic Pages (Sheet 8)\n    serpstatTrafficPages\n  }\n}];"
+      },
+      "id": "f8795c0a-b30a-46bd-8fb6-013bdfc8b724",
+      "name": "Format Data (Full)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\nconst period = `Період: ${data.dateFrom} — ${data.dateTo}`;\n\nheaderRows.push(currentRow);\nrows.push(['📊 ОГЛЯД ДОМЕНУ', '', '', '', '']); currentRow++;\nrows.push([`Дата звіту: ${data.dateTo}`, '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Метрика', 'Значення', '', '', '']); currentRow++;\nrows.push(['Домен', data.domain, '', '', '']); currentRow++;\nrows.push(['Країна аналізу', data.country.toUpperCase(), '', '', '']); currentRow++;\nrows.push(['Органічний трафік', data.domainMetrics.organic_traffic, '', '', '']); currentRow++;\nrows.push(['Органічні ключові слова', data.domainMetrics.organic_keywords, '', '', '']); currentRow++;\nrows.push(['В ТОП-3', data.positionsData.pos_1_3, '', '', '']); currentRow++;\nrows.push(['Вартість трафіку ($)', data.domainMetrics.organic_cost, '', '', '']); currentRow++;\nrows.push(['Трафікогенеруючі сторінки', data.currentOrgPages, '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\n\nif (data.pagesHistoryData && data.pagesHistoryData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['📈 ДИНАМІКА ТРАФІКОГЕНЕРУЮЧИХ СТОРІНОК', '', '', '', '']); currentRow++;\n  rows.push([period, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  \n  tableHeaderRows.push(currentRow);\n  rows.push(['Дата', 'Кількість сторінок', '', '', '']); currentRow++;\n  data.pagesHistoryData.forEach(h => {\n    rows.push([h.date, h.organic_pages, '', '', '']); currentRow++;\n  });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\nif (data.topPagesData && data.topPagesData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['🏆 ТОП СТОРІНОК ЗА ОРГАНІЧНИМ ТРАФІКОМ', '', '', '', '']); currentRow++;\n  rows.push([`Станом на: ${data.dateTo}`, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  \n  tableHeaderRows.push(currentRow);\n  rows.push(['URL сторінки', 'Трафік', 'Частка %', 'Ключових слів', 'Топ ключове слово']); currentRow++;\n  data.topPagesData.forEach(p => {\n    rows.push([p.url, p.traffic, p.traffic_share, p.keywords, p.top_keyword]); currentRow++;\n  });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\nif (data.trafficHistory && data.trafficHistory.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['📉 ДИНАМІКА ОРГАНІЧНОГО ТРАФІКУ', '', '', '', '']); currentRow++;\n  rows.push([period, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  \n  tableHeaderRows.push(currentRow);\n  rows.push(['Дата', 'Органічний трафік', 'Вартість ($)', '', '']); currentRow++;\n  data.trafficHistory.forEach(h => {\n    rows.push([h.date, h.organic_traffic, h.traffic_value, '', '']); currentRow++;\n  });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\nif (data.geoData && data.geoData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['🌍 РОЗПОДІЛ ТРАФІКУ ЗА КРАЇНАМИ', '', '', '', '']); currentRow++;\n  rows.push([`Станом на: ${data.dateTo}`, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  \n  tableHeaderRows.push(currentRow);\n  rows.push(['Країна', 'Трафік', 'Частка %', 'Ключових слів', '']); currentRow++;\n  data.geoData.forEach(g => {\n    rows.push([g.country, g.traffic, g.traffic_share, g.keywords, '']); currentRow++;\n  });\n}\n\nreturn [{\n  json: {\n    rows, headerRows, tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet1Id: data.sheet1Id,\n    sheet2Id: data.sheet2Id,\n    totalRows: currentRow,\n    positionsData: data.positionsData,\n    topKeywordsData: data.topKeywordsData,\n    domain: data.domain,\n    dateTo: data.dateTo,\n    domainMetrics: data.domainMetrics\n  }\n}];"
+      },
+      "id": "b8100d3e-3522-4420-8dbf-2d7ed26e52b5",
+      "name": "Prepare Sheet 1 (Full)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Органічний_трафік!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "570f167d-650a-47aa-9baa-b2422252e944",
+      "name": "Write Sheet 1 (Full)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1136,
+        1664
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "4c8d5d02-1ed8-444a-b1ec-9091467bbafb",
+      "name": "Wait 65s (1)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        1664
+      ],
+      "webhookId": "wait-1-full-v74"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 1 (Full)').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $('Prepare Sheet 1 (Full)').first().json.headerRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 1 (Full)').first().json.sheet1Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.4, blue: 0.6 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } })).concat($('Prepare Sheet 1 (Full)').first().json.tableHeaderRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 1 (Full)').first().json.sheet1Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, textFormat: { bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }))).concat([{ updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 1 (Full)').first().json.sheet1Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 400 }, fields: 'pixelSize' } }]) }) }}",
+        "options": {}
+      },
+      "id": "8ba1b304-c767-44ff-9d0d-794e19bcf7d1",
+      "name": "Format Sheet 1 (Full)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -800,
+        1664
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "c28dd001-dfc7-4a97-a101-90533115736a",
+      "name": "Wait 65s (2)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        1664
+      ],
+      "webhookId": "wait-2-full-v74"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Prepare Sheet 1 (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\nheaderRows.push(currentRow);\nrows.push(['🔍 КІЛЬКІСТЬ ОХОПЛЕНИХ ПОШУКОВИХ ЗАПИТІВ', '', '', '', '', '']); currentRow++;\nrows.push([`Станом на: ${data.dateTo}`, '', '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Показник', 'Кількість', '', '', '', '']); currentRow++;\nrows.push(['Всього ключових запитів', data.domainMetrics.organic_keywords, '', '', '', '']); currentRow++;\nrows.push(['З них в ТОП-3', data.positionsData.pos_1_3, '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '', '']); currentRow++;\n\nif (data.topKeywordsData && data.topKeywordsData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['🏆 ТОП ТРАФІКОГЕНЕРУЮЧИХ ПОШУКОВИХ ЗАПИТІВ', '', '', '', '', '']); currentRow++;\n  rows.push([`Станом на: ${data.dateTo}`, '', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '', '']); currentRow++;\n  \n  tableHeaderRows.push(currentRow);\n  rows.push(['Ключове слово', 'Позиція', 'Volume', 'Трафік', 'Value ($)', 'URL сторінки']); currentRow++;\n  data.topKeywordsData.forEach(k => {\n    rows.push([k.keyword, k.position, k.volume, k.traffic, k.value, k.url]); currentRow++;\n  });\n}\n\nreturn [{\n  json: {\n    rows, headerRows, tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet2Id: data.sheet2Id,\n    totalRows: currentRow\n  }\n}];"
+      },
+      "id": "a509c07c-e4f8-4dd3-8894-67cd789e70ff",
+      "name": "Prepare Sheet 2 (Full)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        1840
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Ключові_запити!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "c3d74ead-5e8b-4396-a707-26bdc3913ac0",
+      "name": "Write Sheet 2 (Full)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        1840
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "fc9920b8-752d-4bbd-ab16-df21f9319d53",
+      "name": "Wait 65s (3)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        1840
+      ],
+      "webhookId": "wait-3-full-v74"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 2 (Full)').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $('Prepare Sheet 2 (Full)').first().json.headerRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 2 (Full)').first().json.sheet2Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 6 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.5, blue: 0.3 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } })).concat($('Prepare Sheet 2 (Full)').first().json.tableHeaderRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 2 (Full)').first().json.sheet2Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 6 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.9, green: 0.95, blue: 0.9 }, textFormat: { bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }))).concat([{ updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 2 (Full)').first().json.sheet2Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 300 }, fields: 'pixelSize' } }]) }) }}",
+        "options": {}
+      },
+      "id": "e0919fb2-0aef-447d-863c-69dd379b3457",
+      "name": "Format Sheet 2 (Full)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        1840
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"SEO Audit completed. Ahrefs data added.\",\n  \"domain\": \"{{ $('Set Variables (Full)').first().json.domain }}\",\n  \"spreadsheet_id\": \"{{ $('Prepare Sheet 1 (Full)').first().json.spreadsheetId }}\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Prepare Sheet 1 (Full)').first().json.spreadsheetId }}\",\n  \"sheets\": [\"Органічний_трафік\", \"Ключові_запити\"],\n  \"execution_time\": \"~4 minutes\"\n}",
+        "options": {}
+      },
+      "id": "e0f797d9-0463-4013-a44f-0ae8b6dadf9b",
+      "name": "Respond - Full Audit Done",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1312,
+        2880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Посилальний_профіль",
+        "options": {}
+      },
+      "id": "20566773-56af-49a1-bef4-9add74cc761d",
+      "name": "Create Sheet 3",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -304,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 1: Добавить после Create Sheet 2"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Всі_беклінки",
+        "options": {}
+      },
+      "id": "7b713f44-b297-46da-8a6b-9205f9f68e39",
+      "name": "Create Sheet 4",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -128,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 1: Добавить после Create Sheet 3"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Топ_сторінки_за_посиланнями",
+        "options": {}
+      },
+      "id": "63b91067-1645-4d51-83d7-1285de5773e5",
+      "name": "Create Sheet 5",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        80,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 1: Добавить после Create Sheet 4, перед Browse AI"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-domain-rating-history",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date_from": "={{ $('Set Variables (Full)').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables (Full)').item.json.date_to }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "history_grouping",
+              "displayName": "history_grouping",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "date_to",
+              "displayName": "date_to",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "date_from",
+              "displayName": "date_from",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b260d54c-0135-4388-b7f3-10aaa75fab7e",
+      "name": "Get DR History",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      },
+      "notes": "FLOW 3: Добавить после Get Pages History"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-refdomains-history",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date_from": "={{ $('Set Variables (Full)').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables (Full)').item.json.date_to }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "history_grouping",
+              "displayName": "history_grouping",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "date_to",
+              "displayName": "date_to",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "date_from",
+              "displayName": "date_from",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "protocol",
+              "displayName": "protocol",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "cd2ada61-faef-44b7-934b-30e449bcf02f",
+      "name": "Get Refdomains History",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        112,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      },
+      "notes": "FLOW 3: Добавить после Get DR History"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-linked-anchors-external",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "select": "anchor,linked_domains,links_from_target",
+            "limit": "20",
+            "order_by": "linked_domains:desc"
+          }
+        },
+        "options": {}
+      },
+      "id": "23349db3-e321-4a00-bae4-d2d6da111465",
+      "name": "Get External Anchors",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        672,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      },
+      "notes": "FLOW 3: Добавить после Get Refdomains History"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-top-pages",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "select": "url,referring_domains,ur,sum_traffic,keywords",
+            "date": "={{ $('Set Variables (Full)').item.json.date_to }}",
+            "order_by": "referring_domains:desc",
+            "timeout": 0,
+            "limit": 100
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timeout",
+              "displayName": "timeout",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "limit",
+              "displayName": "limit",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "order_by",
+              "displayName": "order_by",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "where",
+              "displayName": "where",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "select",
+              "displayName": "select",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "protocol",
+              "displayName": "protocol",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "date_compared",
+              "displayName": "date_compared",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "volume_mode",
+              "displayName": "volume_mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f1bef996-6bbb-4a05-81eb-34c4d97d1fc9",
+      "name": "Get Top Pages By Links",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      },
+      "notes": "FLOW 3: Добавить после Get All Backlinks"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 3 - Посилальний профіль v2.0\n// З відображенням змін за рік\n// ============================================\n\nconst data = $('Format Data (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// Хелпер для форматування змін\nconst formatChange = (value) => {\n  if (value > 0) return '+' + value.toLocaleString();\n  if (value < 0) return value.toLocaleString();\n  return '0';\n};\n\n// Секція 1: Основні показники з порівнянням\nheaderRows.push(currentRow);\nrows.push(['🔗 ПОСИЛАЛЬНИЙ ПРОФІЛЬ', '', '', '', '']); currentRow++;\nrows.push([`Станом на: ${data.dateTo} | Порівняння з ${data.dateFrom}`, '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Метрика', 'Поточне', 'Рік тому', 'Зміна', '']); currentRow++;\n\n// Domain Rating\nrows.push([\n  'Domain Rating (DR)', \n  data.domainMetrics.domain_rating || 0, \n  data.domainMetrics.domain_rating_year_ago || 0,\n  formatChange(data.domainMetrics.domain_rating_change || 0),\n  ''\n]); currentRow++;\n\n// Беклінки\nrows.push([\n  'Беклінки (live)', \n  (data.domainMetrics.backlinks || 0).toLocaleString(), \n  (data.domainMetrics.backlinks_year_ago || 0).toLocaleString(),\n  formatChange(data.domainMetrics.backlinks_change || 0),\n  ''\n]); currentRow++;\n\n// Беклінки за весь час\nrows.push([\n  'Беклінки (all time)', \n  (data.domainMetrics.backlinks_all_time || 0).toLocaleString(), \n  '-',\n  '-',\n  ''\n]); currentRow++;\n\n// Реферальні домени\nrows.push([\n  'Реферальні домени (live)', \n  (data.domainMetrics.refdomains || 0).toLocaleString(), \n  (data.domainMetrics.refdomains_year_ago || 0).toLocaleString(),\n  formatChange(data.domainMetrics.refdomains_change || 0),\n  ''\n]); currentRow++;\n\n// Реферальні домени за весь час\nrows.push([\n  'Реферальні домени (all time)', \n  (data.domainMetrics.refdomains_all_time || 0).toLocaleString(), \n  '-',\n  '-',\n  ''\n]); currentRow++;\n\nrows.push(['', '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\n\n// Секція 2: Історія DR\nif (data.drHistoryData && data.drHistoryData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['📈 ІСТОРІЯ DOMAIN RATING', '', '', '', '']); currentRow++;\n  rows.push([`Період: ${data.dateFrom} — ${data.dateTo}`, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  tableHeaderRows.push(currentRow);\n  rows.push(['Дата', 'DR', '', '', '']); currentRow++;\n  data.drHistoryData.forEach(h => { rows.push([h.date, h.domain_rating, '', '', '']); currentRow++; });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\n// Секція 3: Історія реферальних доменів\nif (data.refdomainsHistoryData && data.refdomainsHistoryData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['📊 ІСТОРІЯ РЕФЕРАЛЬНИХ ДОМЕНІВ', '', '', '', '']); currentRow++;\n  rows.push([`Період: ${data.dateFrom} — ${data.dateTo}`, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  tableHeaderRows.push(currentRow);\n  rows.push(['Дата', 'Реф. домени', '', '', '']); currentRow++;\n  data.refdomainsHistoryData.forEach(h => { rows.push([h.date, h.refdomains, '', '', '']); currentRow++; });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\n// Секція 4: Анкор лист\nif (data.anchorsData && data.anchorsData.length > 0) {\n  headerRows.push(currentRow);\n  rows.push(['⚓ АНКОР ЛИСТ (ТОП-20)', '', '', '', '']); currentRow++;\n  rows.push([`Станом на: ${data.dateTo}`, '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n  tableHeaderRows.push(currentRow);\n  rows.push(['Анкор', 'Реф. домени', 'Частка %', '', '']); currentRow++;\n  data.anchorsData.forEach(a => { rows.push([a.anchor, a.linked_domains, a.share, '', '']); currentRow++; });\n  rows.push(['', '', '', '', '']); currentRow++;\n  rows.push(['', '', '', '', '']); currentRow++;\n}\n\n// Секція 5: Навігація\nheaderRows.push(currentRow);\nrows.push(['📎 ДЕТАЛЬНІ ДАНІ', '', '', '', '']); currentRow++;\nrows.push(['', '', '', '', '']); currentRow++;\nrows.push(['→ Всі беклінки (топ-100 за DR)', 'Лист \"Всі_беклінки\"', '', '', '']); currentRow++;\nrows.push(['→ Топ сторінки за посиланнями', 'Лист \"Топ_сторінки_за_посиланнями\"', '', '', '']); currentRow++;\n\nreturn [{\n  json: {\n    rows, headerRows, tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet3Id: data.sheet3Id,\n    totalRows: currentRow\n  }\n}];"
+      },
+      "id": "6624de1c-e169-450e-9944-d711d0fa3c70",
+      "name": "Prepare Sheet 3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        2000
+      ],
+      "notes": "FLOW 3: Добавить после Format Sheet 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 4 - Всі беклінки (v7.7 - виправлені поля)\n// ============================================\nconst data = $('Format Data (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// Заголовок секції\nheaderRows.push(currentRow);\nrows.push(['🔗 ВСІ БЕКЛІНКИ', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']); \ncurrentRow++;\nrows.push([`Топ-500 за DR джерела | Станом на: ${data.dateTo}`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']); \ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']); \ncurrentRow++;\n\n// Заголовки таблиці (19 колонок)\ntableHeaderRows.push(currentRow);\nrows.push([\n  'Referring page title',      // A\n  'Referring page URL',        // B\n  'HTTP code',                 // C\n  'DR',                        // D\n  'UR',                        // E\n  'Domain traffic',            // F\n  'Referring domains',         // G\n  'Linked domains',            // H\n  'External links',            // I\n  'Page traffic',              // J\n  'Keywords',                  // K\n  'Target URL',                // L\n  'Anchor',                    // M\n  'Type',                      // N\n  'Content',                   // O\n  'Nofollow',                  // P\n  'UGC',                       // Q\n  'Sponsored',                 // R\n  'Discovered'                 // S\n]);\ncurrentRow++;\n\n// Дані беклінків\nif (data.backlinksData && data.backlinksData.length > 0) {\n  data.backlinksData.forEach(b => {\n    rows.push([\n      b.title || '',\n      b.url_from || '',\n      b.http_code || 200,\n      b.domain_rating_source || 0,\n      b.url_rating_source || 0,\n      b.traffic_domain || 0,\n      b.refdomains_source || 0,\n      b.linked_domains_source_page || 0,\n      b.links_external || 0,\n      b.traffic || 0,\n      b.positions || 0,\n      b.url_to || '',\n      b.anchor || '',\n      b.link_type || 'text',\n      b.is_content ? '✓' : '',\n      b.is_nofollow ? '✓' : '',\n      b.is_ugc ? '✓' : '',\n      b.is_sponsored ? '✓' : '',\n      b.discovered_status || ''\n    ]);\n    currentRow++;\n  });\n}\n\nreturn [{\n  json: {\n    rows,\n    headerRows,\n    tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet4Id: data.sheet4Id,\n    totalRows: currentRow\n  }\n}];"
+      },
+      "id": "76b0c2fe-d4a6-44cd-8412-5c853d5265bf",
+      "name": "Prepare Sheet 4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2160
+      ],
+      "notes": "FLOW 3: Добавить после Format Sheet 3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 5 - Топ сторінки за посиланнями (v7.7 - спрощено)\n// ============================================\nconst data = $('Format Data (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// Заголовок секції\nheaderRows.push(currentRow);\nrows.push(['🏆 ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', '', '', '', '']); \ncurrentRow++;\nrows.push([`Відсортовано за Referring domains | Станом на: ${data.dateTo}`, '', '', '', '']); \ncurrentRow++;\nrows.push(['', '', '', '', '']); \ncurrentRow++;\n\n// Заголовки таблиці (5 колонок - те що реально є в API)\ntableHeaderRows.push(currentRow);\nrows.push([\n  'Page URL',           // A\n  'Referring domains',  // B\n  'UR',                 // C\n  'Traffic',            // D\n  'Keywords'            // E\n]);\ncurrentRow++;\n\n// Дані сторінок\nif (data.topPagesByLinksData && data.topPagesByLinksData.length > 0) {\n  data.topPagesByLinksData.forEach(p => {\n    rows.push([\n      p.url || '',\n      p.referring_domains || 0,\n      p.ur || 0,\n      p.sum_traffic || 0,\n      p.keywords || 0\n    ]);\n    currentRow++;\n  });\n}\n\nreturn [{\n  json: {\n    rows,\n    headerRows,\n    tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet5Id: data.sheet5Id,\n    totalRows: currentRow\n  }\n}];"
+      },
+      "id": "863e1668-34b6-4da7-bd41-173255bf1e8d",
+      "name": "Prepare Sheet 5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2304
+      ],
+      "notes": "FLOW 3: Добавить после Format Sheet 4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Посилальний_профіль!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "f74b0dee-2ae3-49e3-8879-6a2a977fdf8b",
+      "name": "Write Sheet 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        2000
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 3: После Prepare Sheet 3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Всі_беклінки!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "52b14071-6e36-4f9c-ac52-aab5032af50c",
+      "name": "Write Sheet 4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        2160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 3: После Prepare Sheet 4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Топ_сторінки_за_посиланнями!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "05c802bc-f29f-426d-b331-7609a9a74de0",
+      "name": "Write Sheet 5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        2304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 3: После Prepare Sheet 5"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "20c770a7-7c4f-4d1a-af8f-4c435d055004",
+      "name": "Wait 65s (4)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        2016
+      ],
+      "webhookId": "wait-4-v75",
+      "notes": "После Write Sheet 3"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "fd73dadf-2d7c-4b8e-bf4a-7750ddd7cb64",
+      "name": "Wait 65s (5)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2000
+      ],
+      "webhookId": "wait-5-v75",
+      "notes": "После Format Sheet 3"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "5e783447-5079-4e1d-b07f-03eaa5814a9b",
+      "name": "Wait 65s (6)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2160
+      ],
+      "webhookId": "wait-6-v75",
+      "notes": "После Write Sheet 4"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "cc028620-edb4-4793-b956-35a1ecd55162",
+      "name": "Wait 65s (7)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        2160
+      ],
+      "webhookId": "wait-7-v75",
+      "notes": "После Format Sheet 4"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "de42162c-277d-47dc-9c0e-108419e78352",
+      "name": "Wait 65s (8)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -976,
+        2304
+      ],
+      "webhookId": "wait-8-v75",
+      "notes": "После Write Sheet 5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 3').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $('Prepare Sheet 3').first().json.headerRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 3').first().json.sheet3Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.6, green: 0.2, blue: 0.4 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } })).concat($('Prepare Sheet 3').first().json.tableHeaderRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 3').first().json.sheet3Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.95, green: 0.9, blue: 0.93 }, textFormat: { bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }))).concat([{ updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 3').first().json.sheet3Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 300 }, fields: 'pixelSize' } }]) }) }}",
+        "options": {}
+      },
+      "id": "face6884-3ed3-421c-953e-ab4cdd6b5335",
+      "name": "Format Sheet 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        2000
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "После Wait 65s (4)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 4').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  requests: $('Prepare Sheet 4').first().json.headerRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 19 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.4, green: 0.2, blue: 0.6 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  })).concat($('Prepare Sheet 4').first().json.tableHeaderRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 19 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.95, green: 0.9, blue: 0.8 }, textFormat: { bold: true, fontSize: 10 } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  }))).concat([\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 300 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 350 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, dimension: 'COLUMNS', startIndex: 11, endIndex: 12 }, properties: { pixelSize: 300 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, dimension: 'COLUMNS', startIndex: 12, endIndex: 13 }, properties: { pixelSize: 200 }, fields: 'pixelSize' } },\n    { setBasicFilter: { filter: { range: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, startRowIndex: 3, startColumnIndex: 0, endColumnIndex: 21 } } } },\n    { updateSheetProperties: { properties: { sheetId: $('Prepare Sheet 4').first().json.sheet4Id, gridProperties: { frozenRowCount: 4 } }, fields: 'gridProperties.frozenRowCount' } }\n  ])\n}) }}",
+        "options": {}
+      },
+      "id": "c633db54-2f98-407e-81c9-721602c0c378",
+      "name": "Format Sheet 4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        2160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "После Wait 65s (6)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 5').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  requests: $('Prepare Sheet 5').first().json.headerRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 5').first().json.sheet5Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.2, green: 0.4, blue: 0.6 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  })).concat($('Prepare Sheet 5').first().json.tableHeaderRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 5').first().json.sheet5Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 5 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.95, green: 0.9, blue: 0.8 }, textFormat: { bold: true, fontSize: 10 } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  }))).concat([\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 5').first().json.sheet5Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 400 }, fields: 'pixelSize' } },\n    { setBasicFilter: { filter: { range: { sheetId: $('Prepare Sheet 5').first().json.sheet5Id, startRowIndex: 3, startColumnIndex: 0, endColumnIndex: 9 } } } },\n    { updateSheetProperties: { properties: { sheetId: $('Prepare Sheet 5').first().json.sheet5Id, gridProperties: { frozenRowCount: 4 } }, fields: 'gridProperties.frozenRowCount' } }\n  ])\n}) }}",
+        "options": {}
+      },
+      "id": "3b0b134f-eb97-4610-bba5-1786df7b4873",
+      "name": "Format Sheet 5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        2304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "После Wait 65s (8)"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-backlinks-stats",
+          "mode": "list",
+          "cachedResultName": "site-explorer-backlinks-stats"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date": "={{ $('Set Variables (Full)').item.json.date_to }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "protocol",
+              "displayName": "protocol",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "caa178a6-fe8d-4d3b-a5af-8f64f886d2c4",
+      "name": "Get Backlinks Stats1",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        288,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      },
+      "notes": "FLOW 3: Добавить после Get DR History"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-all-backlinks",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "select": "title,url_from,http_code,domain_rating_source,url_rating_source,traffic_domain,refdomains_source,linked_domains_source_page,links_external,traffic,positions,url_to,anchor,link_type,is_content,is_nofollow,is_ugc,is_sponsored,discovered_status",
+            "limit": 100,
+            "order_by": "domain_rating_source:desc",
+            "history": "live",
+            "timeout": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timeout",
+              "displayName": "timeout",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "limit",
+              "displayName": "limit",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "order_by",
+              "displayName": "order_by",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "where",
+              "displayName": "where",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "select",
+              "displayName": "select",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "protocol",
+              "displayName": "protocol",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "aggregation",
+              "displayName": "aggregation",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "history",
+              "displayName": "history",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0f542aaa-8e6e-418f-9bfb-ba5623f140aa",
+      "name": "Get All Backlinks",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-backlinks-stats",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables (Full)').item.json.domain }}",
+            "date": "={{ $('Set Variables (Full)').item.json.date_from }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "protocol",
+              "displayName": "protocol",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "target",
+              "displayName": "target",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "63968e01-0580-4d1f-a5cb-2f43c0747e1a",
+      "name": "Get Backlinks Stats (Year Ago)",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        480,
+        1392
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "34b05c6b-4fbd-42d0-95e0-06a6562df9fe",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        3152
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Поведінкові_метрики",
+        "options": {}
+      },
+      "name": "Create Sheet 6",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        320,
+        336
+      ],
+      "id": "60433f5f-3328-48cb-910d-152c21c9398e",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 1: Після Create Sheet 5, перед Browse AI - Run Task"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Поведінкові_метрики!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "name": "Write Sheet 6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        736
+      ],
+      "id": "6a6e3ca6-adb7-4923-bc8f-6a948e796981",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 2: Після Prepare Sheet 6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 6').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $('Prepare Sheet 6').first().json.headerRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 6').first().json.sheet6Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 4 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.15, green: 0.5, blue: 0.7 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } })).concat($('Prepare Sheet 6').first().json.tableHeaderRows.map(row => ({ repeatCell: { range: { sheetId: $('Prepare Sheet 6').first().json.sheet6Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 4 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.9, green: 0.95, blue: 0.98 }, textFormat: { bold: true, fontSize: 10 } } }, fields: 'userEnteredFormat(backgroundColor,textFormat)' } }))).concat([{ updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 6').first().json.sheet6Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 250 }, fields: 'pixelSize' } }, { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 6').first().json.sheet6Id, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 150 }, fields: 'pixelSize' } }]) }) }}",
+        "options": {}
+      },
+      "name": "Format Sheet 6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2416,
+        736
+      ],
+      "id": "fb0d4d39-d9fd-4a1f-89d5-0a6981934139",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "FLOW 2: Після Write Sheet 6, перед Trigger Full Audit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 6 - Поведінкові метрики v4.0\n// 9 секцій з даними SimilarWeb (включаючи Social Traffic)\n// Оновлено: 2026-01-07\n// ============================================\n\nconst data = $('Extract Sheet IDs').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// ========== ЗАГОЛОВОК ЛИСТА ==========\nheaderRows.push(currentRow);\nrows.push(['📊 ПОВЕДІНКОВІ МЕТРИКИ', '', '', '']); currentRow++;\nrows.push(['Джерело: SimilarWeb | Період: 12 місяців', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 1. ENGAGEMENT OVERVIEW ==========\nheaderRows.push(currentRow);\nrows.push(['👥 ОГЛЯД ЗАЛУЧЕНОСТІ', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Метрика', 'Значення', '', '']); currentRow++;\n\nconst eng = data.engagementData || {};\nrows.push(['Щомісячні відвідування', eng.monthlyVisits || 'Н/Д', '', '']); currentRow++;\nrows.push(['Унікальні відвідувачі/міс', eng.monthlyUniqueVisitors || 'Н/Д', '', '']); currentRow++;\nrows.push(['Дедупл. аудиторія', eng.deduplicatedAudience || 'Н/Д', '', '']); currentRow++;\nrows.push(['Тривалість візиту', eng.visitDuration || 'Н/Д', '', '']); currentRow++;\nrows.push(['Сторінок за візит', eng.pagesPerVisit || 'Н/Д', '', '']); currentRow++;\nrows.push(['Показник відмов', eng.bounceRate || 'Н/Д', '', '']); currentRow++;\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 2. DEVICE DISTRIBUTION ==========\nheaderRows.push(currentRow);\nrows.push(['📱 РОЗПОДІЛ ЗА ПРИСТРОЯМИ', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Пристрій', 'Частка', '', '']); currentRow++;\n\nconst dev = data.deviceData || {};\nrows.push(['Desktop', dev.desktop || 'Н/Д', '', '']); currentRow++;\nrows.push(['Mobile Web', dev.mobile || 'Н/Д', '', '']); currentRow++;\nif (dev.total) {\n  rows.push(['Всього', dev.total, '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 3. CHANNEL TRAFFIC ==========\nheaderRows.push(currentRow);\nrows.push(['📈 ДЖЕРЕЛА ТРАФІКУ', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Канал', 'Частка', '', '']); currentRow++;\n\nconst channels = data.channelsData || [];\nif (channels.length > 0) {\n  channels.forEach(ch => {\n    rows.push([ch.channel, ch.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 4. SOCIAL TRAFFIC (НОВА СЕКЦІЯ) ==========\nheaderRows.push(currentRow);\nrows.push(['📱 СОЦІАЛЬНИЙ ТРАФІК', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Соціальна мережа', 'Частка', '', '']); currentRow++;\n\nconst social = data.socialData || [];\nif (social.length > 0) {\n  social.forEach(s => {\n    rows.push([s.network, s.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 5. TOP REFERRING WEBSITES ==========\nheaderRows.push(currentRow);\nrows.push(['🔗 ТОП РЕФЕРАЛЬНІ САЙТИ', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Сайт', 'Частка', '', '']); currentRow++;\n\nconst refSites = data.referringWebsites || [];\nif (refSites.length > 0) {\n  refSites.slice(0, 10).forEach(s => {\n    rows.push([s.site, s.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 6. TOP REFERRING INDUSTRIES ==========\nheaderRows.push(currentRow);\nrows.push(['🏭 ТОП РЕФЕРАЛЬНІ ІНДУСТРІЇ', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Індустрія', 'Частка', '', '']); currentRow++;\n\nconst industries = data.referringIndustries || [];\nif (industries.length > 0) {\n  industries.slice(0, 10).forEach(ind => {\n    rows.push([ind.industry, ind.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 7. TOP LINK DESTINATIONS ==========\nheaderRows.push(currentRow);\nrows.push(['🎯 ТОП LINK DESTINATIONS', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['URL', 'Частка', '', '']); currentRow++;\n\nconst linkDest = data.linkDestinations || [];\nif (linkDest.length > 0) {\n  linkDest.slice(0, 10).forEach(l => {\n    rows.push([l.url, l.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 8. TOP AD DESTINATIONS ==========\nheaderRows.push(currentRow);\nrows.push(['📺 ТОП AD DESTINATIONS', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['URL', 'Частка', '', '']); currentRow++;\n\nconst adDest = data.adDestinations || [];\nif (adDest.length > 0) {\n  adDest.slice(0, 10).forEach(a => {\n    rows.push([a.url, a.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\nrows.push(['', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\n// ========== 9. TOP PUBLISHERS ==========\nheaderRows.push(currentRow);\nrows.push(['📰 ТОП PUBLISHERS', '', '', '']); currentRow++;\nrows.push(['', '', '', '']); currentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Видавець', 'Частка', '', '']); currentRow++;\n\nconst publishers = data.topPublishers || [];\nif (publishers.length > 0) {\n  publishers.slice(0, 10).forEach(p => {\n    rows.push([p.publisher, p.share, '', '']); currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '']); currentRow++;\n}\n\n// ========== РЕЗУЛЬТАТ ==========\nreturn [{\n  json: {\n    rows,\n    headerRows,\n    tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet6Id: data.sheet6Id,\n    totalRows: currentRow\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        736
+      ],
+      "id": "b98e1f80-1b8c-4d3a-a8a3-41c404d85c29",
+      "name": "Prepare Sheet 6"
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "8500e4ab-c5a7-4e1c-b9b7-d4476ebd1a7d",
+      "name": "Wait 65s (8)1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2208,
+        736
+      ],
+      "webhookId": "wait-8-v75",
+      "notes": "После Write Sheet 5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chartUrl",
+              "name": "chartUrl",
+              "value": "={{ $json.secure_url }}",
+              "type": "string"
+            },
+            {
+              "id": "hasChart",
+              "name": "=hasChart",
+              "value": "={{ $json.secure_url ? true : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "spreadsheetId",
+              "name": "spreadsheetId",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.spreadsheetId }}",
+              "type": "string"
+            },
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "brandedPercent",
+              "name": "brandedPercent",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.brandedPercent }}",
+              "type": "number"
+            },
+            {
+              "id": "nonBrandedPercent",
+              "name": "nonBrandedPercent",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.nonBrandedPercent }}",
+              "type": "number"
+            },
+            {
+              "id": "hasData",
+              "name": "hasData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.hasData }}",
+              "type": "boolean"
+            },
+            {
+              "id": "engagementData",
+              "name": "engagementData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.engagementData }}",
+              "type": "object"
+            },
+            {
+              "id": "channelsData",
+              "name": "channelsData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.channelsData }}",
+              "type": "array"
+            },
+            {
+              "id": "deviceData",
+              "name": "deviceData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.deviceData }}",
+              "type": "object"
+            },
+            {
+              "id": "socialData",
+              "name": "socialData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.socialData }}",
+              "type": "array"
+            },
+            {
+              "id": "referringWebsites",
+              "name": "referringWebsites",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.referringWebsites }}",
+              "type": "array"
+            },
+            {
+              "id": "referringIndustries",
+              "name": "referringIndustries",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.referringIndustries }}",
+              "type": "array"
+            },
+            {
+              "id": "linkDestinations",
+              "name": "linkDestinations",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.linkDestinations }}",
+              "type": "array"
+            },
+            {
+              "id": "adDestinations",
+              "name": "adDestinations",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.adDestinations }}",
+              "type": "array"
+            },
+            {
+              "id": "topPublishers",
+              "name": "topPublishers",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.topPublishers }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        640
+      ],
+      "id": "e7243f23-602e-47f9-b471-2ead04171c81",
+      "name": "Set Chart Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chartUrl",
+              "name": "chartUrl",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "hasChart",
+              "name": "hasChart",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "spreadsheetId",
+              "name": "spreadsheetId",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.spreadsheetId }}",
+              "type": "string"
+            },
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "brandedPercent",
+              "name": "brandedPercent",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.brandedPercent }}",
+              "type": "number"
+            },
+            {
+              "id": "nonBrandedPercent",
+              "name": "nonBrandedPercent",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.nonBrandedPercent }}",
+              "type": "number"
+            },
+            {
+              "id": "hasData",
+              "name": "hasData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.hasData }}",
+              "type": "boolean"
+            },
+            {
+              "id": "engagementData",
+              "name": "engagementData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.engagementData }}",
+              "type": "object"
+            },
+            {
+              "id": "channelsData",
+              "name": "channelsData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.channelsData }}",
+              "type": "array"
+            },
+            {
+              "id": "deviceData",
+              "name": "deviceData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.deviceData }}",
+              "type": "object"
+            },
+            {
+              "id": "socialData",
+              "name": "socialData",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.socialData }}",
+              "type": "array"
+            },
+            {
+              "id": "referringWebsites",
+              "name": "referringWebsites",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.referringWebsites }}",
+              "type": "array"
+            },
+            {
+              "id": "referringIndustries",
+              "name": "referringIndustries",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.referringIndustries }}",
+              "type": "array"
+            },
+            {
+              "id": "linkDestinations",
+              "name": "linkDestinations",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.linkDestinations }}",
+              "type": "array"
+            },
+            {
+              "id": "adDestinations",
+              "name": "adDestinations",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.adDestinations }}",
+              "type": "array"
+            },
+            {
+              "id": "topPublishers",
+              "name": "topPublishers",
+              "value": "={{ $('Extract Spreadsheet ID').first().json.topPublishers }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        848
+      ],
+      "id": "61ca9c05-2862-4414-a4b6-5b3dbb71f843",
+      "name": "No Chart"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Ключові_фрази",
+        "options": {}
+      },
+      "id": "41a5379f-a283-48c9-a44d-043d41a96673",
+      "name": "Create Sheet 7 - Serpstat",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 7 - Ключові фрази (Serpstat)\n// ============================================\n\nconst data = $('Format Data (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// Заголовок секції\nheaderRows.push(currentRow);\nrows.push(['🔑 КЛЮЧОВІ ФРАЗИ (SERPSTAT)', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push([`Домен: ${data.domain} | Регіон: ${data.country.toUpperCase()} | Станом на: ${data.dateTo}`, '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\n\n// Статистика\nconst serpstatData = data.serpstatKeywords || [];\nconst stats = data.serpstatStats || {};\n\nheaderRows.push(currentRow);\nrows.push(['📊 СТАТИСТИКА', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Показник', 'Значення', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['Всього ключових фраз', stats.total || serpstatData.length, '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['Сумарний обсяг пошуку', stats.totalVolume || 0, '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['Середня позиція', stats.avgPosition || '-', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['В ТОП-3', stats.top3 || 0, '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['В ТОП-10', stats.top10 || 0, '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['В ТОП-20', stats.top20 || 0, '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\n\n// Заголовки таблиці\nheaderRows.push(currentRow);\nrows.push(['🔍 СПИСОК КЛЮЧОВИХ ФРАЗ', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']);\ncurrentRow++;\n\ntableHeaderRows.push(currentRow);\nrows.push(['Keyword', 'Volume', 'KD', 'Organic traffic', 'Position', 'SERP features', 'URL', 'Branded', 'Local', 'Navigational', 'Informational', 'Commercial', 'Transactional']);\ncurrentRow++;\n\n// Дані\nif (serpstatData.length > 0) {\n  serpstatData.forEach(kw => {\n    rows.push([kw.keyword || '', kw.volume || 0, kw.kd || 0, kw.organic_traffic || 0, kw.position || 0, kw.serp_features || '', kw.url || '', kw.branded || 'FALSE', kw.local || 'FALSE', kw.navigational || 'FALSE', kw.informational || 'FALSE', kw.commercial || 'FALSE', kw.transactional || 'FALSE']);\n    currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '', '', '', '', '', '', '', '', '', '']);\n  currentRow++;\n}\n\nreturn [{ json: { rows, headerRows, tableHeaderRows, spreadsheetId: data.spreadsheetId, sheet7Id: data.sheet7Id, totalRows: currentRow } }];"
+      },
+      "id": "d52ee83e-c3fb-421f-9029-459cccb822f6",
+      "name": "Prepare Sheet 7 - Serpstat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2496
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Ключові_фрази!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "04856121-af5d-46f3-a8bf-a0ea9f7992e5",
+      "name": "Write Sheet 7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        2496
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "e3fbf72d-7424-4d59-b6a5-0ec42c7be79c",
+      "name": "Wait 65s (9)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        2496
+      ],
+      "webhookId": "wait-9-serpstat"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet 7 - Serpstat').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  requests: $('Prepare Sheet 7 - Serpstat').first().json.headerRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 7 - Serpstat').first().json.sheet7Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 13 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.07, green: 0.34, blue: 0.25 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  })).concat($('Prepare Sheet 7 - Serpstat').first().json.tableHeaderRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet 7 - Serpstat').first().json.sheet7Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 13 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.85, green: 0.92, blue: 0.83 }, textFormat: { bold: true, fontSize: 10 } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  }))).concat([\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 7 - Serpstat').first().json.sheet7Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 300 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 7 - Serpstat').first().json.sheet7Id, dimension: 'COLUMNS', startIndex: 5, endIndex: 6 }, properties: { pixelSize: 350 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet 7 - Serpstat').first().json.sheet7Id, dimension: 'COLUMNS', startIndex: 6, endIndex: 7 }, properties: { pixelSize: 400 }, fields: 'pixelSize' } }\n  ])\n}) }}",
+        "options": {}
+      },
+      "id": "4cb73893-2d06-4cca-89be-e70a5f8c7f02",
+      "name": "Format Sheet 7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        2496
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "220volt.com.ua",
+              "type": "string"
+            },
+            {
+              "id": "se",
+              "name": "se",
+              "value": "g_ua",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab69ba30-ad2c-4c73-9ab0-364ee64c856f",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        3168
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.serpstat.com/v4",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": 1,\n  \"method\": \"SerpstatDomainProcedure.getDomainKeywords\",\n  \"params\": {\n    \"domain\": \"{{ $json.domain }}\",\n    \"se\": \"{{ $json.se }}\",\n    \"size\": 100,\n    \"page\": 1,\n    \"sort\": {\n      \"position\": \"asc\",\n      \"region_queries_count\": \"desc\"\n    },\n    \"filters\": {\n      \"position_from\": 1,\n      \"position_to\": 20\n    }\n  }\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "7ef64b49-3f83-48fe-8636-fe4ce2e50bd7",
+      "name": "Serpstat - With Filters",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        3168
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "1v76U3Ro61zZtXSg",
+          "name": "Serpstat-API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst result = response.result || {};\nconst data = result.data || [];\nconst summaryInfo = result.summary_info || {};\n\n// Аналіз позицій\nconst positions = data.map(k => k.position);\nconst minPos = Math.min(...positions);\nconst maxPos = Math.max(...positions);\n\n// Топ-10 для перевірки сортування\nconst top10 = data.slice(0, 10).map(k => ({\n  keyword: k.keyword,\n  position: k.position,\n  volume: k.region_queries_count\n}));\n\nreturn [{\n  json: {\n    // Загальна інфо\n    totalInResponse: data.length,\n    totalInDB: summaryInfo.total || 0,\n    \n    // Перевірка фільтра позицій\n    positionRange: {\n      min: minPos,\n      max: maxPos,\n      filterWorked: maxPos <= 20\n    },\n    \n    // Топ-10 для перевірки сортування\n    top10Preview: top10,\n    \n    // Помилки якщо є\n    error: response.error || null\n  }\n}];"
+      },
+      "id": "9c7fb57d-11f3-4e10-8abb-3d98bf3bfa87",
+      "name": "Analyze Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        3168
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.serpstat.com/v4",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": 1,\n  \"method\": \"SerpstatDomainProcedure.getDomainKeywords\",\n  \"params\": {\n    \"domain\": \"{{ $('Set Variables (Full)').item.json.domain }}\",\n    \"se\": \"g_{{ $('Set Variables (Full)').item.json.country }}\",\n    \"size\": 1000,\n    \"page\": 1,\n    \"sort\": {\n      \"position\": \"asc\",\n      \"region_queries_count\": \"desc\"\n    },\n    \"filters\": {\n      \"position_from\": 1,\n      \"position_to\": 20\n    }\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "919344d0-66bf-42eb-bb0c-cc512b81b57f",
+      "name": "Serpstat - Page 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1232,
+        1344
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "1v76U3Ro61zZtXSg",
+          "name": "Serpstat-API"
+        }
+      },
+      "notes": "ЗАМІНЮЄ стару ноду Serpstat - Get Keywords. Перший запит з фільтрами позицій 1-20"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// SERPSTAT INIT LOOP\n// Ініціалізація циклу для пагінації\n// ============================================\n\nconst response = $input.first().json;\nconst vars = $('Set Variables (Full)').first().json;\n\nconst result = response.result || {};\nconst firstPageData = result.data || [];\nconst summaryInfo = result.summary_info || {};\n\nconst totalInDB = summaryInfo.total || 0;\nconst pageSize = 1000;\nconst maxKeywords = 5000; // Ліміт\n\nconst targetKeywords = Math.min(totalInDB, maxKeywords);\nconst totalPagesNeeded = Math.ceil(targetKeywords / pageSize);\n\nreturn [{\n  json: {\n    // Стан циклу\n    currentPage: 1,\n    totalPagesNeeded: totalPagesNeeded,\n    \n    // Зібрані дані\n    allKeywords: firstPageData,\n    \n    // Статистика\n    totalInDB: totalInDB,\n    targetKeywords: targetKeywords,\n    \n    // Config для запитів\n    domain: vars.domain,\n    country: vars.country,\n    pageSize: pageSize,\n    delaySeconds: 3\n  }\n}];"
+      },
+      "id": "5ab436ef-29a7-496c-90ac-0ad0d2967585",
+      "name": "Serpstat Init Loop",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        1344
+      ],
+      "notes": "Ініціалізує цикл, визначає кількість сторінок"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-more-pages",
+              "leftValue": "={{ $json.currentPage < $json.totalPagesNeeded }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "69787380-958d-40db-b795-49acb8271b02",
+      "name": "Serpstat Need More?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        1344
+      ],
+      "notes": "Перевіряє чи потрібні ще сторінки"
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.delaySeconds }}"
+      },
+      "id": "fda037b9-44be-4cc7-85be-870eb0705d19",
+      "name": "Serpstat Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1856,
+        1248
+      ],
+      "webhookId": "serpstat-pagination-wait",
+      "notes": "Затримка 3 сек між запитами (уникаємо Too many requests)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.serpstat.com/v4",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": 1,\n  \"method\": \"SerpstatDomainProcedure.getDomainKeywords\",\n  \"params\": {\n    \"domain\": \"{{ $json.domain }}\",\n    \"se\": \"g_{{ $json.country }}\",\n    \"size\": {{ $json.pageSize }},\n    \"page\": {{ $json.currentPage + 1 }},\n    \"sort\": {\n      \"position\": \"asc\",\n      \"region_queries_count\": \"desc\"\n    },\n    \"filters\": {\n      \"position_from\": 1,\n      \"position_to\": 20\n    }\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "c9004afd-a26c-4164-9089-7776b76307f4",
+      "name": "Serpstat - Next Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2064,
+        1248
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "1v76U3Ro61zZtXSg",
+          "name": "Serpstat-API"
+        }
+      },
+      "notes": "Запит наступної сторінки"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// SERPSTAT MERGE PAGE\n// Додаємо дані та оновлюємо стан циклу\n// ============================================\n\nconst prevState = $('Serpstat Wait').first().json;\nconst response = $input.first().json;\n\nconst newPageData = response.result?.data || [];\nconst hasError = !!response.error;\n\n// Об'єднуємо дані\nconst allKeywords = [...(prevState.allKeywords || []), ...newPageData];\n\nreturn [{\n  json: {\n    // Оновлений стан\n    currentPage: prevState.currentPage + 1,\n    totalPagesNeeded: prevState.totalPagesNeeded,\n    \n    // Оновлені дані\n    allKeywords: allKeywords,\n    \n    // Статистика\n    totalInDB: prevState.totalInDB,\n    targetKeywords: prevState.targetKeywords,\n    lastPageCount: newPageData.length,\n    lastPageError: hasError ? response.error?.message : null,\n    \n    // Config\n    domain: prevState.domain,\n    country: prevState.country,\n    pageSize: prevState.pageSize,\n    delaySeconds: prevState.delaySeconds\n  }\n}];"
+      },
+      "id": "cef61106-0daf-46ed-a06e-94fb745ccd4a",
+      "name": "Serpstat Merge Page",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        1248
+      ],
+      "notes": "Об'єднує дані з попередніми та оновлює стан"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// SERPSTAT PREPARE OUTPUT\n// Фінальне форматування для Format Data (Full)\n// ============================================\n\nconst data = $input.first().json;\nconst allKeywords = data.allKeywords || [];\n\n// Формуємо результат у форматі як очікує Format Data (Full)\nreturn [{\n  json: {\n    result: {\n      data: allKeywords,\n      summary_info: {\n        total: data.totalInDB,\n        collected: allKeywords.length,\n        pages_loaded: data.currentPage\n      }\n    }\n  }\n}];"
+      },
+      "id": "949bfdfa-bbdd-4f32-9403-97b3467e7311",
+      "name": "Serpstat Prepare Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        1440
+      ],
+      "notes": "Готує дані у форматі для Format Data (Full)"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create Spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "title": "Трафікогенеруючі_сторінки",
+        "options": {}
+      },
+      "id": "fcfb7fef-f0a6-4b3c-8f03-8f8aa16fca45",
+      "name": "Create Sheet 8 - Traffic Pages",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        752,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 65
+      },
+      "id": "b1c5a554-6f08-4831-a504-eaabcc958265",
+      "name": "Wait 65s (10)1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -944,
+        2688
+      ],
+      "webhookId": "wait-10-sheet8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PREPARE SHEET 8 - Трафікогенеруючі сторінки\n// Агрегація Serpstat ключів по URL\n// ============================================\n\nconst data = $('Format Data (Full)').first().json;\nconst rows = [];\nconst headerRows = [];\nconst tableHeaderRows = [];\nlet currentRow = 0;\n\n// Заголовок секції\nheaderRows.push(currentRow);\nrows.push(['📊 ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ', '', '', '', '', '']);\ncurrentRow++;\nrows.push([`Домен: ${data.domain} | Джерело: Serpstat | Позиції: 1-20`, '', '', '', '', '']);\ncurrentRow++;\nrows.push(['', '', '', '', '', '']);\ncurrentRow++;\n\n// Заголовки таблиці\ntableHeaderRows.push(currentRow);\nrows.push(['URL', 'Traffic', '# of keywords', 'Top keyword', 'Top keyword: Volume', 'Top keyword: Position']);\ncurrentRow++;\n\n// Дані\nconst trafficPages = data.serpstatTrafficPages || [];\n\nif (trafficPages.length > 0) {\n  trafficPages.forEach(page => {\n    rows.push([\n      page.url || '',\n      page.traffic || 0,\n      page.keywordCount || 0,\n      page.topKeyword || '',\n      page.topKeywordVolume || 0,\n      page.topKeywordPosition || 0\n    ]);\n    currentRow++;\n  });\n} else {\n  rows.push(['Дані відсутні', '', '', '', '', '']);\n  currentRow++;\n}\n\nreturn [{\n  json: {\n    rows,\n    headerRows,\n    tableHeaderRows,\n    spreadsheetId: data.spreadsheetId,\n    sheet8Id: data.sheet8Id,\n    totalRows: currentRow,\n    pagesCount: trafficPages.length\n  }\n}];"
+      },
+      "id": "70ee6861-147a-461f-b781-4c09892aa2c8",
+      "name": "Prepare Sheet  8",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2688
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Трафікогенеруючі_сторінки!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.rows }) }}",
+        "options": {}
+      },
+      "id": "79bc9d96-fec9-48ea-92ec-dc5c68ca9d19",
+      "name": "Write Sheet 8",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1136,
+        2688
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet  8').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  requests: $('Prepare Sheet  8').first().json.headerRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 6 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.15, green: 0.35, blue: 0.6 }, textFormat: { bold: true, fontSize: 12, foregroundColor: { red: 1, green: 1, blue: 1 } } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  })).concat($('Prepare Sheet  8').first().json.tableHeaderRows.map(row => ({\n    repeatCell: {\n      range: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, startRowIndex: row, endRowIndex: row + 1, startColumnIndex: 0, endColumnIndex: 6 },\n      cell: { userEnteredFormat: { backgroundColor: { red: 0.85, green: 0.9, blue: 0.95 }, textFormat: { bold: true, fontSize: 10 } } },\n      fields: 'userEnteredFormat(backgroundColor,textFormat)'\n    }\n  }))).concat([\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 450 }, fields: 'pixelSize' } },\n    { updateDimensionProperties: { range: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 }, properties: { pixelSize: 250 }, fields: 'pixelSize' } },\n    { setBasicFilter: { filter: { range: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, startRowIndex: 3, startColumnIndex: 0, endColumnIndex: 6 } } } },\n    { updateSheetProperties: { properties: { sheetId: $('Prepare Sheet  8').first().json.sheet8Id, gridProperties: { frozenRowCount: 4 } }, fields: 'gridProperties.frozenRowCount' } }\n  ])\n}) }}",
+        "options": {}
+      },
+      "id": "bab890d6-33ee-4c08-ab9a-de7dc412389a",
+      "name": "Format Sheet 8",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        2688
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Start": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Create Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Move to Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to Folder": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 1": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 2": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Browse AI - Run Task": {
+      "main": [
+        [
+          {
+            "node": "Respond - Processing Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Browse AI Callback": {
+      "main": [
+        [
+          {
+            "node": "Parse Browse AI Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Browse AI Callback": {
+      "main": [
+        [
+          {
+            "node": "Has Domain?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Domain?": {
+      "main": [
+        [
+          {
+            "node": "Search Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Extract Spreadsheet ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Spreadsheet ID": {
+      "main": [
+        [
+          {
+            "node": "Has SVG?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has SVG?": {
+      "main": [
+        [
+          {
+            "node": "Prepare SVG Base64",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare SVG Base64": {
+      "main": [
+        [
+          {
+            "node": "Upload to Cloudinary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Cloudinary": {
+      "main": [
+        [
+          {
+            "node": "Set Chart Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Chart Data": {
+      "main": [
+        [
+          {
+            "node": "Get Sheet IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Sheet IDs": {
+      "main": [
+        [
+          {
+            "node": "Get Row Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Row Count": {
+      "main": [
+        [
+          {
+            "node": "Extract Sheet IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sheet IDs": {
+      "main": [
+        [
+          {
+            "node": "Prepare Branded Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Branded Data": {
+      "main": [
+        [
+          {
+            "node": "Write Branded Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Branded Data": {
+      "main": [
+        [
+          {
+            "node": "Format Branded Section",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Branded Section": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Full Audit": {
+      "main": [
+        [
+          {
+            "node": "Respond - Callback Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Full Audit": {
+      "main": [
+        [
+          {
+            "node": "Set Variables (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get Current Metrics (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Metrics (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get Metrics History (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Metrics History (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get Metrics by Country (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Metrics by Country (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get Top Pages (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Pages (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get Pages History (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pages History (Full)": {
+      "main": [
+        [
+          {
+            "node": "Get DR History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data (Full)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 1 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 1 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 1 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 1 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (1)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 1 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 1 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (2)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 2 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 2 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 2 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 2 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (3)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 2 (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 2 (Full)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 3": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 4": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 5": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Refdomains History": {
+      "main": [
+        [
+          {
+            "node": "Get Backlinks Stats1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get External Anchors": {
+      "main": [
+        [
+          {
+            "node": "Get All Backlinks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get DR History": {
+      "main": [
+        [
+          {
+            "node": "Get Refdomains History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Pages By Links": {
+      "main": [
+        [
+          {
+            "node": "Serpstat - Page 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 3": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 4": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 3": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 4": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 5": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (4)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 3": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 4": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (6)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (7)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 5": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (8)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (5)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (6)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (8)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 5": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet 7 - Serpstat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Backlinks Stats1": {
+      "main": [
+        [
+          {
+            "node": "Get Backlinks Stats (Year Ago)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Backlinks": {
+      "main": [
+        [
+          {
+            "node": "Get Top Pages By Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Backlinks Stats (Year Ago)": {
+      "main": [
+        [
+          {
+            "node": "Get External Anchors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Create Sheet 6": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 7 - Serpstat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 6": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (8)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 6": {
+      "main": [
+        [
+          {
+            "node": "Trigger Full Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 6": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (8)1": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Chart Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Chart Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Chart": {
+      "main": [
+        [
+          {
+            "node": "Merge Chart Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet 7 - Serpstat": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 7": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (9)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (9)": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 7 - Serpstat": {
+      "main": [
+        [
+          {
+            "node": "Create Sheet 8 - Traffic Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 7": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet  8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Serpstat - With Filters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat - With Filters": {
+      "main": [
+        [
+          {
+            "node": "Analyze Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat - Page 1": {
+      "main": [
+        [
+          {
+            "node": "Serpstat Init Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat Init Loop": {
+      "main": [
+        [
+          {
+            "node": "Serpstat Need More?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat Need More?": {
+      "main": [
+        [
+          {
+            "node": "Serpstat Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Serpstat Prepare Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat Wait": {
+      "main": [
+        [
+          {
+            "node": "Serpstat - Next Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat - Next Page": {
+      "main": [
+        [
+          {
+            "node": "Serpstat Merge Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat Merge Page": {
+      "main": [
+        [
+          {
+            "node": "Serpstat Need More?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serpstat Prepare Output": {
+      "main": [
+        [
+          {
+            "node": "Format Data (Full)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 65s (10)1": {
+      "main": [
+        [
+          {
+            "node": "Format Sheet 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet 8 - Traffic Pages": {
+      "main": [
+        [
+          {
+            "node": "Browse AI - Run Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet  8": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet 8": {
+      "main": [
+        [
+          {
+            "node": "Wait 65s (10)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sheet 8": {
+      "main": [
+        [
+          {
+            "node": "Respond - Full Audit Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "fc496c36-862e-44d3-83aa-f2cc4725e56a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "eWP6BdOJxjV9NBZL",
+  "tags": []
+}
