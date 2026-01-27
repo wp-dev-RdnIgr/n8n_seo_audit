@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+    
+    .card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+    
+    .header h1 {
+      font-size: 21px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    
+    .header p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    
+    input[type="text"]::placeholder {
+      color: #94a3b8;
+    }
+    
+    input[type="text"]:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+    
+    input[type="text"]:focus {
+      border-color: #6366f1;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+    
+    input[type="text"]:focus + .input-icon {
+      opacity: 0.7;
+    }
+    
+    /* Button */
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: white;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.2px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .btn span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* Loading */
+    .btn-loading span {
+      visibility: hidden;
+    }
+    
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Result */
+    .result {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      display: none;
+      animation: slideIn 0.25s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .result.success {
+      display: block;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+    
+    .result.error {
+      display: block;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+    
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .result-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    
+    .result.success .result-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    
+    .result.error .result-icon {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    
+    .result h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .result.success h3 {
+      color: #15803d;
+    }
+    
+    .result.error h3 {
+      color: #dc2626;
+    }
+    
+    .result p {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+    }
+    
+    .result a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .result a:hover {
+      background: #bbf7d0;
+    }
+    
+    /* Sheets List */
+    .sheets {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .sheets-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+    }
+    
+    .sheets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .sheet-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    
+    .sheet-item:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+    }
+    
+    .sheet-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    
+    .sheet-item:nth-child(1) .sheet-num { background: #3b82f6; }
+    .sheet-item:nth-child(2) .sheet-num { background: #8b5cf6; }
+    .sheet-item:nth-child(3) .sheet-num { background: #ec4899; }
+    .sheet-item:nth-child(4) .sheet-num { background: #f59e0b; }
+    .sheet-item:nth-child(5) .sheet-num { background: #10b981; }
+    .sheet-item:nth-child(6) .sheet-num { background: #06b6d4; }
+    .sheet-item:nth-child(7) .sheet-num { background: #6366f1; }
+    .sheet-item:nth-child(8) .sheet-num { background: #84cc16; }
+    
+    .sheet-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .sheet-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+    
+    .sheet-desc {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .footer-time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    
+    .footer-time svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.6;
+    }
+    
+    .footer-brand {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    
+    .footer-brand span {
+      color: #6366f1;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">📊</div>
+        <h1>Аналіз конкурентів</h1>
+        <p>Збір даних з Ahrefs, Serpstat та SimilarWeb</p>
+      </div>
+      
+      <div class="form-group">
+        <label>Домен конкурента</label>
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="domain" 
+            placeholder="example.com.ua"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <span class="input-icon">🔗</span>
+        </div>
+      </div>
+      
+      <button class="btn" id="submitBtn" onclick="handleSubmit()">
+        <span>Запустити аналіз</span>
+      </button>
+      
+      <div class="result" id="result">
+        <div class="result-header">
+          <div class="result-icon" id="resultIcon"></div>
+          <h3 id="resultTitle"></h3>
+        </div>
+        <p id="resultMessage"></p>
+      </div>
+      
+      <div class="sheets">
+        <div class="sheets-title">Листи у звіті</div>
+        <div class="sheets-list">
+          <div class="sheet-item">
+            <div class="sheet-num">1</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Органічний трафік</div>
+              <div class="sheet-desc">Динаміка, гео, топ сторінки</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">2</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Ключові запити</div>
+              <div class="sheet-desc">Топ ключі з Ahrefs</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">3</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Посилальний профіль</div>
+              <div class="sheet-desc">DR, беклінки, анкори</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">4</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Всі беклінки</div>
+              <div class="sheet-desc">Топ-100 за DR джерела</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">5</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Топ сторінки за посиланнями</div>
+              <div class="sheet-desc">Сторінки з найбільшою кількістю ref domains</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">6</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Поведінкові метрики</div>
+              <div class="sheet-desc">SimilarWeb: канали, пристрої, соцмережі</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">7</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Ключові фрази</div>
+              <div class="sheet-desc">До 5000 ключів з Serpstat</div>
+            </div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">8</div>
+            <div class="sheet-info">
+              <div class="sheet-name">Трафікогенеруючі сторінки</div>
+              <div class="sheet-desc">URL з найбільшим трафіком</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <div class="footer-time">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Час генерації: ~14 хв
+        </div>
+        <div class="footer-brand">
+          <span>WebPromo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function handleSubmit() {
+      const domainInput = document.getElementById('domain');
+      const submitBtn = document.getElementById('submitBtn');
+      const resultDiv = document.getElementById('result');
+      
+      const domain = domainInput.value.trim();
+      
+      if (!domain) {
+        showError('Введіть домен конкурента');
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      resultDiv.className = 'result';
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          
+          if (response.success) {
+            showSuccess(response.spreadsheetUrl);
+          } else {
+            showError(response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          showError(error.toString());
+        })
+        .submitAudit(domain);
+    }
+    
+    function showSuccess(url) {
+      const resultDiv = document.getElementById('result');
+      const resultIcon = document.getElementById('resultIcon');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultMessage = document.getElementById('resultMessage');
+      
+      resultDiv.className = 'result success';
+      resultIcon.textContent = '✓';
+      resultTitle.textContent = 'Аналіз запущено';
+      resultMessage.innerHTML = 
+        'Google Таблиця створена. Дані з\'являться протягом 14 хвилин.' +
+        '<a href="' + url + '" target="_blank">Відкрити таблицю →</a>';
+    }
+    
+    function showError(message) {
+      const resultDiv = document.getElementById('result');
+      const resultIcon = document.getElementById('resultIcon');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultMessage = document.getElementById('resultMessage');
+      
+      resultDiv.className = 'result error';
+      resultIcon.textContent = '✕';
+      resultTitle.textContent = 'Помилка';
+      resultMessage.textContent = message;
+    }
+    
+    document.getElementById('domain').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      }
+    });
+    
+    document.getElementById('domain').focus();
+  </script>
+</body>
+</html>
