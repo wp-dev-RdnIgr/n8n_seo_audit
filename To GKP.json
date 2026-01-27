@@ -1,0 +1,80 @@
+{
+  "name": "To GKP",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "09e55a93-8517-4658-aefe-2e9a60d440cd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://googleads.googleapis.com/v18/customers/3460470607:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"keywordSeed\": {\n    \"keywords\": [\"кросівки\"]\n  },\n  \"language\": \"languageConstants/1000\",\n  \"geoTargetConstants\": [\"geoTargetConstants/2804\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "117b0b61-8537-4c09-8c03-9c46426d0eab",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "66959477-57f1-4d93-a956-3fd71d589bc9",
+  "meta": {
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "RxenHNIWWNSyxUWJ",
+  "tags": []
+}
