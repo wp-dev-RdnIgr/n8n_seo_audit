@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .header h1 {
+      font-size: 21px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .label-hint {
+      font-weight: 400;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 14px 12px 44px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input[type="number"] {
+      padding-left: 14px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-family: 'Inter', monospace;
+      color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.6;
+    }
+
+    input:hover, select:hover, textarea:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #10b981;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row .form-group {
+      flex: 1;
+    }
+
+    /* Tags input */
+    .tags-container {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 46px;
+      cursor: text;
+      transition: all 0.2s ease;
+    }
+
+    .tags-container:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+
+    .tags-container:focus-within {
+      border-color: #10b981;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #065f46;
+      animation: tagIn 0.15s ease;
+    }
+
+    @keyframes tagIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .tag-remove {
+      cursor: pointer;
+      font-size: 14px;
+      color: #6ee7b7;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+
+    .tag-remove:hover {
+      color: #dc2626;
+      background: #fee2e2;
+    }
+
+    .tags-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1e293b;
+      flex: 1;
+      min-width: 120px;
+      padding: 4px 2px;
+    }
+
+    .tags-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .tag-count {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* Collapsible */
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 10px 0;
+      user-select: none;
+    }
+
+    .collapsible-header label {
+      cursor: pointer;
+      margin-bottom: 0;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .collapsible-arrow {
+      font-size: 10px;
+      color: #94a3b8;
+      transition: transform 0.2s;
+    }
+
+    .collapsible-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-body.open {
+      max-height: 400px;
+    }
+
+    .collapsible-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: white;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.2px;
+      margin-top: 6px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-loading span {
+      visibility: hidden;
+    }
+
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Result */
+    .result {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      display: none;
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result.success {
+      display: block;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .result.error {
+      display: block;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .result.success .result-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .result.error .result-icon {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .result h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .result.success h3 { color: #15803d; }
+    .result.error h3 { color: #dc2626; }
+
+    .result p {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .result a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .result a:hover {
+      background: #bbf7d0;
+    }
+
+    .result .stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #bbf7d0;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #15803d;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .footer-time svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.6;
+    }
+
+    .footer-brand {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .footer-brand span {
+      color: #10b981;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">🔑</div>
+        <h1>Семантичне ядро</h1>
+        <p>Збір даних з Google Keyword Planner</p>
+      </div>
+
+      <!-- Назва документа -->
+      <div class="form-group">
+        <label>Назва звіту</label>
+        <div class="input-wrapper">
+          <input type="text" id="docName" placeholder="GKP Report - Nike UA">
+          <span class="input-icon">📄</span>
+        </div>
+      </div>
+
+      <!-- Seed Keywords -->
+      <div class="form-group">
+        <label>Ключові слова <span class="label-hint">(Enter для додавання)</span></label>
+        <div class="tags-container" id="tagsContainer" onclick="document.getElementById('tagsInput').focus()">
+          <input type="text" class="tags-input" id="tagsInput" placeholder="Введіть ключове слово...">
+        </div>
+        <div class="tag-count" id="tagCount"></div>
+      </div>
+
+      <!-- Language + Geo -->
+      <div class="row">
+        <div class="form-group">
+          <label>Мова</label>
+          <select id="language">
+            <option value="1000">English</option>
+            <option value="1001">Deutsch</option>
+            <option value="1006">Italiano</option>
+            <option value="1009">Dansk</option>
+            <option value="1014">Francais</option>
+            <option value="1019">Nederlands</option>
+            <option value="1020">Norsk</option>
+            <option value="1027">Espanol</option>
+            <option value="1030">Svenska</option>
+            <option value="1036">Polski</option>
+            <option value="1046">Portugues</option>
+            <option value="1056" selected>Ukrainska</option>
+            <option value="1058">Romana</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Геотаргетинг</label>
+          <select id="geoTarget">
+            <option value="2804" selected>Україна</option>
+            <option value="2276">Німеччина</option>
+            <option value="2840">США</option>
+            <option value="2826">Великобританія</option>
+            <option value="2250">Франція</option>
+            <option value="2380">Італія</option>
+            <option value="2724">Іспанія</option>
+            <option value="2616">Польща</option>
+            <option value="2528">Нідерланди</option>
+            <option value="2040">Австрія</option>
+            <option value="2756">Швейцарія</option>
+            <option value="2203">Чехія</option>
+            <option value="2642">Румунія</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Limit -->
+      <div class="row">
+        <div class="form-group">
+          <label>Ліміт ключів</label>
+          <input type="number" id="limit" value="600" min="10" max="5000">
+        </div>
+      </div>
+
+      <!-- URL Mapping (collapsible) -->
+      <div class="collapsible-header" onclick="toggleCollapsible()">
+        <label>URL-маппінг (необов'язково)</label>
+        <span class="collapsible-arrow" id="collapseArrow">▼</span>
+      </div>
+      <div class="collapsible-body" id="collapseBody">
+        <div class="form-group">
+          <textarea id="urlMapping" rows="4" placeholder="keyword | https://site.com/page&#10;keyword 2 | https://site.com/page2"></textarea>
+        </div>
+      </div>
+
+      <button class="btn" id="submitBtn" onclick="handleSubmit()">
+        <span>Зібрати семантику</span>
+      </button>
+
+      <div class="result" id="result">
+        <div class="result-header">
+          <div class="result-icon" id="resultIcon"></div>
+          <h3 id="resultTitle"></h3>
+        </div>
+        <p id="resultMessage"></p>
+        <div id="resultExtra"></div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-time">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Час генерації: ~2 хв
+        </div>
+        <div class="footer-brand">
+          <span>WebPromo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // Tags Input
+    // ============================================
+    var seedKeywords = [];
+
+    var tagsInput = document.getElementById('tagsInput');
+    var tagsContainer = document.getElementById('tagsContainer');
+    var tagCount = document.getElementById('tagCount');
+
+    tagsInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag(this.value.trim());
+        this.value = '';
+      }
+      if (e.key === 'Backspace' && this.value === '' && seedKeywords.length > 0) {
+        removeTag(seedKeywords.length - 1);
+      }
+    });
+
+    // Paste support: split by newline or comma
+    tagsInput.addEventListener('paste', function(e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text');
+      var items = text.split(/[\n,]+/);
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i].trim();
+        if (item) addTag(item);
+      }
+    });
+
+    function addTag(text) {
+      if (!text || seedKeywords.indexOf(text.toLowerCase()) !== -1) return;
+      seedKeywords.push(text.toLowerCase());
+      renderTags();
+    }
+
+    function removeTag(index) {
+      seedKeywords.splice(index, 1);
+      renderTags();
+    }
+
+    function renderTags() {
+      // Remove old tags
+      var oldTags = tagsContainer.querySelectorAll('.tag');
+      for (var i = 0; i < oldTags.length; i++) {
+        oldTags[i].remove();
+      }
+
+      // Add new tags
+      for (var i = 0; i < seedKeywords.length; i++) {
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = seedKeywords[i] + '<span class="tag-remove" data-index="' + i + '">&times;</span>';
+        tagsContainer.insertBefore(tag, tagsInput);
+      }
+
+      // Update count
+      tagCount.textContent = seedKeywords.length > 0 ? seedKeywords.length + ' ключових слів' : '';
+
+      // Add remove handlers
+      var removeButtons = tagsContainer.querySelectorAll('.tag-remove');
+      for (var i = 0; i < removeButtons.length; i++) {
+        removeButtons[i].addEventListener('click', function(e) {
+          e.stopPropagation();
+          removeTag(parseInt(this.getAttribute('data-index')));
+        });
+      }
+    }
+
+    // ============================================
+    // Collapsible
+    // ============================================
+    function toggleCollapsible() {
+      var body = document.getElementById('collapseBody');
+      var arrow = document.getElementById('collapseArrow');
+      body.classList.toggle('open');
+      arrow.classList.toggle('open');
+    }
+
+    // ============================================
+    // Submit
+    // ============================================
+    function handleSubmit() {
+      var submitBtn = document.getElementById('submitBtn');
+      var resultDiv = document.getElementById('result');
+
+      if (seedKeywords.length === 0) {
+        showError('Додайте хоча б одне ключове слово');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      resultDiv.className = 'result';
+
+      var formData = {
+        doc_name: document.getElementById('docName').value.trim(),
+        seed_keywords: seedKeywords,
+        language: document.getElementById('language').value,
+        geo_target: document.getElementById('geoTarget').value,
+        limit: document.getElementById('limit').value,
+        url_mapping_text: document.getElementById('urlMapping').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+
+          if (response.success) {
+            showSuccess(response);
+          } else {
+            showError(response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          showError(error.toString());
+        })
+        .submitGKP(formData);
+    }
+
+    function showSuccess(data) {
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+      var resultExtra = document.getElementById('resultExtra');
+
+      resultDiv.className = 'result success';
+      resultIcon.textContent = '\u2713';
+      resultTitle.textContent = 'Семантику зібрано';
+      resultMessage.innerHTML = data.message;
+      resultExtra.innerHTML =
+        '<a href="' + data.spreadsheetUrl + '" target="_blank">Відкрити таблицю \u2192</a>' +
+        '<div class="stats">' +
+          '<div class="stat"><div class="stat-value">' + data.totalKeywords + '</div><div class="stat-label">ключових слів</div></div>' +
+          '<div class="stat"><div class="stat-value">' + data.totalClusters + '</div><div class="stat-label">кластерів</div></div>' +
+        '</div>';
+    }
+
+    function showError(message) {
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+      var resultExtra = document.getElementById('resultExtra');
+
+      resultDiv.className = 'result error';
+      resultIcon.textContent = '\u2715';
+      resultTitle.textContent = 'Помилка';
+      resultMessage.textContent = message;
+      resultExtra.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
