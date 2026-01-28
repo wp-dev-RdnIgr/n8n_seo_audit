@@ -23,7 +23,7 @@
       "name": "Sticky Note - Metrics",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [200, 20]
+      "position": [1200, 20]
     },
     {
       "parameters": {
@@ -68,6 +68,12 @@
               "type": "string"
             },
             {
+              "id": "source_spreadsheet_id",
+              "name": "source_spreadsheet_id",
+              "value": "={{ $json.body.source_spreadsheet_id || '' }}",
+              "type": "string"
+            },
+            {
               "id": "customer_id",
               "name": "customer_id",
               "value": "={{ $json.body.customer_id || '3460470607' }}",
@@ -91,15 +97,41 @@
     },
     {
       "parameters": {
-        "resource": "spreadsheet",
-        "title": "={{ $('Ideas - Set Variables').item.json.doc_name }}",
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasSourceSheet",
+              "leftValue": "={{ $json.source_spreadsheet_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ideas-019",
+      "name": "Ideas - Has Source Sheet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Ideas - Set Variables').item.json.source_spreadsheet_id }}/values/A:A?majorDimension=COLUMNS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
       },
-      "id": "ideas-003",
-      "name": "Ideas - Create Sheet",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [-1320, 300],
+      "id": "ideas-020",
+      "name": "Ideas - Read Source Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-1080, 200],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -109,13 +141,63 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\nconst allSeeds = JSON.parse($('Ideas - Set Variables').first().json.seed_keywords || '[]');\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
+        "jsCode": "// Extract seeds from sheet (skip header row, limit to 300)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst seeds = column.slice(1).filter(k => k && k.trim()).slice(0, 300);\nreturn [{ json: { seeds: seeds } }];"
+      },
+      "id": "ideas-021",
+      "name": "Ideas - Parse Sheet Seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-840, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use seeds from body\nconst seeds = JSON.parse($('Ideas - Set Variables').first().json.seed_keywords || '[]');\nreturn [{ json: { seeds: seeds } }];"
+      },
+      "id": "ideas-022",
+      "name": "Ideas - Use Body Seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1080, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "ideas-023",
+      "name": "Ideas - Merge Seeds Source",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [-600, 300]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Ideas - Set Variables').item.json.doc_name }}",
+        "options": {}
+      },
+      "id": "ideas-003",
+      "name": "Ideas - Create Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-360, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\nconst allSeeds = $('Ideas - Merge Seeds Source').first().json.seeds || [];\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
       },
       "id": "ideas-004",
       "name": "Ideas - Split Batches",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-1080, 300]
+      "position": [-120, 300]
     },
     {
       "parameters": {
@@ -139,7 +221,7 @@
       "name": "Ideas - API Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-840, 300],
+      "position": [120, 300],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -156,7 +238,7 @@
       "name": "Ideas - Merge Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-600, 300]
+      "position": [360, 300]
     },
     {
       "parameters": {
@@ -181,7 +263,7 @@
       "name": "Ideas - Has Next Page?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [-360, 300]
+      "position": [600, 300]
     },
     {
       "parameters": {
@@ -192,7 +274,7 @@
       "name": "Ideas - Wait Page",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [-120, 200]
+      "position": [840, 200]
     },
     {
       "parameters": {
@@ -216,7 +298,7 @@
       "name": "Ideas - Next Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-120, 100],
+      "position": [840, 100],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -248,7 +330,7 @@
       "name": "Ideas - Has More Batches?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [-360, 500]
+      "position": [600, 500]
     },
     {
       "parameters": {
@@ -259,7 +341,7 @@
       "name": "Ideas - Wait Batch",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [-120, 400]
+      "position": [840, 400]
     },
     {
       "parameters": {
@@ -269,7 +351,7 @@
       "name": "Ideas - Prepare Next Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-120, 500]
+      "position": [840, 500]
     },
     {
       "parameters": {
@@ -293,7 +375,7 @@
       "name": "Ideas - Next Seed Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-120, 600],
+      "position": [840, 600],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -310,7 +392,7 @@
       "name": "Ideas - Format Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-360, 700]
+      "position": [600, 700]
     },
     {
       "parameters": {
@@ -327,7 +409,7 @@
       "name": "Ideas - Write Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-120, 700],
+      "position": [840, 700],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -344,7 +426,7 @@
       "name": "Ideas - Wait Write",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [-120, 800]
+      "position": [840, 800]
     },
     {
       "parameters": {
@@ -361,7 +443,7 @@
       "name": "Ideas - Format Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-120, 900],
+      "position": [840, 900],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -379,7 +461,7 @@
       "name": "Ideas - Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [-120, 1000]
+      "position": [840, 1000]
     },
 
     {
@@ -393,7 +475,7 @@
       "name": "Metrics - Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [1240, 300],
       "webhookId": "gkp-metrics"
     },
     {
@@ -450,7 +532,7 @@
       "name": "Metrics - Set Variables",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [480, 300]
+      "position": [1480, 300]
     },
     {
       "parameters": {
@@ -474,7 +556,7 @@
       "name": "Metrics - Has Source Sheet?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [1720, 300]
     },
     {
       "parameters": {
@@ -488,7 +570,7 @@
       "name": "Metrics - Read Source Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [960, 200],
+      "position": [1960, 200],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -504,7 +586,7 @@
       "name": "Metrics - Parse Sheet",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 200]
+      "position": [2200, 200]
     },
     {
       "parameters": {
@@ -514,7 +596,7 @@
       "name": "Metrics - Use Body Keywords",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 400]
+      "position": [1960, 400]
     },
     {
       "parameters": {
@@ -526,7 +608,7 @@
       "name": "Metrics - Merge Source",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [1440, 300]
+      "position": [2440, 300]
     },
     {
       "parameters": {
@@ -538,7 +620,7 @@
       "name": "Metrics - Create Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1680, 300],
+      "position": [2680, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -554,7 +636,7 @@
       "name": "Metrics - Split Batches",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1920, 300]
+      "position": [2920, 300]
     },
     {
       "parameters": {
@@ -578,7 +660,7 @@
       "name": "Metrics - API Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2160, 300],
+      "position": [3160, 300],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -595,7 +677,7 @@
       "name": "Metrics - Merge Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2400, 300]
+      "position": [3400, 300]
     },
     {
       "parameters": {
@@ -620,7 +702,7 @@
       "name": "Metrics - Check More Batches?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [2640, 300]
+      "position": [3640, 300]
     },
     {
       "parameters": {
@@ -631,7 +713,7 @@
       "name": "Metrics - Wait Batch",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [2880, 200]
+      "position": [3880, 200]
     },
     {
       "parameters": {
@@ -655,7 +737,7 @@
       "name": "Metrics - Next Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3120, 200],
+      "position": [4120, 200],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -672,7 +754,7 @@
       "name": "Metrics - Merge Next",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3360, 200]
+      "position": [4360, 200]
     },
     {
       "parameters": {
@@ -682,7 +764,7 @@
       "name": "Metrics - Format Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2640, 500]
+      "position": [3640, 500]
     },
     {
       "parameters": {
@@ -699,7 +781,7 @@
       "name": "Metrics - Write Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2880, 500],
+      "position": [3880, 500],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -716,7 +798,7 @@
       "name": "Metrics - Wait Write",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [3120, 500]
+      "position": [4120, 500]
     },
     {
       "parameters": {
@@ -733,7 +815,7 @@
       "name": "Metrics - Format Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3360, 500],
+      "position": [4360, 500],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -751,7 +833,7 @@
       "name": "Metrics - Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [3600, 500]
+      "position": [4600, 500]
     }
   ],
   "pinData": {},
@@ -760,6 +842,24 @@
       "main": [[{ "node": "Ideas - Set Variables", "type": "main", "index": 0 }]]
     },
     "Ideas - Set Variables": {
+      "main": [[{ "node": "Ideas - Has Source Sheet?", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Has Source Sheet?": {
+      "main": [
+        [{ "node": "Ideas - Read Source Sheet", "type": "main", "index": 0 }],
+        [{ "node": "Ideas - Use Body Seeds", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ideas - Read Source Sheet": {
+      "main": [[{ "node": "Ideas - Parse Sheet Seeds", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Parse Sheet Seeds": {
+      "main": [[{ "node": "Ideas - Merge Seeds Source", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Use Body Seeds": {
+      "main": [[{ "node": "Ideas - Merge Seeds Source", "type": "main", "index": 1 }]]
+    },
+    "Ideas - Merge Seeds Source": {
       "main": [[{ "node": "Ideas - Create Sheet", "type": "main", "index": 0 }]]
     },
     "Ideas - Create Sheet": {
