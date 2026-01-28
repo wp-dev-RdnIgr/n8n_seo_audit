@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { width: 100%; max-width: 520px; }
+    .card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .header { text-align: center; margin-bottom: 28px; }
+    .logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+    .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
+    .stage-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #065f46;
+      margin-bottom: 12px;
+    }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .label-hint { font-weight: 400; color: #94a3b8; font-size: 11px; }
+    .input-wrapper { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; opacity: 0.4; pointer-events: none;
+    }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 12px 14px 12px 44px;
+      font-size: 14px; font-family: inherit; color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px; font-family: inherit; color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    input:hover, select:hover { border-color: #cbd5e1; background: #f1f5f9; }
+    input:focus, select:focus { border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12); }
+    input::placeholder { color: #94a3b8; }
+    .row { display: flex; gap: 12px; }
+    .row .form-group { flex: 1; }
+    .info-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+    .info-box p { font-size: 12px; color: #0369a1; line-height: 1.5; }
+    .info-box strong { color: #0c4a6e; }
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      color: white;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-loading span { visibility: hidden; }
+    .btn-loading::after {
+      content: "";
+      position: absolute; top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      display: none;
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .result-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
+    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
+    .result h3 { font-size: 14px; font-weight: 600; }
+    .result.success h3 { color: #15803d; }
+    .result.error h3 { color: #dc2626; }
+    .result p { font-size: 13px; color: #475569; line-height: 1.5; }
+    .result a {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 12px;
+      padding: 9px 14px;
+      font-size: 13px; font-weight: 500;
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      border-radius: 7px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .result a:hover { background: #bbf7d0; }
+    .result .stats { display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #bbf7d0; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #15803d; }
+    .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-time { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
+    .footer-time svg { width: 14px; height: 14px; opacity: 0.6; }
+    .footer-brand { font-size: 11px; color: #94a3b8; }
+    .footer-brand span { color: #10b981; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="stage-badge">Етап 1</div>
+        <div class="logo">💡</div>
+        <h1>Генерація ідей</h1>
+        <p>Розширення семантичного ядра з seed-фраз</p>
+      </div>
+
+      <div class="info-box">
+        <p><strong>Як це працює:</strong> Завантажте таблицю з seed-фразами (до 300 шт.) у колонці A. Система згенерує тисячі пов'язаних ключових слів з даними про обсяг пошуку.</p>
+      </div>
+
+      <div class="form-group">
+        <label>Назва звіту</label>
+        <div class="input-wrapper">
+          <input type="text" id="docName" placeholder="GKP Ideas - Nike UA">
+          <span class="input-icon">📄</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Посилання на таблицю з seed-фразами <span class="label-hint">(колонка A)</span></label>
+        <div class="input-wrapper">
+          <input type="url" id="sourceSheet" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <span class="input-icon">📊</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>Мова</label>
+          <select id="language">
+            <option value="1000">English</option>
+            <option value="1001">Deutsch</option>
+            <option value="1006">Italiano</option>
+            <option value="1014">Francais</option>
+            <option value="1027">Espanol</option>
+            <option value="1036">Polski</option>
+            <option value="1046">Portugues</option>
+            <option value="1056" selected>Ukrainska</option>
+            <option value="1058">Romana</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Геотаргетинг</label>
+          <select id="geoTarget">
+            <option value="2804" selected>Україна</option>
+            <option value="2276">Німеччина</option>
+            <option value="2840">США</option>
+            <option value="2826">Великобританія</option>
+            <option value="2250">Франція</option>
+            <option value="2380">Італія</option>
+            <option value="2724">Іспанія</option>
+            <option value="2616">Польща</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn" id="submitBtn" onclick="handleSubmit()">
+        <span>Згенерувати ідеї</span>
+      </button>
+
+      <div class="result" id="result">
+        <div class="result-header">
+          <div class="result-icon" id="resultIcon"></div>
+          <h3 id="resultTitle"></h3>
+        </div>
+        <p id="resultMessage"></p>
+        <div id="resultExtra"></div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-time">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Час генерації: ~3-5 хв
+        </div>
+        <div class="footer-brand"><span>WebPromo</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function extractSpreadsheetId(url) {
+      if (!url) return '';
+      var match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : '';
+    }
+
+    function handleSubmit() {
+      var submitBtn = document.getElementById('submitBtn');
+      var resultDiv = document.getElementById('result');
+      var sourceSheet = document.getElementById('sourceSheet').value.trim();
+
+      if (!sourceSheet) {
+        showError('Вставте посилання на таблицю з seed-фразами');
+        return;
+      }
+
+      var spreadsheetId = extractSpreadsheetId(sourceSheet);
+      if (!spreadsheetId) {
+        showError('Невірний формат посилання на Google Sheets');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      resultDiv.className = 'result';
+
+      var formData = {
+        doc_name: document.getElementById('docName').value.trim(),
+        source_spreadsheet_id: spreadsheetId,
+        language: document.getElementById('language').value,
+        geo_target: document.getElementById('geoTarget').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          if (response.success) {
+            showSuccess(response);
+          } else {
+            showError(response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          showError(error.toString());
+        })
+        .submitGKPIdeas(formData);
+    }
+
+    function showSuccess(data) {
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+      var resultExtra = document.getElementById('resultExtra');
+
+      resultDiv.className = 'result success';
+      resultIcon.textContent = '\u2713';
+      resultTitle.textContent = 'Ідеї згенеровано';
+      resultMessage.innerHTML = data.message;
+      resultExtra.innerHTML =
+        '<a href="' + data.spreadsheetUrl + '" target="_blank">Відкрити таблицю \u2192</a>' +
+        '<div class="stats">' +
+          '<div class="stat"><div class="stat-value">' + data.totalKeywords + '</div><div class="stat-label">ключових слів</div></div>' +
+          '<div class="stat"><div class="stat-value">' + data.totalBatches + '</div><div class="stat-label">батчів оброблено</div></div>' +
+        '</div>';
+    }
+
+    function showError(message) {
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+      var resultExtra = document.getElementById('resultExtra');
+
+      resultDiv.className = 'result error';
+      resultIcon.textContent = '\u2715';
+      resultTitle.textContent = 'Помилка';
+      resultMessage.textContent = message;
+      resultExtra.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
