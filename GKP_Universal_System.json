@@ -161,9 +161,7 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
+        "mode": "append"
       },
       "id": "ideas-023",
       "name": "Ideas - Merge Seeds Source",
@@ -600,9 +598,7 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
+        "mode": "append"
       },
       "id": "metrics-007",
       "name": "Metrics - Merge Source",
