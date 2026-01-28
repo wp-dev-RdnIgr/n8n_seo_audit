@@ -91,6 +91,16 @@
     },
     {
       "parameters": {
+        "jsCode": "// Split keywords into batches of 20 (Google Ads API limit)\nconst allKeywords = JSON.parse($('Set Variables').first().json.seed_keywords);\nconst BATCH_SIZE = 20;\nconst batches = [];\n\nfor (let i = 0; i < allKeywords.length; i += BATCH_SIZE) {\n  batches.push(allKeywords.slice(i, i + BATCH_SIZE));\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    currentBatch: 0,\n    allResults: [],\n    currentKeywords: JSON.stringify(batches[0])\n  }\n}];"
+      },
+      "id": "a1000001-0001-0001-0001-000000000020",
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-480, 300]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
@@ -110,14 +120,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ $('Set Variables').item.json.seed_keywords }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ $json.currentKeywords }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}",
         "options": {}
       },
       "id": "a1000001-0001-0001-0001-000000000004",
-      "name": "GKP - Page 1",
+      "name": "GKP - Fetch Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-480, 300],
+      "position": [-240, 300],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -127,13 +137,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Init pagination\nconst response = $input.first().json;\nconst results = response.results || [];\nconst nextPageToken = response.nextPageToken || null;\nconst limit = $('Set Variables').first().json.limit;\n\nreturn [{\n  json: {\n    allResults: results,\n    nextPageToken: nextPageToken,\n    totalFetched: results.length,\n    limit: limit,\n    needMore: nextPageToken !== null && results.length < limit\n  }\n}];"
+        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\nconst batchState = $('Split Into Batches').first().json;\n\n// On first iteration, use Split node data; on subsequent, use loop data\nlet state;\ntry {\n  state = $('Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\n\nconst hasMore = nextBatch < batches.length;\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    currentKeywords: hasMore ? JSON.stringify(batches[nextBatch]) : '[]',\n    hasMore: hasMore,\n    totalFetched: allResults.length\n  }\n}];"
       },
-      "id": "a1000001-0001-0001-0001-000000000005",
-      "name": "Init Pagination",
+      "id": "a1000001-0001-0001-0001-000000000021",
+      "name": "Merge Batch Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-240, 300]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -141,8 +151,8 @@
           "options": { "caseSensitive": true, "leftValue": "" },
           "conditions": [
             {
-              "id": "needMore",
-              "leftValue": "={{ $json.needMore }}",
+              "id": "hasMore",
+              "leftValue": "={{ $json.hasMore }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -155,21 +165,21 @@
         }
       },
       "id": "a1000001-0001-0001-0001-000000000006",
-      "name": "Need More Pages?",
+      "name": "Check More Batches?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [0, 300]
+      "position": [240, 300]
     },
     {
       "parameters": {
-        "amount": 1,
+        "amount": 2,
         "unit": "seconds"
       },
       "id": "a1000001-0001-0001-0001-000000000007",
-      "name": "Wait",
+      "name": "Wait Between Batches",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [240, 200]
+      "position": [480, 200]
     },
     {
       "parameters": {
@@ -192,14 +202,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ $('Set Variables').item.json.seed_keywords }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000,\n  \"pageToken\": \"{{ $('Need More Pages?').item.json.nextPageToken }}\"\n}",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ $('Check More Batches?').item.json.currentKeywords }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}",
         "options": {}
       },
       "id": "a1000001-0001-0001-0001-000000000008",
-      "name": "GKP - Next Page",
+      "name": "GKP - Next Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [480, 200],
+      "position": [720, 200],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -209,17 +219,17 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge paginated results\nconst prev = $('Need More Pages?').first().json;\nconst response = $input.first().json;\nconst newResults = response.results || [];\nconst allResults = [...prev.allResults, ...newResults];\nconst nextPageToken = response.nextPageToken || null;\nconst limit = prev.limit;\n\nreturn [{\n  json: {\n    allResults: allResults,\n    nextPageToken: nextPageToken,\n    totalFetched: allResults.length,\n    limit: limit,\n    needMore: nextPageToken !== null && allResults.length < limit\n  }\n}];"
+        "jsCode": "// Merge next batch results\nconst apiResponse = $input.first().json;\nconst state = $('Check More Batches?').first().json;\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...state.allResults, ...newResults];\nconst nextBatch = state.currentBatch + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    currentKeywords: hasMore ? JSON.stringify(batches[nextBatch]) : '[]',\n    hasMore: hasMore,\n    totalFetched: allResults.length\n  }\n}];"
       },
-      "id": "a1000001-0001-0001-0001-000000000009",
-      "name": "Merge Pages",
+      "id": "a1000001-0001-0001-0001-000000000022",
+      "name": "Merge Next Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 200]
+      "position": [960, 200]
     },
     {
       "parameters": {
-        "jsCode": "// Format GKP data into spreadsheet rows\nconst input = $input.first().json;\nconst allResults = input.allResults || [];\nconst limit = input.limit || 600;\nconst urlMapping = JSON.parse($('Set Variables').first().json.url_mapping || '{}');\nconst seedKeywords = JSON.parse($('Set Variables').first().json.seed_keywords || '[]');\n\n// Month enum to short name\nconst monthMap = {JANUARY:'Jan',FEBRUARY:'Feb',MARCH:'Mar',APRIL:'Apr',MAY:'May',JUNE:'Jun',JULY:'Jul',AUGUST:'Aug',SEPTEMBER:'Sep',OCTOBER:'Oct',NOVEMBER:'Nov',DECEMBER:'Dec'};\n\n// Parse each result\nconst parsed = allResults.map(r => {\n  const kw = r.text || '';\n  const metrics = r.keywordIdeaMetrics || {};\n  const avg = metrics.avgMonthlySearches ? parseInt(metrics.avgMonthlySearches) : 0;\n  const comp = metrics.competition || 'N/A';\n  const compIndex = metrics.competitionIndex !== undefined ? metrics.competitionIndex : '';\n  \n  // Monthly volumes\n  const monthlyVolumes = (metrics.monthlySearchVolumes || []).map(m => {\n    return m.monthlySearches ? parseInt(m.monthlySearches) : 0;\n  });\n  \n  // Month headers from actual data\n  const monthHeaders = (metrics.monthlySearchVolumes || []).map(m => {\n    const name = monthMap[m.month] || m.month;\n    return name + ' ' + m.year;\n  });\n  \n  // Find matching URL\n  const url = urlMapping[kw] || '';\n  \n  // Determine which seed keyword this belongs to\n  let seedGroup = 'Other';\n  for (const seed of seedKeywords) {\n    if (kw.toLowerCase().includes(seed.toLowerCase()) || seed.toLowerCase().includes(kw.toLowerCase())) {\n      seedGroup = seed;\n      break;\n    }\n  }\n  \n  return {\n    keyword: kw,\n    url: url,\n    avgMonthlySearches: avg,\n    competition: comp,\n    competitionIndex: compIndex,\n    monthlyVolumes: monthlyVolumes,\n    monthHeaders: monthHeaders,\n    seedGroup: seedGroup\n  };\n});\n\n// Sort by avg monthly searches desc\nparsed.sort((a, b) => b.avgMonthlySearches - a.avgMonthlySearches);\n\n// Limit\nconst limited = parsed.slice(0, limit);\n\n// Group by seed keyword\nconst groups = {};\nfor (const item of limited) {\n  if (!groups[item.seedGroup]) {\n    groups[item.seedGroup] = [];\n  }\n  groups[item.seedGroup].push(item);\n}\n\n// Get month headers from first result\nconst monthHeaderRow = limited.length > 0 ? limited[0].monthHeaders : [];\n\n// Build sheet data rows\nconst headerRow = ['Keyword', 'URL', 'Avg. monthly searches', 'Competition', 'Competition (indexed value)', ...monthHeaderRow];\n\nconst rows = [headerRow];\n\nfor (const [seedName, items] of Object.entries(groups)) {\n  // Cluster header\n  const emptyRow = new Array(headerRow.length).fill('');\n  rows.push(emptyRow);\n  \n  const clusterHeader = new Array(headerRow.length).fill('');\n  clusterHeader[0] = `Cluster: ${seedName}`;\n  rows.push(clusterHeader);\n  \n  // Data rows\n  for (const item of items) {\n    rows.push([\n      item.keyword,\n      item.url,\n      item.avgMonthlySearches,\n      item.competition,\n      item.competitionIndex,\n      ...item.monthlyVolumes\n    ]);\n  }\n  \n  // Cluster summary\n  const clusterTotal = items.reduce((sum, i) => sum + i.avgMonthlySearches, 0);\n  const summaryRow = new Array(headerRow.length).fill('');\n  summaryRow[0] = 'Cluster monthly searches:';\n  summaryRow[2] = clusterTotal;\n  rows.push(summaryRow);\n}\n\nreturn [{\n  json: {\n    rows: rows,\n    totalKeywords: limited.length,\n    totalGroups: Object.keys(groups).length,\n    sheetId: $('Create Spreadsheet').first().json.spreadsheetId || $('Create Spreadsheet').first().json.id\n  }\n}];"
+        "jsCode": "// Format GKP data into spreadsheet rows\nconst input = $input.first().json;\nconst allResults = input.allResults || [];\nconst limit = $('Set Variables').first().json.limit || 600;\nconst urlMapping = JSON.parse($('Set Variables').first().json.url_mapping || '{}');\nconst seedKeywords = JSON.parse($('Set Variables').first().json.seed_keywords || '[]');\n\n// Deduplicate by keyword text\nconst seen = new Set();\nconst uniqueResults = allResults.filter(r => {\n  const key = (r.text || '').toLowerCase();\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\n// Month enum to short name\nconst monthMap = {JANUARY:'Jan',FEBRUARY:'Feb',MARCH:'Mar',APRIL:'Apr',MAY:'May',JUNE:'Jun',JULY:'Jul',AUGUST:'Aug',SEPTEMBER:'Sep',OCTOBER:'Oct',NOVEMBER:'Nov',DECEMBER:'Dec'};\n\n// Parse each result\nconst parsed = uniqueResults.map(r => {\n  const kw = r.text || '';\n  const metrics = r.keywordIdeaMetrics || {};\n  const avg = metrics.avgMonthlySearches ? parseInt(metrics.avgMonthlySearches) : 0;\n  const comp = metrics.competition || 'N/A';\n  const compIndex = metrics.competitionIndex !== undefined ? metrics.competitionIndex : '';\n  \n  const monthlyVolumes = (metrics.monthlySearchVolumes || []).map(m => {\n    return m.monthlySearches ? parseInt(m.monthlySearches) : 0;\n  });\n  \n  const monthHeaders = (metrics.monthlySearchVolumes || []).map(m => {\n    const name = monthMap[m.month] || m.month;\n    return name + ' ' + m.year;\n  });\n  \n  const url = urlMapping[kw] || '';\n  \n  let seedGroup = 'Other';\n  for (const seed of seedKeywords) {\n    if (kw.toLowerCase().includes(seed.toLowerCase()) || seed.toLowerCase().includes(kw.toLowerCase())) {\n      seedGroup = seed;\n      break;\n    }\n  }\n  \n  return { keyword: kw, url, avgMonthlySearches: avg, competition: comp, competitionIndex: compIndex, monthlyVolumes, monthHeaders, seedGroup };\n});\n\nparsed.sort((a, b) => b.avgMonthlySearches - a.avgMonthlySearches);\nconst limited = parsed.slice(0, limit);\n\nconst groups = {};\nfor (const item of limited) {\n  if (!groups[item.seedGroup]) groups[item.seedGroup] = [];\n  groups[item.seedGroup].push(item);\n}\n\nconst monthHeaderRow = limited.length > 0 ? limited[0].monthHeaders : [];\nconst headerRow = ['Keyword', 'URL', 'Avg. monthly searches', 'Competition', 'Competition (indexed value)', ...monthHeaderRow];\nconst rows = [headerRow];\n\nfor (const [seedName, items] of Object.entries(groups)) {\n  rows.push(new Array(headerRow.length).fill(''));\n  const ch = new Array(headerRow.length).fill('');\n  ch[0] = `Cluster: ${seedName}`;\n  rows.push(ch);\n  \n  for (const item of items) {\n    rows.push([item.keyword, item.url, item.avgMonthlySearches, item.competition, item.competitionIndex, ...item.monthlyVolumes]);\n  }\n  \n  const sr = new Array(headerRow.length).fill('');\n  sr[0] = 'Cluster monthly searches:';\n  sr[2] = items.reduce((sum, i) => sum + i.avgMonthlySearches, 0);\n  rows.push(sr);\n}\n\nreturn [{\n  json: {\n    rows: rows,\n    totalKeywords: limited.length,\n    totalGroups: Object.keys(groups).length,\n    sheetId: $('Create Spreadsheet').first().json.spreadsheetId || $('Create Spreadsheet').first().json.id\n  }\n}];"
       },
       "id": "a1000001-0001-0001-0001-000000000010",
       "name": "Format Data",
@@ -300,161 +310,56 @@
   "pinData": {},
   "connections": {
     "Webhook - Start": {
-      "main": [
-        [
-          {
-            "node": "Set Variables",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Set Variables", "type": "main", "index": 0 }]]
     },
     "Set Variables": {
-      "main": [
-        [
-          {
-            "node": "Create Spreadsheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Create Spreadsheet", "type": "main", "index": 0 }]]
     },
     "Create Spreadsheet": {
+      "main": [[{ "node": "Split Into Batches", "type": "main", "index": 0 }]]
+    },
+    "Split Into Batches": {
+      "main": [[{ "node": "GKP - Fetch Batch", "type": "main", "index": 0 }]]
+    },
+    "GKP - Fetch Batch": {
+      "main": [[{ "node": "Merge Batch Results", "type": "main", "index": 0 }]]
+    },
+    "Merge Batch Results": {
+      "main": [[{ "node": "Check More Batches?", "type": "main", "index": 0 }]]
+    },
+    "Check More Batches?": {
       "main": [
-        [
-          {
-            "node": "GKP - Page 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Wait Between Batches", "type": "main", "index": 0 }],
+        [{ "node": "Format Data", "type": "main", "index": 0 }]
       ]
     },
-    "GKP - Page 1": {
-      "main": [
-        [
-          {
-            "node": "Init Pagination",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Wait Between Batches": {
+      "main": [[{ "node": "GKP - Next Batch", "type": "main", "index": 0 }]]
     },
-    "Init Pagination": {
-      "main": [
-        [
-          {
-            "node": "Need More Pages?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "GKP - Next Batch": {
+      "main": [[{ "node": "Merge Next Batch", "type": "main", "index": 0 }]]
     },
-    "Need More Pages?": {
-      "main": [
-        [
-          {
-            "node": "Wait",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Format Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait": {
-      "main": [
-        [
-          {
-            "node": "GKP - Next Page",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GKP - Next Page": {
-      "main": [
-        [
-          {
-            "node": "Merge Pages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge Pages": {
-      "main": [
-        [
-          {
-            "node": "Need More Pages?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Merge Next Batch": {
+      "main": [[{ "node": "Check More Batches?", "type": "main", "index": 0 }]]
     },
     "Format Data": {
-      "main": [
-        [
-          {
-            "node": "Write to Sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Write to Sheet", "type": "main", "index": 0 }]]
     },
     "Write to Sheet": {
-      "main": [
-        [
-          {
-            "node": "Wait for Write",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Wait for Write", "type": "main", "index": 0 }]]
     },
     "Wait for Write": {
-      "main": [
-        [
-          {
-            "node": "Format Sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Format Sheet", "type": "main", "index": 0 }]]
     },
     "Format Sheet": {
-      "main": [
-        [
-          {
-            "node": "Respond - Done",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Respond - Done", "type": "main", "index": 0 }]]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "00000000-0000-0000-0000-000000000001",
+  "versionId": "00000000-0000-0000-0000-000000000002",
   "meta": {
     "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
   },

@@ -1,0 +1,427 @@
+{
+  "name": "GKP Idea Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gkp-ideas",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000001",
+      "name": "Webhook - Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1400, 300],
+      "webhookId": "gkp-ideas"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc_name",
+              "name": "doc_name",
+              "value": "={{ $json.body.doc_name || 'GKP Ideas - ' + $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "language",
+              "name": "language",
+              "value": "={{ $json.body.language || '1001' }}",
+              "type": "string"
+            },
+            {
+              "id": "geo_target",
+              "name": "geo_target",
+              "value": "={{ $json.body.geo_target || '2276' }}",
+              "type": "string"
+            },
+            {
+              "id": "seed_keywords",
+              "name": "seed_keywords",
+              "value": "={{ JSON.stringify(($json.body.seed_keywords || []).slice(0, 300)) }}",
+              "type": "string"
+            },
+            {
+              "id": "customer_id",
+              "name": "customer_id",
+              "value": "={{ $json.body.customer_id || '3460470607' }}",
+              "type": "string"
+            },
+            {
+              "id": "start_time",
+              "name": "start_time",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000002",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1160, 300]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Set Variables').item.json.doc_name }}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000003",
+      "name": "Create Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-920, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\nconst allSeeds = JSON.parse($('Set Variables').first().json.seed_keywords || '[]');\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
+      },
+      "id": "i1000001-0001-0001-0001-000000000004",
+      "name": "Split Seeds Into Batches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000{{ $json.pageToken ? ',\\n  \"pageToken\": \"' + $json.pageToken + '\"' : '' }}\n}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000005",
+      "name": "GKP - Fetch Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-440, 300],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Has More Seed Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Split Seeds Into Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nconst hasNextPage = nextPageToken !== null;\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  // Current batch complete, move to next\n  batchesProcessed++;\n  currentSeedBatch++;\n  hasMoreSeedBatches = currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
+      },
+      "id": "i1000001-0001-0001-0001-000000000006",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasNextPage",
+              "leftValue": "={{ $json.hasNextPage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "i1000001-0001-0001-0001-000000000007",
+      "name": "Has Next Page?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [40, 300]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "id": "i1000001-0001-0001-0001-000000000008",
+      "name": "Wait Page",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [280, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($('Has Next Page?').item.json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000,\n  \"pageToken\": \"{{ $('Has Next Page?').item.json.pageToken }}\"\n}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000009",
+      "name": "GKP - Next Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [520, 200],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasMoreBatches",
+              "leftValue": "={{ $json.hasMoreSeedBatches }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "i1000001-0001-0001-0001-000000000010",
+      "name": "Has More Seed Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [40, 500]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "i1000001-0001-0001-0001-000000000011",
+      "name": "Wait Batch",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [280, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare for next seed batch\nconst state = $('Has More Seed Batches?').first().json;\nreturn [{\n  json: {\n    ...state,\n    pageToken: null\n  }\n}];"
+      },
+      "id": "i1000001-0001-0001-0001-000000000012",
+      "name": "Prepare Next Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000013",
+      "name": "GKP - Next Seed Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [760, 400],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format ideas data for spreadsheet\nconst input = $input.first().json;\nconst allResults = input.allResults || [];\n\n// Deduplicate by keyword text\nconst seen = new Set();\nconst unique = allResults.filter(r => {\n  const key = (r.text || '').toLowerCase();\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\n// Sort by avgMonthlySearches DESC\nunique.sort((a, b) => {\n  const aVol = parseInt(a.keywordIdeaMetrics?.avgMonthlySearches || '0');\n  const bVol = parseInt(b.keywordIdeaMetrics?.avgMonthlySearches || '0');\n  return bVol - aVol;\n});\n\n// Build rows\nconst headerRow = ['Keyword', 'Avg. Monthly Searches', 'Competition', 'Competition Index', 'Source Seed'];\nconst rows = [headerRow];\n\nfor (const r of unique) {\n  const kw = r.text || '';\n  const metrics = r.keywordIdeaMetrics || {};\n  const avg = metrics.avgMonthlySearches ? parseInt(metrics.avgMonthlySearches) : 0;\n  const comp = metrics.competition || 'N/A';\n  const compIndex = metrics.competitionIndex !== undefined ? metrics.competitionIndex : '';\n  const source = r.sourceSeed || '';\n  \n  rows.push([kw, avg, comp, compIndex, source]);\n}\n\nconst processingTime = Math.round((Date.now() - $('Set Variables').first().json.start_time) / 1000);\n\nreturn [{\n  json: {\n    rows: rows,\n    totalKeywords: unique.length,\n    batchesProcessed: input.batchesProcessed,\n    processingTime: processingTime,\n    spreadsheetId: input.spreadsheetId\n  }\n}];"
+      },
+      "id": "i1000001-0001-0001-0001-000000000014",
+      "name": "Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"range\": \"A1\", \"majorDimension\": \"ROWS\", \"values\": $json.rows }) }}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000015",
+      "name": "Write to Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [520, 700],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "i1000001-0001-0001-0001-000000000016",
+      "name": "Wait for Write",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [760, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Format Data').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.086, \"green\": 0.627, \"blue\": 0.522 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 350 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 1, \"endIndex\": 5 },\n        \"properties\": { \"pixelSize\": 120 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 4, \"endIndex\": 5 },\n        \"properties\": { \"pixelSize\": 250 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": {\n          \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"startColumnIndex\": 0, \"endColumnIndex\": 5 }\n        }\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 0, \"gridProperties\": { \"frozenRowCount\": 1 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000017",
+      "name": "Format Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1000, 700],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Format Data').first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $('Format Data').first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $('Format Data').first().json.totalKeywords }},\n  \"total_batches_processed\": {{ $('Format Data').first().json.batchesProcessed }},\n  \"processing_time_seconds\": {{ $('Format Data').first().json.processingTime }}\n}",
+        "options": {}
+      },
+      "id": "i1000001-0001-0001-0001-000000000018",
+      "name": "Respond - Done",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1240, 700]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Start": {
+      "main": [[{ "node": "Set Variables", "type": "main", "index": 0 }]]
+    },
+    "Set Variables": {
+      "main": [[{ "node": "Create Spreadsheet", "type": "main", "index": 0 }]]
+    },
+    "Create Spreadsheet": {
+      "main": [[{ "node": "Split Seeds Into Batches", "type": "main", "index": 0 }]]
+    },
+    "Split Seeds Into Batches": {
+      "main": [[{ "node": "GKP - Fetch Ideas", "type": "main", "index": 0 }]]
+    },
+    "GKP - Fetch Ideas": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Merge Results": {
+      "main": [[{ "node": "Has Next Page?", "type": "main", "index": 0 }]]
+    },
+    "Has Next Page?": {
+      "main": [
+        [{ "node": "Wait Page", "type": "main", "index": 0 }],
+        [{ "node": "Has More Seed Batches?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait Page": {
+      "main": [[{ "node": "GKP - Next Page", "type": "main", "index": 0 }]]
+    },
+    "GKP - Next Page": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Has More Seed Batches?": {
+      "main": [
+        [{ "node": "Wait Batch", "type": "main", "index": 0 }],
+        [{ "node": "Format Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait Batch": {
+      "main": [[{ "node": "Prepare Next Batch", "type": "main", "index": 0 }]]
+    },
+    "Prepare Next Batch": {
+      "main": [[{ "node": "GKP - Next Seed Batch", "type": "main", "index": 0 }]]
+    },
+    "GKP - Next Seed Batch": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Format Data": {
+      "main": [[{ "node": "Write to Sheet", "type": "main", "index": 0 }]]
+    },
+    "Write to Sheet": {
+      "main": [[{ "node": "Wait for Write", "type": "main", "index": 0 }]]
+    },
+    "Wait for Write": {
+      "main": [[{ "node": "Format Sheet", "type": "main", "index": 0 }]]
+    },
+    "Format Sheet": {
+      "main": [[{ "node": "Respond - Done", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "00000000-0000-0000-0000-000000000001",
+  "meta": { "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725" },
+  "id": "GKP_Idea_Generator_001",
+  "tags": []
+}

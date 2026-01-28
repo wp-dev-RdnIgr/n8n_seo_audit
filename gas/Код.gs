@@ -72,7 +72,7 @@ function submitGKP(formData) {
     return { success: false, error: 'Введіть хоча б одне ключове слово' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-report';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-ideas';
 
   // Парсинг url_mapping з текстового поля (формат: keyword | url)
   var urlMapping = {};
@@ -108,12 +108,15 @@ function submitGKP(formData) {
     var response = UrlFetchApp.fetch(webhookUrl, options);
     var result = JSON.parse(response.getContentText());
 
+    var totalKeywords = result.total_keywords || 0;
+    var totalSeeds = formData.seed_keywords.length;
+
     return {
       success: true,
       spreadsheetUrl: result.spreadsheet_url,
-      totalKeywords: result.total_keywords,
-      totalClusters: result.total_clusters,
-      message: 'Знайдено ' + result.total_keywords + ' ключових слів у ' + result.total_clusters + ' кластерах'
+      totalKeywords: totalKeywords,
+      totalClusters: totalSeeds,
+      message: 'Знайдено ' + totalKeywords + ' ключових слів з ' + totalSeeds + ' сід-фраз'
     };
   } catch (error) {
     return { success: false, error: error.toString() };
