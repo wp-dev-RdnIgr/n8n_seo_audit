@@ -1,0 +1,178 @@
+{
+  "name": "Robots.txt + Sitemap Check",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "robots-sitemap-check",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1000001-0001-0001-0001-000000000001",
+      "name": "Webhook - Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-600, 300],
+      "webhookId": "robots-sitemap-check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $json.body.domain.replace(/^https?:\\/\\//, '').replace(/\\/$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "base_url",
+              "name": "base_url",
+              "value": "={{ 'https://' + $json.body.domain.replace(/^https?:\\/\\//, '').replace(/\\/$/, '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1000001-0001-0001-0001-000000000002",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-360, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Set Variables').item.json.base_url }}/robots.txt",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "b1000001-0001-0001-0001-000000000003",
+      "name": "Get Robots.txt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-120, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Set Variables').item.json.base_url }}/sitemap.xml",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "b1000001-0001-0001-0001-000000000004",
+      "name": "Get Sitemap.xml",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-120, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse robots.txt and extract sitemaps\nconst robotsResponse = $('Get Robots.txt').first().json;\nconst sitemapResponse = $('Get Sitemap.xml').first().json;\nconst domain = $('Set Variables').first().json.domain;\nconst baseUrl = $('Set Variables').first().json.base_url;\n\n// Parse robots.txt\nlet robotsContent = '';\nlet robotsStatus = 'not_found';\nlet sitemapsFromRobots = [];\nlet disallowRules = [];\nlet allowRules = [];\n\nif (robotsResponse.statusCode === 200) {\n  robotsContent = robotsResponse.body || '';\n  robotsStatus = 'found';\n  \n  // Extract sitemap URLs\n  const sitemapMatches = robotsContent.match(/Sitemap:\\s*(.+)/gi) || [];\n  sitemapsFromRobots = sitemapMatches.map(s => s.replace(/Sitemap:\\s*/i, '').trim());\n  \n  // Extract Disallow rules\n  const disallowMatches = robotsContent.match(/Disallow:\\s*(.+)/gi) || [];\n  disallowRules = disallowMatches.map(d => d.replace(/Disallow:\\s*/i, '').trim());\n  \n  // Extract Allow rules\n  const allowMatches = robotsContent.match(/Allow:\\s*(.+)/gi) || [];\n  allowRules = allowMatches.map(a => a.replace(/Allow:\\s*/i, '').trim());\n}\n\n// Parse sitemap.xml\nlet sitemapStatus = 'not_found';\nlet sitemapType = 'unknown';\nlet sitemapUrls = [];\nlet childSitemaps = [];\n\nif (sitemapResponse.statusCode === 200) {\n  sitemapStatus = 'found';\n  const sitemapBody = sitemapResponse.body || '';\n  \n  // Check if it's a sitemap index\n  if (sitemapBody.includes('<sitemapindex')) {\n    sitemapType = 'sitemap_index';\n    const locMatches = sitemapBody.match(/<loc>([^<]+)<\\/loc>/gi) || [];\n    childSitemaps = locMatches.map(l => l.replace(/<\\/?loc>/gi, ''));\n  } else if (sitemapBody.includes('<urlset')) {\n    sitemapType = 'urlset';\n    const locMatches = sitemapBody.match(/<loc>([^<]+)<\\/loc>/gi) || [];\n    sitemapUrls = locMatches.map(l => l.replace(/<\\/?loc>/gi, ''));\n  }\n}\n\n// Combine all sitemaps to fetch\nconst allSitemaps = [...new Set([...sitemapsFromRobots, ...childSitemaps])];\n\nreturn [{\n  json: {\n    domain: domain,\n    base_url: baseUrl,\n    robots: {\n      status: robotsStatus,\n      content: robotsContent,\n      sitemaps: sitemapsFromRobots,\n      disallow_rules: disallowRules,\n      disallow_count: disallowRules.length,\n      allow_rules: allowRules,\n      allow_count: allowRules.length\n    },\n    sitemap: {\n      status: sitemapStatus,\n      type: sitemapType,\n      url_count: sitemapUrls.length,\n      child_sitemaps: childSitemaps,\n      child_sitemaps_count: childSitemaps.length\n    },\n    all_sitemaps: allSitemaps\n  }\n}];"
+      },
+      "id": "b1000001-0001-0001-0001-000000000005",
+      "name": "Parse Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {}
+      },
+      "id": "b1000001-0001-0001-0001-000000000006",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [360, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Start": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Get Robots.txt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Sitemap.xml",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Robots.txt": {
+      "main": [
+        [
+          {
+            "node": "Parse Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Sitemap.xml": {
+      "main": [
+        [
+          {
+            "node": "Parse Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Results": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00000000-0000-0000-0000-000000000002",
+  "meta": {
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "Robots_Sitemap_001",
+  "tags": []
+}
