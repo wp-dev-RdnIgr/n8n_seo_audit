@@ -96,7 +96,8 @@
         "parameters": {
           "mappingMode": "defineBelow",
           "value": {
-            "target": "={{ $('Set Variables').item.json.domain }}"
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_today }}"
           }
         },
         "options": {}
@@ -125,7 +126,8 @@
         "parameters": {
           "mappingMode": "defineBelow",
           "value": {
-            "target": "={{ $('Set Variables').item.json.domain }}"
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_today }}"
           }
         },
         "options": {}
@@ -155,6 +157,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_today }}",
             "select": "anchor,linked_domains,links_from_target",
             "limit": "50",
             "order_by": "linked_domains:desc"
@@ -187,6 +190,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_today }}",
             "select": "url,referring_domains,ur,sum_traffic,keywords",
             "order_by": "referring_domains:desc",
             "limit": 100
@@ -219,6 +223,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_today }}",
             "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content",
             "limit": 100,
             "order_by": "domain_rating_source:desc",
