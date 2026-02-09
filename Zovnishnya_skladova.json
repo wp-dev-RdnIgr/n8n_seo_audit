@@ -8,11 +8,11 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000001",
-      "name": "Webhook - Start",
+      "id": "node-webhook",
+      "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-1000, 300],
+      "position": [-800, 300],
       "webhookId": "link-profile-audit"
     },
     {
@@ -47,17 +47,17 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000002",
+      "id": "node-variables",
       "name": "Set Variables",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-760, 300]
+      "position": [-560, 300]
     },
     {
       "parameters": {
         "resource": "folder",
         "operation": "create",
-        "name": "={{ $('Set Variables').item.json.folder_name }}",
+        "name": "={{ $json.folder_name }}",
         "options": {
           "folderColorRgb": "#f83a22",
           "parentFolderUi": {
@@ -65,18 +65,61 @@
               "folderSelector": "list",
               "folderSelectValue": {
                 "__rl": true,
-                "value": "={{ $('Set Variables').item.json.parent_folder_id }}",
+                "value": "={{ $json.parent_folder_id }}",
                 "mode": "id"
               }
             }
           }
         }
       },
-      "id": "c1000001-0001-0001-0001-000000000003",
+      "id": "node-create-folder",
       "name": "Create Folder",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [-520, 300],
+      "position": [-320, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"title\": \"Link Profile - {{ $('Set Variables').item.json.domain }}\"\n  },\n  \"sheets\": [\n    { \"properties\": { \"title\": \"1. Профіль беклінків\", \"sheetId\": 0 } },\n    { \"properties\": { \"title\": \"2. Анкор лист\", \"sheetId\": 1 } },\n    { \"properties\": { \"title\": \"3. ТОП сторінки\", \"sheetId\": 2 } },\n    { \"properties\": { \"title\": \"4. Всі беклінки\", \"sheetId\": 3 } }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-create-spreadsheet",
+      "name": "Create Spreadsheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-80, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheetId }}?addParents={{ $('Create Folder').item.json.id }}&removeParents=root",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "node-move-to-folder",
+      "name": "Move to Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [160, 300],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "vhGFSji8bW1qOA1c",
@@ -102,11 +145,11 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000004",
+      "id": "node-get-dr",
       "name": "Get DR",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [-280, 0],
+      "position": [400, 0],
       "credentials": {
         "httpBearerAuth": {
           "id": "3Y8C09Rxdir7dllK",
@@ -132,11 +175,11 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000005",
+      "id": "node-get-backlinks-stats",
       "name": "Get Backlinks Stats",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [-280, 150],
+      "position": [400, 150],
       "credentials": {
         "httpBearerAuth": {
           "id": "3Y8C09Rxdir7dllK",
@@ -165,11 +208,11 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000006",
+      "id": "node-get-anchors",
       "name": "Get External Anchors",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [-280, 300],
+      "position": [400, 300],
       "credentials": {
         "httpBearerAuth": {
           "id": "3Y8C09Rxdir7dllK",
@@ -198,11 +241,11 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000007",
+      "id": "node-get-top-pages",
       "name": "Get Top Pages",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [-280, 450],
+      "position": [400, 450],
       "credentials": {
         "httpBearerAuth": {
           "id": "3Y8C09Rxdir7dllK",
@@ -232,11 +275,11 @@
         },
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000008",
+      "id": "node-get-all-backlinks",
       "name": "Get All Backlinks",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [-280, 600],
+      "position": [400, 600],
       "credentials": {
         "httpBearerAuth": {
           "id": "3Y8C09Rxdir7dllK",
@@ -246,67 +289,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Collect all data\nconst domain = $('Set Variables').first().json.domain;\nconst folderId = $('Create Folder').first().json.id;\nconst folderName = $('Set Variables').first().json.folder_name;\n\n// Helper function to extract data from MCP response\nfunction extractMcpData(raw) {\n  if (!raw) return null;\n  // MCP returns: { content: [{ type: 'text', text: { ... actual data ... } }] }\n  if (raw.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    // text can be string (JSON) or object\n    if (typeof textContent === 'string') {\n      try { return JSON.parse(textContent); } catch (e) { return textContent; }\n    }\n    return textContent;\n  }\n  return raw;\n}\n\n// Parse API responses\nlet dr = null, backlinksStats = null, anchors = [], topPages = [], allBacklinks = [];\n\ntry {\n  const drRaw = $('Get DR').first().json;\n  dr = extractMcpData(drRaw);\n  // DR response has nested structure: { domain_rating: { domain_rating: X, ahrefs_rank: Y } }\n  if (dr && dr.domain_rating && typeof dr.domain_rating === 'object') {\n    dr = dr.domain_rating;\n  }\n} catch (e) { dr = { error: e.message }; }\n\ntry {\n  const statsRaw = $('Get Backlinks Stats').first().json;\n  backlinksStats = extractMcpData(statsRaw);\n  // Stats may have nested structure\n  if (backlinksStats && backlinksStats.stats) backlinksStats = backlinksStats.stats;\n} catch (e) { backlinksStats = { error: e.message }; }\n\ntry {\n  const anchorsRaw = $('Get External Anchors').first().json;\n  const anchorsData = extractMcpData(anchorsRaw);\n  // Anchors response: { linkedanchors: [...] }\n  anchors = anchorsData?.linkedanchors || anchorsData?.anchors || (Array.isArray(anchorsData) ? anchorsData : []);\n} catch (e) { anchors = []; }\n\ntry {\n  const pagesRaw = $('Get Top Pages').first().json;\n  const pagesData = extractMcpData(pagesRaw);\n  // Top pages response: { pages: [...] }\n  topPages = pagesData?.pages || pagesData?.top_pages || (Array.isArray(pagesData) ? pagesData : []);\n} catch (e) { topPages = []; }\n\ntry {\n  const blRaw = $('Get All Backlinks').first().json;\n  const blData = extractMcpData(blRaw);\n  // Backlinks response: { backlinks: [...] }\n  allBacklinks = blData?.backlinks || (Array.isArray(blData) ? blData : []);\n} catch (e) { allBacklinks = []; }\n\nreturn [{\n  json: {\n    domain,\n    folderId,\n    folderName,\n    dr,\n    backlinksStats,\n    anchors: Array.isArray(anchors) ? anchors : [],\n    topPages: Array.isArray(topPages) ? topPages : [],\n    allBacklinks: Array.isArray(allBacklinks) ? allBacklinks : []\n  }\n}];"
+        "jsCode": "// Helper function to extract data from MCP response\nfunction extractMcpData(raw) {\n  if (!raw) return null;\n  // MCP returns: { content: [{ type: 'text', text: { ... actual data ... } }] }\n  if (raw.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    if (typeof textContent === 'string') {\n      try { return JSON.parse(textContent); } catch (e) { return textContent; }\n    }\n    return textContent;\n  }\n  return raw;\n}\n\n// Get stored data from previous nodes\nconst domain = $('Set Variables').first().json.domain;\nconst folderId = $('Create Folder').first().json.id;\nconst spreadsheetId = $('Create Spreadsheet').first().json.spreadsheetId;\n\n// Parse API responses\nlet dr = null, backlinksStats = null, anchors = [], topPages = [], allBacklinks = [];\n\ntry {\n  const drRaw = $('Get DR').first().json;\n  dr = extractMcpData(drRaw);\n  if (dr && dr.domain_rating && typeof dr.domain_rating === 'object') {\n    dr = dr.domain_rating;\n  }\n} catch (e) { dr = { error: e.message }; }\n\ntry {\n  const statsRaw = $('Get Backlinks Stats').first().json;\n  backlinksStats = extractMcpData(statsRaw);\n  if (backlinksStats && backlinksStats.stats) backlinksStats = backlinksStats.stats;\n} catch (e) { backlinksStats = { error: e.message }; }\n\ntry {\n  const anchorsRaw = $('Get External Anchors').first().json;\n  const anchorsData = extractMcpData(anchorsRaw);\n  anchors = anchorsData?.linkedanchors || anchorsData?.anchors || (Array.isArray(anchorsData) ? anchorsData : []);\n} catch (e) { anchors = []; }\n\ntry {\n  const pagesRaw = $('Get Top Pages').first().json;\n  const pagesData = extractMcpData(pagesRaw);\n  topPages = pagesData?.pages || pagesData?.top_pages || (Array.isArray(pagesData) ? pagesData : []);\n} catch (e) { topPages = []; }\n\ntry {\n  const blRaw = $('Get All Backlinks').first().json;\n  const blData = extractMcpData(blRaw);\n  allBacklinks = blData?.backlinks || (Array.isArray(blData) ? blData : []);\n} catch (e) { allBacklinks = []; }\n\n// === Build sheet data ===\n\n// Sheet 1: Профіль беклінків\nconst profileRows = [\n  ['ПРОФІЛЬ БЕКЛІНКІВ', '', ''],\n  ['', '', ''],\n  ['Метрика', 'Значення', 'Опис'],\n  ['Domain Rating (DR)', dr?.domain_rating || 'N/A', 'Рейтинг домену від Ahrefs (0-100)'],\n  ['Ahrefs Rank', dr?.ahrefs_rank || 'N/A', 'Позиція в глобальному рейтингу'],\n  ['', '', ''],\n  ['Беклінки (всього)', backlinksStats?.live || backlinksStats?.backlinks || 'N/A', 'Кількість активних беклінків'],\n  ['Реферальні домени', backlinksStats?.live_refdomains || backlinksStats?.refdomains || 'N/A', 'Унікальні домени-донори'],\n  ['Dofollow беклінки', backlinksStats?.live_dofollow || 'N/A', 'Беклінки без nofollow'],\n  ['Nofollow беклінки', backlinksStats?.live_nofollow || 'N/A', 'Беклінки з nofollow'],\n  ['', '', ''],\n  ['Домен', domain, ''],\n  ['Дата аналізу', new Date().toISOString().slice(0, 10), '']\n];\n\n// Sheet 2: Анкор лист\nconst anchorRows = [\n  ['АНКОР ЛИСТ', '', ''],\n  ['', '', ''],\n  ['Анкор', 'Кількість доменів', 'Кількість посилань']\n];\nif (Array.isArray(anchors)) {\n  anchors.slice(0, 50).forEach(a => {\n    anchorRows.push([\n      a.anchor || '',\n      a.linked_domains || a.linkedDomains || 0,\n      a.links_from_target || a.linksFromTarget || 0\n    ]);\n  });\n}\n\n// Sheet 3: ТОП сторінки\nconst pagesRows = [\n  ['ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', '', '', '', ''],\n  ['', '', '', '', ''],\n  ['URL', 'Реф. домени', 'UR', 'Трафік', 'Ключі']\n];\nif (Array.isArray(topPages)) {\n  topPages.slice(0, 100).forEach(p => {\n    pagesRows.push([\n      p.url || '',\n      p.referring_domains || p.referringDomains || 0,\n      p.ur || 0,\n      p.sum_traffic || p.sumTraffic || 0,\n      p.keywords || 0\n    ]);\n  });\n}\n\n// Sheet 4: Всі беклінки\nconst blRows = [\n  ['ВСІ БЕКЛІНКИ (ТОП-100 за DR)', '', '', '', '', ''],\n  ['', '', '', '', '', ''],\n  ['URL донора', 'DR джерела', 'Трафік', 'Анкор', 'Тип', 'Nofollow']\n];\nif (Array.isArray(allBacklinks)) {\n  allBacklinks.slice(0, 100).forEach(b => {\n    blRows.push([\n      b.url_from || b.urlFrom || '',\n      b.domain_rating_source || b.domainRatingSource || 0,\n      b.traffic_domain || b.trafficDomain || 0,\n      b.anchor || '',\n      b.link_type || b.linkType || '',\n      b.is_nofollow || b.isNofollow ? 'Yes' : 'No'\n    ]);\n  });\n}\n\nreturn [{\n  json: {\n    domain,\n    folderId,\n    spreadsheetId,\n    profileRows,\n    anchorRows,\n    pagesRows,\n    blRows,\n    debug: {\n      drRaw: dr,\n      backlinksStatsRaw: backlinksStats,\n      anchorsCount: anchors.length,\n      pagesCount: topPages.length,\n      backlinksCount: allBacklinks.length\n    }\n  }\n}];"
       },
-      "id": "c1000001-0001-0001-0001-000000000009",
-      "name": "Collect Data",
+      "id": "node-parse-data",
+      "name": "Parse Ahrefs Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [0, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"properties\": {\n    \"title\": \"Link Profile - {{ $json.domain }}\"\n  },\n  \"sheets\": [\n    { \"properties\": { \"title\": \"1. Профіль беклінків\", \"sheetId\": 0 } },\n    { \"properties\": { \"title\": \"2. Анкор лист\", \"sheetId\": 1 } },\n    { \"properties\": { \"title\": \"3. ТОП сторінки\", \"sheetId\": 2 } },\n    { \"properties\": { \"title\": \"4. Всі беклінки\", \"sheetId\": 3 } }\n  ]\n}",
-        "options": {}
-      },
-      "id": "c1000001-0001-0001-0001-000000000010",
-      "name": "Create Spreadsheet",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [240, 300],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "hMp9ISVYVcdpImYl",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheetId }}?addParents={{ $('Collect Data').first().json.folderId }}&removeParents=root",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
-        "options": {}
-      },
-      "id": "c1000001-0001-0001-0001-000000000011",
-      "name": "Move to Folder",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [480, 300],
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "vhGFSji8bW1qOA1c",
-          "name": "Google Drive for n8n"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// Prepare all sheets data\nconst data = $('Collect Data').first().json;\nconst spreadsheetId = $('Create Spreadsheet').first().json.spreadsheetId;\n\n// === Sheet 1: Профіль беклінків ===\nconst profileRows = [\n  ['ПРОФІЛЬ БЕКЛІНКІВ', '', ''],\n  ['', '', ''],\n  ['Метрика', 'Значення', 'Опис'],\n  ['Domain Rating (DR)', data.dr?.domain_rating || data.dr?.domainRating || 'N/A', 'Рейтинг домену від Ahrefs (0-100)'],\n  ['Ahrefs Rank', data.dr?.ahrefs_rank || data.dr?.ahrefsRank || 'N/A', 'Позиція в глобальному рейтингу'],\n  ['', '', ''],\n  ['Беклінки (всього)', data.backlinksStats?.live || data.backlinksStats?.backlinks || 'N/A', 'Кількість активних беклінків'],\n  ['Реферальні домени', data.backlinksStats?.live_refdomains || data.backlinksStats?.refdomains || 'N/A', 'Унікальні домени-донори'],\n  ['Dofollow беклінки', data.backlinksStats?.live_dofollow || 'N/A', 'Беклінки без nofollow'],\n  ['Nofollow беклінки', data.backlinksStats?.live_nofollow || 'N/A', 'Беклінки з nofollow'],\n  ['', '', ''],\n  ['Дата аналізу', data.domain, new Date().toISOString().slice(0, 10)]\n];\n\n// === Sheet 2: Анкор лист ===\nconst anchorRows = [\n  ['АНКОР ЛИСТ', '', ''],\n  ['', '', ''],\n  ['Анкор', 'Кількість доменів', 'Кількість посилань']\n];\nif (Array.isArray(data.anchors)) {\n  data.anchors.slice(0, 50).forEach(a => {\n    anchorRows.push([\n      a.anchor || '',\n      a.linked_domains || a.linkedDomains || 0,\n      a.links_from_target || a.linksFromTarget || 0\n    ]);\n  });\n}\n\n// === Sheet 3: ТОП сторінки ===\nconst pagesRows = [\n  ['ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', '', '', '', ''],\n  ['', '', '', '', ''],\n  ['URL', 'Реф. домени', 'UR', 'Трафік', 'Ключі']\n];\nif (Array.isArray(data.topPages)) {\n  data.topPages.slice(0, 100).forEach(p => {\n    pagesRows.push([\n      p.url || '',\n      p.referring_domains || p.referringDomains || 0,\n      p.ur || 0,\n      p.sum_traffic || p.sumTraffic || 0,\n      p.keywords || 0\n    ]);\n  });\n}\n\n// === Sheet 4: Всі беклінки ===\nconst blRows = [\n  ['ВСІ БЕКЛІНКИ (ТОП-100 за DR)', '', '', '', '', ''],\n  ['', '', '', '', '', ''],\n  ['URL донора', 'DR джерела', 'Трафік', 'Анкор', 'Тип', 'Nofollow']\n];\nif (Array.isArray(data.allBacklinks)) {\n  data.allBacklinks.slice(0, 100).forEach(b => {\n    blRows.push([\n      b.url_from || b.urlFrom || '',\n      b.domain_rating_source || b.domainRatingSource || 0,\n      b.traffic_domain || b.trafficDomain || 0,\n      b.anchor || '',\n      b.link_type || b.linkType || '',\n      b.is_nofollow || b.isNofollow ? 'Yes' : 'No'\n    ]);\n  });\n}\n\nreturn [{\n  json: {\n    spreadsheetId,\n    profileRows,\n    anchorRows,\n    pagesRows,\n    blRows\n  }\n}];"
-      },
-      "id": "c1000001-0001-0001-0001-000000000012",
-      "name": "Prepare Sheets Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [720, 300]
+      "position": [680, 300]
     },
     {
       "parameters": {
@@ -319,11 +308,11 @@
         "jsonBody": "={\n  \"valueInputOption\": \"RAW\",\n  \"data\": [\n    { \"range\": \"'1. Профіль беклінків'!A1\", \"values\": {{ JSON.stringify($json.profileRows) }} },\n    { \"range\": \"'2. Анкор лист'!A1\", \"values\": {{ JSON.stringify($json.anchorRows) }} },\n    { \"range\": \"'3. ТОП сторінки'!A1\", \"values\": {{ JSON.stringify($json.pagesRows) }} },\n    { \"range\": \"'4. Всі беклінки'!A1\", \"values\": {{ JSON.stringify($json.blRows) }} }\n  ]\n}",
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000013",
+      "id": "node-write-sheets",
       "name": "Write All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [960, 300],
+      "position": [920, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -334,19 +323,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheets Data').first().json.spreadsheetId }}:batchUpdate",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Parse Ahrefs Data').item.json.spreadsheetId }}:batchUpdate",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.2, \"green\": 0.4, \"blue\": 0.6 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 200 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 1, \"endIndex\": 2 },\n        \"properties\": { \"pixelSize\": 150 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 2, \"endIndex\": 3 },\n        \"properties\": { \"pixelSize\": 300 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 1, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.2, \"green\": 0.5, \"blue\": 0.3 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 1, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 1, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 300 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 2, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.6, \"green\": 0.3, \"blue\": 0.1 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 2, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 2, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 400 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 3, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.5, \"green\": 0.2, \"blue\": 0.5 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 3, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 3, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 350 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 0, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 1, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 2, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 3, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.2, \"green\": 0.4, \"blue\": 0.6 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 200 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 1, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.2, \"green\": 0.5, \"blue\": 0.3 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 1, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 1, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 300 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 2, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.6, \"green\": 0.3, \"blue\": 0.1 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 2, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 2, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 400 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 3, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.5, \"green\": 0.2, \"blue\": 0.5 }, \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 14 } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 3, \"startRowIndex\": 2, \"endRowIndex\": 3 },\n        \"cell\": { \"userEnteredFormat\": { \"backgroundColor\": { \"red\": 0.9, \"green\": 0.9, \"blue\": 0.9 }, \"textFormat\": { \"bold\": true } } },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 3, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 350 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 0, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 1, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 2, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 3, \"gridProperties\": { \"frozenRowCount\": 3 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    }\n  ]\n}",
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000014",
+      "id": "node-format-sheets",
       "name": "Format All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1200, 300],
+      "position": [1160, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -357,19 +346,19 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Collect Data').first().json.domain }}\",\n  \"folder_url\": \"https://drive.google.com/drive/folders/{{ $('Collect Data').first().json.folderId }}\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Prepare Sheets Data').first().json.spreadsheetId }}\",\n  \"sheets\": [\n    \"1. Профіль беклінків\",\n    \"2. Анкор лист\",\n    \"3. ТОП сторінки\",\n    \"4. Всі беклінки\"\n  ]\n}",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Parse Ahrefs Data').item.json.domain }}\",\n  \"folder_url\": \"https://drive.google.com/drive/folders/{{ $('Parse Ahrefs Data').item.json.folderId }}\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Parse Ahrefs Data').item.json.spreadsheetId }}\",\n  \"debug\": {{ JSON.stringify($('Parse Ahrefs Data').item.json.debug) }}\n}",
         "options": {}
       },
-      "id": "c1000001-0001-0001-0001-000000000015",
+      "id": "node-respond",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1440, 300]
+      "position": [1400, 300]
     }
   ],
   "pinData": {},
   "connections": {
-    "Webhook - Start": {
+    "Webhook": {
       "main": [
         [
           {
@@ -392,6 +381,28 @@
       ]
     },
     "Create Folder": {
+      "main": [
+        [
+          {
+            "node": "Create Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Move to Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to Folder": {
       "main": [
         [
           {
@@ -426,7 +437,7 @@
       "main": [
         [
           {
-            "node": "Collect Data",
+            "node": "Parse Ahrefs Data",
             "type": "main",
             "index": 0
           }
@@ -437,7 +448,7 @@
       "main": [
         [
           {
-            "node": "Collect Data",
+            "node": "Parse Ahrefs Data",
             "type": "main",
             "index": 0
           }
@@ -448,7 +459,7 @@
       "main": [
         [
           {
-            "node": "Collect Data",
+            "node": "Parse Ahrefs Data",
             "type": "main",
             "index": 0
           }
@@ -459,7 +470,7 @@
       "main": [
         [
           {
-            "node": "Collect Data",
+            "node": "Parse Ahrefs Data",
             "type": "main",
             "index": 0
           }
@@ -470,47 +481,14 @@
       "main": [
         [
           {
-            "node": "Collect Data",
+            "node": "Parse Ahrefs Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Collect Data": {
-      "main": [
-        [
-          {
-            "node": "Create Spreadsheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Spreadsheet": {
-      "main": [
-        [
-          {
-            "node": "Move to Folder",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Move to Folder": {
-      "main": [
-        [
-          {
-            "node": "Prepare Sheets Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Sheets Data": {
+    "Parse Ahrefs Data": {
       "main": [
         [
           {
@@ -548,7 +526,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "00000000-0000-0000-0000-000000000005",
+  "versionId": "00000000-0000-0000-0000-000000000007",
   "meta": {
     "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
   },
