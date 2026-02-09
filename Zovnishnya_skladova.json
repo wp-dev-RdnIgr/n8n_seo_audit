@@ -279,13 +279,10 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheetId }}/parents",
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheetId }}?addParents={{ $('Collect Data').first().json.folderId }}&removeParents=root",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"addParents\": \"{{ $('Collect Data').first().json.folderId }}\",\n  \"removeParents\": \"root\"\n}",
         "options": {}
       },
       "id": "c1000001-0001-0001-0001-000000000011",
