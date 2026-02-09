@@ -1,0 +1,400 @@
+{
+  "name": "5. Zovnishnya skladova (Link Profile)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "link-profile-audit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000001",
+      "name": "Webhook - Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-800, 300],
+      "webhookId": "link-profile-audit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "={{ $json.body.domain.replace(/^https?:\\/\\//, '').replace(/\\/$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "date_from",
+              "name": "date_from",
+              "value": "={{ $json.body.date_from || $now.minus({years: 1}).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "date_to",
+              "name": "date_to",
+              "value": "={{ $json.body.date_to || $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000002",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-560, 300]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-domain-rating",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "date_from": "={{ $('Set Variables').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables').item.json.date_to }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000003",
+      "name": "Get DR History",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 100],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-refdomains-history",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "date_from": "={{ $('Set Variables').item.json.date_from }}",
+            "date_to": "={{ $('Set Variables').item.json.date_to }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000004",
+      "name": "Get Refdomains History",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 250],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-linked-anchors-external",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "select": "anchor,linked_domains,links_from_target",
+            "limit": "50",
+            "order_by": "linked_domains:desc"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000005",
+      "name": "Get External Anchors",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 400],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-top-pages",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "select": "url,referring_domains,ur,sum_traffic,keywords",
+            "date": "={{ $('Set Variables').item.json.date_to }}",
+            "order_by": "referring_domains:desc",
+            "limit": 100
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000006",
+      "name": "Get Top Pages by Links",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 550],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-all-backlinks",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "select": "title,url_from,http_code,domain_rating_source,url_rating_source,traffic_domain,refdomains_source,linked_domains_source_page,links_external,traffic,positions,url_to,anchor,link_type,is_content,is_nofollow,is_ugc,is_sponsored,discovered_status",
+            "limit": 100,
+            "order_by": "domain_rating_source:desc",
+            "history": "live"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000007",
+      "name": "Get All Backlinks",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 700],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
+        "authentication": "bearerAuth",
+        "tool": {
+          "__rl": true,
+          "value": "site-explorer-backlinks-stats",
+          "mode": "list"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "target": "={{ $('Set Variables').item.json.domain }}",
+            "date": "={{ $('Set Variables').item.json.date_to }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000008",
+      "name": "Get Backlinks Stats",
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1,
+      "position": [-320, 850],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "3Y8C09Rxdir7dllK",
+          "name": "Ahrefs_mcp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all data from Ahrefs API calls\nconst domain = $('Set Variables').first().json.domain;\nconst dateFrom = $('Set Variables').first().json.date_from;\nconst dateTo = $('Set Variables').first().json.date_to;\n\n// Get data from all nodes\nlet drHistory = [];\nlet refdomainsHistory = [];\nlet anchors = [];\nlet topPages = [];\nlet backlinks = [];\nlet stats = {};\n\ntry {\n  drHistory = $('Get DR History').first().json.content || $('Get DR History').first().json;\n} catch (e) { drHistory = { error: e.message }; }\n\ntry {\n  refdomainsHistory = $('Get Refdomains History').first().json.content || $('Get Refdomains History').first().json;\n} catch (e) { refdomainsHistory = { error: e.message }; }\n\ntry {\n  anchors = $('Get External Anchors').first().json.content || $('Get External Anchors').first().json;\n} catch (e) { anchors = { error: e.message }; }\n\ntry {\n  topPages = $('Get Top Pages by Links').first().json.content || $('Get Top Pages by Links').first().json;\n} catch (e) { topPages = { error: e.message }; }\n\ntry {\n  backlinks = $('Get All Backlinks').first().json.content || $('Get All Backlinks').first().json;\n} catch (e) { backlinks = { error: e.message }; }\n\ntry {\n  stats = $('Get Backlinks Stats').first().json.content || $('Get Backlinks Stats').first().json;\n} catch (e) { stats = { error: e.message }; }\n\nreturn [{\n  json: {\n    domain: domain,\n    period: {\n      from: dateFrom,\n      to: dateTo\n    },\n    data: {\n      dr_history: drHistory,\n      refdomains_history: refdomainsHistory,\n      anchors: anchors,\n      top_pages_by_links: topPages,\n      all_backlinks: backlinks,\n      backlinks_stats: stats\n    }\n  }\n}];"
+      },
+      "id": "c1000001-0001-0001-0001-000000000009",
+      "name": "Merge All Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {}
+      },
+      "id": "c1000001-0001-0001-0001-000000000010",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [240, 400]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Start": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Get DR History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Refdomains History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get External Anchors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Top Pages by Links",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get All Backlinks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Backlinks Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get DR History": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Refdomains History": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get External Anchors": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Pages by Links": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Backlinks": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Backlinks Stats": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Data": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00000000-0000-0000-0000-000000000004",
+  "meta": {
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "Zovnishnya_skladova_001",
+  "tags": []
+}
