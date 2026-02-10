@@ -169,7 +169,7 @@
         "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
         "authentication": "bearerAuth",
         "tool": {"__rl": true, "value": "site-explorer-all-backlinks", "mode": "list"},
-        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "offset": "={{ $json.offset }}", "order_by": "traffic_domain:desc", "history": "live"}},
+        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "offset": "={{ $input.item.json.offset }}", "order_by": "traffic_domain:desc", "history": "live"}},
         "options": {}
       },
       "id": "node-get-backlinks-batch",
