@@ -181,7 +181,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const allItems = $('Get Backlinks Batch').all();\nlet allBacklinks = [];\n\nfor (const item of allItems) {\n  const raw = item.json;\n  if (raw?.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    let data = textContent;\n    if (typeof textContent === 'string') {\n      try { data = JSON.parse(textContent); } catch (e) {}\n    }\n    const links = data?.backlinks || (Array.isArray(data) ? data : []);\n    allBacklinks = allBacklinks.concat(links);\n  }\n}\n\nreturn [{json: {collectedBacklinks: allBacklinks, totalCount: allBacklinks.length}}];"
+        "jsCode": "const allItems = $input.all();\nlet allBacklinks = [];\n\nfor (const item of allItems) {\n  const raw = item.json;\n  if (raw?.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    let data = textContent;\n    if (typeof textContent === 'string') {\n      try { data = JSON.parse(textContent); } catch (e) {}\n    }\n    const links = data?.backlinks || (Array.isArray(data) ? data : []);\n    allBacklinks = allBacklinks.concat(links);\n  }\n}\n\nreturn [{json: {collectedBacklinks: allBacklinks, totalCount: allBacklinks.length}}];"
       },
       "id": "node-collect-backlinks",
       "name": "Collect All Backlinks",
@@ -269,7 +269,7 @@
   },
   "active": false,
   "settings": {"executionOrder": "v1"},
-  "versionId": "00000000-0000-0000-0000-000000000010",
+  "versionId": "00000000-0000-0000-0000-000000000011",
   "meta": {"instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"},
   "id": "Zovnishnya_skladova_001",
   "tags": []
