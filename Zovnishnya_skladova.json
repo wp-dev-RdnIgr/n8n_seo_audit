@@ -145,7 +145,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = [];\nfor (let i = 0; i < 3; i++) {\n  items.push({json: {offset: i * 100}});\n}\nreturn items;"
+        "jsCode": "const items = [];\nfor (let i = 0; i < 50; i++) {\n  items.push({json: {offset: i * 100}});\n}\nreturn items;"
       },
       "id": "node-prepare-loop",
       "name": "Prepare Backlinks Loop",

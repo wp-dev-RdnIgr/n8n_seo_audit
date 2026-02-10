@@ -197,8 +197,8 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
+        "mode": "append",
+        "numberInputs": 6,
         "options": {}
       },
       "id": "node-merge",
@@ -209,7 +209,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\n\n// Collect all agent responses\nconst sections = [];\nfor (const item of items) {\n  if (item.json.message?.content) {\n    sections.push(item.json.message.content);\n  } else if (item.json.text) {\n    sections.push(item.json.text);\n  }\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    spreadsheetId,\n    section1: sections[0] || '',\n    section2: sections[1] || '',\n    section3: sections[2] || '',\n    section4: sections[3] || '',\n    section5: sections[4] || '',\n    section6: sections[5] || '',\n    allSections: sections.join('\\n\\n---\\n\\n')\n  }\n}];"
+        "jsCode": "const items = $input.all();\n\nconst domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday || $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\n\n// Collect all agent responses - items arrive in order by input index (0-5)\nconst sections = [];\nfor (const item of items) {\n  const content = item.json.message?.content || item.json.content || item.json.text || item.json.output || '';\n  sections.push(content);\n}\n\n// Ensure we have exactly 6 sections\nwhile (sections.length < 6) {\n  sections.push('[Дані відсутні]');\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    spreadsheetId,\n    section1: sections[0],\n    section2: sections[1],\n    section3: sections[2],\n    section4: sections[3],\n    section5: sections[4],\n    section6: sections[5],\n    sectionsCount: items.length,\n    allSections: sections.filter(s => s && s !== '[Дані відсутні]').join('\\n\\n---\\n\\n')\n  }\n}];"
       },
       "id": "node-collect-sections",
       "name": "Collect Sections",
@@ -328,11 +328,11 @@
       ]
     ]},
     "Agent 1 - Organic Traffic": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 2 - Link Profile": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 3 - Top Pages Links": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 4 - Behavioral": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 5 - Keywords": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 6 - Traffic Pages": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 2 - Link Profile": {"main": [[{"node": "Merge Results", "type": "main", "index": 1}]]},
+    "Agent 3 - Top Pages Links": {"main": [[{"node": "Merge Results", "type": "main", "index": 2}]]},
+    "Agent 4 - Behavioral": {"main": [[{"node": "Merge Results", "type": "main", "index": 3}]]},
+    "Agent 5 - Keywords": {"main": [[{"node": "Merge Results", "type": "main", "index": 4}]]},
+    "Agent 6 - Traffic Pages": {"main": [[{"node": "Merge Results", "type": "main", "index": 5}]]},
     "Merge Results": {"main": [[{"node": "Collect Sections", "type": "main", "index": 0}]]},
     "Collect Sections": {"main": [[{"node": "Final Summary Agent", "type": "main", "index": 0}]]},
     "Final Summary Agent": {"main": [[{"node": "Prepare Document", "type": "main", "index": 0}]]},
