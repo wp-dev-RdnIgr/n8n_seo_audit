@@ -48,7 +48,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst fileInfo = $json;\n\n// Extract domain from spreadsheet name (format: \"SEO Audit - domain.com - date\" or similar)\nconst name = fileInfo.name || '';\nlet domain = '';\n\n// Try to extract domain from name\nconst domainMatch = name.match(/[-–—]\\s*([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})\\s*[-–—]/)\n  || name.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})/);\nif (domainMatch) {\n  domain = domainMatch[1];\n}\n\n// Get parent folder ID\nconst folderId = fileInfo.parents?.[0] || '';\n\nreturn [{\n  json: {\n    spreadsheetId,\n    domain,\n    folderId,\n    dateToday,\n    spreadsheetName: name\n  }\n}];"
+        "jsCode": "const spreadsheetId = $('Set Variables').first().json.spreadsheetId;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst fileInfo = $json;\n\n// Extract domain from spreadsheet name (format: \"SEO Audit - domain.com - date\" or similar)\nconst name = fileInfo.name || '';\nlet domain = '';\n\n// Try to extract domain from name\nconst domainMatch = name.match(/[-–—]\\s*([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})\\s*[-–—]/)\n  || name.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})/);\nif (domainMatch) {\n  domain = domainMatch[1];\n}\n\n// Get parent folder ID\nconst folderId = fileInfo.parents?.[0] || '';\n\nreturn [{\n  json: {\n    spreadsheetId,\n    domain,\n    folderId,\n    dateToday,\n    spreadsheetName: name\n  }\n}];"
       },
       "id": "node-extract-info",
       "name": "Extract Domain & Folder",
