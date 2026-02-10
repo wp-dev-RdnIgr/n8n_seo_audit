@@ -19,9 +19,7 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "spreadsheetId", "name": "spreadsheetId", "value": "={{ $json.body.spreadsheetId }}", "type": "string"},
-            {"id": "domain", "name": "domain", "value": "={{ $json.body.domain }}", "type": "string"},
-            {"id": "folderId", "name": "folderId", "value": "={{ $json.body.folderId }}", "type": "string"},
+            {"id": "spreadsheetId", "name": "spreadsheetId", "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}", "type": "string"},
             {"id": "date_today", "name": "date_today", "value": "={{ $now.toFormat('yyyy-MM-dd') }}", "type": "string"}
           ]
         },
@@ -36,6 +34,31 @@
     {
       "parameters": {
         "method": "GET",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheetId }}?fields=name,parents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "node-get-file-info",
+      "name": "Get Spreadsheet Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-400, 300],
+      "credentials": {"googleDriveOAuth2Api": {"id": "vhGFSji8bW1qOA1c", "name": "Google Drive for n8n"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst fileInfo = $json;\n\n// Extract domain from spreadsheet name (format: \"SEO Audit - domain.com - date\" or similar)\nconst name = fileInfo.name || '';\nlet domain = '';\n\n// Try to extract domain from name\nconst domainMatch = name.match(/[-–—]\\s*([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})\\s*[-–—]/)\n  || name.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})/);\nif (domainMatch) {\n  domain = domainMatch[1];\n}\n\n// Get parent folder ID\nconst folderId = fileInfo.parents?.[0] || '';\n\nreturn [{\n  json: {\n    spreadsheetId,\n    domain,\n    folderId,\n    dateToday,\n    spreadsheetName: name\n  }\n}];"
+      },
+      "id": "node-extract-info",
+      "name": "Extract Domain & Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchGet?ranges=Органічний_трафік!A:Z&ranges=Посилальний_профіль!A:Z&ranges=Топ_сторінки_за_посиланнями!A:Z&ranges=Поведінкові_метрики!A:Z&ranges=Ключові_фрази!A:Z&ranges=Трафікогенеруючі_сторінки!A:Z",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
@@ -45,12 +68,12 @@
       "name": "Read All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-320, 300],
+      "position": [-60, 300],
       "credentials": {"googleSheetsOAuth2Api": {"id": "hMp9ISVYVcdpImYl", "name": "Google Sheets account"}}
     },
     {
       "parameters": {
-        "jsCode": "const domain = $('Set Variables').first().json.domain;\nconst spreadsheetId = $('Set Variables').first().json.spreadsheetId;\nconst folderId = $('Set Variables').first().json.folderId;\nconst dateToday = $('Set Variables').first().json.date_today;\n\nconst valueRanges = $json.valueRanges || [];\n\nfunction parseSheet(values) {\n  if (!values || values.length < 2) return { headers: [], rows: [], stats: {} };\n  const headers = values[0];\n  const rows = values.slice(1);\n  return { headers, rows, count: rows.length };\n}\n\nfunction chunkArray(arr, size) {\n  const chunks = [];\n  for (let i = 0; i < arr.length; i += size) {\n    chunks.push(arr.slice(i, i + size));\n  }\n  return chunks;\n}\n\nfunction summarizeData(data, topN = 100) {\n  const top = data.rows.slice(0, topN);\n  const stats = {\n    totalRows: data.rows.length,\n    headers: data.headers\n  };\n  return { top, stats, headers: data.headers };\n}\n\n// Parse all 6 sheets\nconst sheets = {\n  organic: parseSheet(valueRanges[0]?.values),\n  linkProfile: parseSheet(valueRanges[1]?.values),\n  topPagesByLinks: parseSheet(valueRanges[2]?.values),\n  behavioral: parseSheet(valueRanges[3]?.values),\n  keywords: parseSheet(valueRanges[4]?.values),\n  trafficPages: parseSheet(valueRanges[5]?.values)\n};\n\n// Prepare data for each agent\nconst agent1Data = {\n  name: 'Органічний трафік',\n  data: summarizeData(sheets.organic, 50)\n};\n\nconst agent2Data = {\n  name: 'Посилальний профіль',\n  data: summarizeData(sheets.linkProfile, 50)\n};\n\nconst agent3Data = {\n  name: 'Топ сторінки за посиланнями',\n  data: summarizeData(sheets.topPagesByLinks, 100)\n};\n\nconst agent4Data = {\n  name: 'Поведінкові метрики',\n  data: summarizeData(sheets.behavioral, 50)\n};\n\n// Keywords - chunk by 500 if large\nconst keywordsChunks = sheets.keywords.rows.length > 500 \n  ? chunkArray(sheets.keywords.rows, 500).slice(0, 3) // Max 3 chunks for cost\n  : [sheets.keywords.rows];\n\nconst agent5Data = {\n  name: 'Ключові фрази',\n  data: {\n    headers: sheets.keywords.headers,\n    chunks: keywordsChunks.map((chunk, i) => ({\n      chunkNum: i + 1,\n      totalChunks: keywordsChunks.length,\n      rows: chunk.slice(0, 200) // Limit each chunk\n    })),\n    stats: {\n      totalKeywords: sheets.keywords.rows.length\n    }\n  }\n};\n\nconst agent6Data = {\n  name: 'Трафікогенеруючі сторінки',\n  data: summarizeData(sheets.trafficPages, 100)\n};\n\nreturn [{\n  json: {\n    domain,\n    spreadsheetId,\n    folderId,\n    dateToday,\n    agent1Data,\n    agent2Data,\n    agent3Data,\n    agent4Data,\n    agent5Data,\n    agent6Data\n  }\n}];"
+        "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday;\n\nconst valueRanges = $json.valueRanges || [];\n\nfunction parseSheet(values) {\n  if (!values || values.length < 2) return { headers: [], rows: [], stats: {} };\n  const headers = values[0];\n  const rows = values.slice(1);\n  return { headers, rows, count: rows.length };\n}\n\nfunction chunkArray(arr, size) {\n  const chunks = [];\n  for (let i = 0; i < arr.length; i += size) {\n    chunks.push(arr.slice(i, i + size));\n  }\n  return chunks;\n}\n\nfunction summarizeData(data, topN = 100) {\n  const top = data.rows.slice(0, topN);\n  const stats = {\n    totalRows: data.rows.length,\n    headers: data.headers\n  };\n  return { top, stats, headers: data.headers };\n}\n\n// Parse all 6 sheets\nconst sheets = {\n  organic: parseSheet(valueRanges[0]?.values),\n  linkProfile: parseSheet(valueRanges[1]?.values),\n  topPagesByLinks: parseSheet(valueRanges[2]?.values),\n  behavioral: parseSheet(valueRanges[3]?.values),\n  keywords: parseSheet(valueRanges[4]?.values),\n  trafficPages: parseSheet(valueRanges[5]?.values)\n};\n\n// Prepare data for each agent\nconst agent1Data = {\n  name: 'Органічний трафік',\n  data: summarizeData(sheets.organic, 50)\n};\n\nconst agent2Data = {\n  name: 'Посилальний профіль',\n  data: summarizeData(sheets.linkProfile, 50)\n};\n\nconst agent3Data = {\n  name: 'Топ сторінки за посиланнями',\n  data: summarizeData(sheets.topPagesByLinks, 100)\n};\n\nconst agent4Data = {\n  name: 'Поведінкові метрики',\n  data: summarizeData(sheets.behavioral, 50)\n};\n\n// Keywords - chunk by 500 if large\nconst keywordsChunks = sheets.keywords.rows.length > 500 \n  ? chunkArray(sheets.keywords.rows, 500).slice(0, 3) // Max 3 chunks for cost\n  : [sheets.keywords.rows];\n\nconst agent5Data = {\n  name: 'Ключові фрази',\n  data: {\n    headers: sheets.keywords.headers,\n    chunks: keywordsChunks.map((chunk, i) => ({\n      chunkNum: i + 1,\n      totalChunks: keywordsChunks.length,\n      rows: chunk.slice(0, 200) // Limit each chunk\n    })),\n    stats: {\n      totalKeywords: sheets.keywords.rows.length\n    }\n  }\n};\n\nconst agent6Data = {\n  name: 'Трафікогенеруючі сторінки',\n  data: summarizeData(sheets.trafficPages, 100)\n};\n\nreturn [{\n  json: {\n    domain,\n    spreadsheetId,\n    folderId,\n    dateToday,\n    agent1Data,\n    agent2Data,\n    agent3Data,\n    agent4Data,\n    agent5Data,\n    agent6Data\n  }\n}];"
       },
       "id": "node-prepare-data",
       "name": "Prepare Data",
@@ -186,7 +209,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst domain = $('Set Variables').first().json.domain;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst folderId = $('Set Variables').first().json.folderId;\nconst spreadsheetId = $('Set Variables').first().json.spreadsheetId;\n\n// Collect all agent responses\nconst sections = [];\nfor (const item of items) {\n  if (item.json.message?.content) {\n    sections.push(item.json.message.content);\n  } else if (item.json.text) {\n    sections.push(item.json.text);\n  }\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    spreadsheetId,\n    section1: sections[0] || '',\n    section2: sections[1] || '',\n    section3: sections[2] || '',\n    section4: sections[3] || '',\n    section5: sections[4] || '',\n    section6: sections[5] || '',\n    allSections: sections.join('\\n\\n---\\n\\n')\n  }\n}];"
+        "jsCode": "const items = $input.all();\n\nconst domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst spreadsheetId = $('Extract Domain & Folder').first().json.spreadsheetId;\n\n// Collect all agent responses\nconst sections = [];\nfor (const item of items) {\n  if (item.json.message?.content) {\n    sections.push(item.json.message.content);\n  } else if (item.json.text) {\n    sections.push(item.json.text);\n  }\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    spreadsheetId,\n    section1: sections[0] || '',\n    section2: sections[1] || '',\n    section3: sections[2] || '',\n    section4: sections[3] || '',\n    section5: sections[4] || '',\n    section6: sections[5] || '',\n    allSections: sections.join('\\n\\n---\\n\\n')\n  }\n}];"
       },
       "id": "node-collect-sections",
       "name": "Collect Sections",
@@ -215,7 +238,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const domain = $('Set Variables').first().json.domain;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst folderId = $('Set Variables').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1;\nconst section2 = $('Collect Sections').first().json.section2;\nconst section3 = $('Collect Sections').first().json.section3;\nconst section4 = $('Collect Sections').first().json.section4;\nconst section5 = $('Collect Sections').first().json.section5;\nconst section6 = $('Collect Sections').first().json.section6;\n\nconst finalSummary = $json.message?.content || $json.text || '';\n\n// Build document content\nconst docContent = `SEO АУДИТ: ${domain}\nДата: ${dateToday}\n\n${'═'.repeat(50)}\n\n${finalSummary}\n\n${'═'.repeat(50)}\n\n1. ОРГАНІЧНИЙ ТРАФІК\n${'─'.repeat(30)}\n\n${section1}\n\n${'═'.repeat(50)}\n\n2. ПОСИЛАЛЬНИЙ ПРОФІЛЬ\n${'─'.repeat(30)}\n\n${section2}\n\n${'═'.repeat(50)}\n\n3. ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ\n${'─'.repeat(30)}\n\n${section3}\n\n${'═'.repeat(50)}\n\n4. ПОВЕДІНКОВІ МЕТРИКИ\n${'─'.repeat(30)}\n\n${section4}\n\n${'═'.repeat(50)}\n\n5. КЛЮЧОВІ ФРАЗИ\n${'─'.repeat(30)}\n\n${section5}\n\n${'═'.repeat(50)}\n\n6. ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ\n${'─'.repeat(30)}\n\n${section6}\n`;\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит - ${domain} - ${dateToday}`,\n    docContent\n  }\n}];"
+        "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1;\nconst section2 = $('Collect Sections').first().json.section2;\nconst section3 = $('Collect Sections').first().json.section3;\nconst section4 = $('Collect Sections').first().json.section4;\nconst section5 = $('Collect Sections').first().json.section5;\nconst section6 = $('Collect Sections').first().json.section6;\n\nconst finalSummary = $json.message?.content || $json.text || '';\n\n// Build document content\nconst docContent = `SEO АУДИТ: ${domain}\nДата: ${dateToday}\n\n${'═'.repeat(50)}\n\n${finalSummary}\n\n${'═'.repeat(50)}\n\n1. ОРГАНІЧНИЙ ТРАФІК\n${'─'.repeat(30)}\n\n${section1}\n\n${'═'.repeat(50)}\n\n2. ПОСИЛАЛЬНИЙ ПРОФІЛЬ\n${'─'.repeat(30)}\n\n${section2}\n\n${'═'.repeat(50)}\n\n3. ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ\n${'─'.repeat(30)}\n\n${section3}\n\n${'═'.repeat(50)}\n\n4. ПОВЕДІНКОВІ МЕТРИКИ\n${'─'.repeat(30)}\n\n${section4}\n\n${'═'.repeat(50)}\n\n5. КЛЮЧОВІ ФРАЗИ\n${'─'.repeat(30)}\n\n${section5}\n\n${'═'.repeat(50)}\n\n6. ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ\n${'─'.repeat(30)}\n\n${section6}\n`;\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит - ${domain} - ${dateToday}`,\n    docContent\n  }\n}];"
       },
       "id": "node-prepare-doc",
       "name": "Prepare Document",
@@ -290,7 +313,9 @@
   "pinData": {},
   "connections": {
     "Webhook": {"main": [[{"node": "Set Variables", "type": "main", "index": 0}]]},
-    "Set Variables": {"main": [[{"node": "Read All Sheets", "type": "main", "index": 0}]]},
+    "Set Variables": {"main": [[{"node": "Get Spreadsheet Info", "type": "main", "index": 0}]]},
+    "Get Spreadsheet Info": {"main": [[{"node": "Extract Domain & Folder", "type": "main", "index": 0}]]},
+    "Extract Domain & Folder": {"main": [[{"node": "Read All Sheets", "type": "main", "index": 0}]]},
     "Read All Sheets": {"main": [[{"node": "Prepare Data", "type": "main", "index": 0}]]},
     "Prepare Data": {"main": [
       [
