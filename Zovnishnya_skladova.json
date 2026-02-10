@@ -145,28 +145,59 @@
     },
     {
       "parameters": {
+        "jsCode": "const items = [];\nfor (let i = 0; i < 50; i++) {\n  items.push({json: {offset: i * 100}});\n}\nreturn items;"
+      },
+      "id": "node-prepare-loop",
+      "name": "Prepare Backlinks Loop",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1360, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "node-loop-backlinks",
+      "name": "Loop Over Offsets",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1600, 300]
+    },
+    {
+      "parameters": {
         "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
         "authentication": "bearerAuth",
         "tool": {"__rl": true, "value": "site-explorer-all-backlinks", "mode": "list"},
-        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "order_by": "domain_rating_source:desc", "history": "live"}},
+        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "offset": "={{ $json.offset }}", "order_by": "domain_rating_source:desc", "history": "live"}},
         "options": {}
       },
-      "id": "node-get-all-backlinks",
-      "name": "Get All Backlinks",
+      "id": "node-get-backlinks-batch",
+      "name": "Get Backlinks Batch",
       "type": "@n8n/n8n-nodes-langchain.mcpClient",
       "typeVersion": 1,
-      "position": [1360, 300],
+      "position": [1840, 300],
       "credentials": {"httpBearerAuth": {"id": "3Y8C09Rxdir7dllK", "name": "Ahrefs_mcp"}}
     },
     {
       "parameters": {
-        "jsCode": "function extractMcpData(raw) {\n  if (!raw) return null;\n  if (raw.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    if (typeof textContent === 'string') {\n      try { return JSON.parse(textContent); } catch (e) { return textContent; }\n    }\n    return textContent;\n  }\n  return raw;\n}\n\nconst domain = $('Set Variables').first().json.domain;\nconst folderId = $('Create Folder').first().json.id;\nconst spreadsheetId = $('Create Spreadsheet').first().json.spreadsheetId;\n\nlet dr = null, backlinksStats = null, anchors = [], topPages = [], allBacklinks = [];\n\ntry {\n  dr = extractMcpData($('Get DR').first().json);\n  if (dr?.domain_rating && typeof dr.domain_rating === 'object') dr = dr.domain_rating;\n} catch (e) { dr = {error: e.message}; }\n\ntry {\n  backlinksStats = extractMcpData($('Get Backlinks Stats').first().json);\n  if (backlinksStats?.stats) backlinksStats = backlinksStats.stats;\n} catch (e) { backlinksStats = {error: e.message}; }\n\ntry {\n  const anchorsData = extractMcpData($('Get External Anchors').first().json);\n  anchors = anchorsData?.linkedanchors || anchorsData?.anchors || (Array.isArray(anchorsData) ? anchorsData : []);\n} catch (e) { anchors = []; }\n\ntry {\n  const pagesData = extractMcpData($('Get Top Pages').first().json);\n  topPages = pagesData?.pages || pagesData?.top_pages || (Array.isArray(pagesData) ? pagesData : []);\n} catch (e) { topPages = []; }\n\ntry {\n  const blData = extractMcpData($('Get All Backlinks').first().json);\n  allBacklinks = blData?.backlinks || (Array.isArray(blData) ? blData : []);\n} catch (e) { allBacklinks = []; }\n\nconst profileRows = [\n  ['ПРОФІЛЬ БЕКЛІНКІВ', '', ''], ['', '', ''], ['Метрика', 'Значення', 'Опис'],\n  ['Domain Rating (DR)', dr?.domain_rating || 'N/A', 'Рейтинг домену від Ahrefs (0-100)'],\n  ['Ahrefs Rank', dr?.ahrefs_rank || 'N/A', 'Позиція в глобальному рейтингу'], ['', '', ''],\n  ['Беклінки (всього)', backlinksStats?.live || 'N/A', 'Кількість активних беклінків'],\n  ['Реферальні домени', backlinksStats?.live_refdomains || 'N/A', 'Унікальні домени-донори'],\n  ['Dofollow беклінки', backlinksStats?.live_dofollow || 'N/A', 'Беклінки без nofollow'],\n  ['Nofollow беклінки', backlinksStats?.live_nofollow || 'N/A', 'Беклінки з nofollow'], ['', '', ''],\n  ['Домен', domain, ''], ['Дата аналізу', new Date().toISOString().slice(0, 10), '']\n];\n\nconst anchorRows = [['АНКОР ЛИСТ', '', ''], ['', '', ''], ['Анкор', 'Кількість доменів', 'Кількість посилань']];\nif (Array.isArray(anchors)) anchors.slice(0, 50).forEach(a => anchorRows.push([a.anchor || '', a.linked_domains || 0, a.links_from_target || 0]));\n\nconst pagesRows = [['ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', '', '', '', ''], ['', '', '', '', ''], ['URL', 'Реф. домени', 'UR', 'Трафік', 'Ключі']];\nif (Array.isArray(topPages)) topPages.slice(0, 100).forEach(p => pagesRows.push([p.url || '', p.referring_domains || 0, p.ur || 0, p.sum_traffic || 0, p.keywords || 0]));\n\nconst blRows = [['ВСІ БЕКЛІНКИ (ТОП-100 за DR)', '', '', '', '', ''], ['', '', '', '', '', ''], ['URL донора', 'DR джерела', 'Трафік', 'Анкор', 'Тип', 'Nofollow']];\nif (Array.isArray(allBacklinks)) allBacklinks.slice(0, 100).forEach(b => blRows.push([b.url_from || '', b.domain_rating_source || 0, b.traffic_domain || 0, b.anchor || '', b.link_type || '', b.is_nofollow ? 'Yes' : 'No']));\n\nreturn [{json: {domain, folderId, spreadsheetId, profileRows, anchorRows, pagesRows, blRows, debug: {drRaw: dr, backlinksStatsRaw: backlinksStats, anchorsCount: anchors.length, pagesCount: topPages.length, backlinksCount: allBacklinks.length}}}];"
+        "jsCode": "const allItems = $('Get Backlinks Batch').all();\nlet allBacklinks = [];\n\nfor (const item of allItems) {\n  const raw = item.json;\n  if (raw?.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    let data = textContent;\n    if (typeof textContent === 'string') {\n      try { data = JSON.parse(textContent); } catch (e) {}\n    }\n    const links = data?.backlinks || (Array.isArray(data) ? data : []);\n    allBacklinks = allBacklinks.concat(links);\n  }\n}\n\nreturn [{json: {collectedBacklinks: allBacklinks, totalCount: allBacklinks.length}}];"
+      },
+      "id": "node-collect-backlinks",
+      "name": "Collect All Backlinks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2080, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractMcpData(raw) {\n  if (!raw) return null;\n  if (raw.content && Array.isArray(raw.content) && raw.content[0]) {\n    const textContent = raw.content[0].text;\n    if (typeof textContent === 'string') {\n      try { return JSON.parse(textContent); } catch (e) { return textContent; }\n    }\n    return textContent;\n  }\n  return raw;\n}\n\nconst domain = $('Set Variables').first().json.domain;\nconst folderId = $('Create Folder').first().json.id;\nconst spreadsheetId = $('Create Spreadsheet').first().json.spreadsheetId;\n\nlet dr = null, backlinksStats = null, anchors = [], topPages = [], allBacklinks = [];\n\ntry {\n  dr = extractMcpData($('Get DR').first().json);\n  if (dr?.domain_rating && typeof dr.domain_rating === 'object') dr = dr.domain_rating;\n} catch (e) { dr = {error: e.message}; }\n\ntry {\n  backlinksStats = extractMcpData($('Get Backlinks Stats').first().json);\n  if (backlinksStats?.stats) backlinksStats = backlinksStats.stats;\n  if (backlinksStats?.metrics) backlinksStats = backlinksStats.metrics;\n} catch (e) { backlinksStats = {error: e.message}; }\n\ntry {\n  const anchorsData = extractMcpData($('Get External Anchors').first().json);\n  anchors = anchorsData?.linkedanchors || anchorsData?.anchors || (Array.isArray(anchorsData) ? anchorsData : []);\n} catch (e) { anchors = []; }\n\ntry {\n  const pagesData = extractMcpData($('Get Top Pages').first().json);\n  topPages = pagesData?.pages || pagesData?.top_pages || (Array.isArray(pagesData) ? pagesData : []);\n} catch (e) { topPages = []; }\n\ntry {\n  allBacklinks = $json.collectedBacklinks || [];\n} catch (e) { allBacklinks = []; }\n\nconst profileRows = [\n  ['ПРОФІЛЬ БЕКЛІНКІВ', '', ''], ['', '', ''], ['Метрика', 'Значення', 'Опис'],\n  ['Domain Rating (DR)', dr?.domain_rating || 'N/A', 'Рейтинг домену від Ahrefs (0-100)'],\n  ['Ahrefs Rank', dr?.ahrefs_rank || 'N/A', 'Позиція в глобальному рейтингу'], ['', '', ''],\n  ['Беклінки (всього)', backlinksStats?.live || 'N/A', 'Кількість активних беклінків'],\n  ['Реферальні домени', backlinksStats?.live_refdomains || 'N/A', 'Унікальні домени-донори'],\n  ['Dofollow беклінки', backlinksStats?.live_dofollow || 'N/A', 'Беклінки без nofollow'],\n  ['Nofollow беклінки', backlinksStats?.live_nofollow || 'N/A', 'Беклінки з nofollow'], ['', '', ''],\n  ['Домен', domain, ''], ['Дата аналізу', new Date().toISOString().slice(0, 10), '']\n];\n\n// Anchor table with percentage calculation\nconst anchorRows = [['АНКОР ЛИСТ', '', ''], ['', '', ''], ['Анкор', 'Реф. домени', 'Частка %']];\nif (Array.isArray(anchors) && anchors.length > 0) {\n  const totalDomains = anchors.reduce((sum, a) => sum + (a.linked_domains || 0), 0);\n  anchors.slice(0, 50).forEach(a => {\n    const domains = a.linked_domains || 0;\n    const percentage = totalDomains > 0 ? ((domains / totalDomains) * 100).toFixed(2) + '%' : '0%';\n    anchorRows.push([a.anchor || '', domains, percentage]);\n  });\n}\n\nconst pagesRows = [['ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', '', '', '', ''], ['', '', '', '', ''], ['URL', 'Реф. домени', 'UR', 'Трафік', 'Ключі']];\nif (Array.isArray(topPages)) topPages.slice(0, 100).forEach(p => pagesRows.push([p.url || '', p.referring_domains || 0, p.ur || 0, p.sum_traffic || 0, p.keywords || 0]));\n\nconst blRows = [['ВСІ БЕКЛІНКИ (ТОП-5000 за DR)', '', '', '', '', ''], ['', '', '', '', '', ''], ['URL донора', 'DR джерела', 'Трафік', 'Анкор', 'Тип', 'Nofollow']];\nif (Array.isArray(allBacklinks)) allBacklinks.slice(0, 5000).forEach(b => blRows.push([b.url_from || '', b.domain_rating_source || 0, b.traffic_domain || 0, b.anchor || '', b.link_type || '', b.is_nofollow ? 'Yes' : 'No']));\n\nreturn [{json: {domain, folderId, spreadsheetId, profileRows, anchorRows, pagesRows, blRows, debug: {drRaw: dr, backlinksStatsRaw: backlinksStats, anchorsCount: anchors.length, pagesCount: topPages.length, backlinksCount: allBacklinks.length}}}];"
       },
       "id": "node-parse-data",
       "name": "Parse Ahrefs Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1600, 300]
+      "position": [2320, 300]
     },
     {
       "parameters": {
@@ -183,7 +214,7 @@
       "name": "Write All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1840, 300],
+      "position": [2560, 300],
       "credentials": {"googleSheetsOAuth2Api": {"id": "hMp9ISVYVcdpImYl", "name": "Google Sheets account"}}
     },
     {
@@ -201,7 +232,7 @@
       "name": "Format All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2080, 300],
+      "position": [2800, 300],
       "credentials": {"googleSheetsOAuth2Api": {"id": "hMp9ISVYVcdpImYl", "name": "Google Sheets account"}}
     },
     {
@@ -214,7 +245,7 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2320, 300]
+      "position": [3040, 300]
     }
   ],
   "pinData": {},
@@ -227,15 +258,18 @@
     "Get DR": {"main": [[{"node": "Get Backlinks Stats", "type": "main", "index": 0}]]},
     "Get Backlinks Stats": {"main": [[{"node": "Get External Anchors", "type": "main", "index": 0}]]},
     "Get External Anchors": {"main": [[{"node": "Get Top Pages", "type": "main", "index": 0}]]},
-    "Get Top Pages": {"main": [[{"node": "Get All Backlinks", "type": "main", "index": 0}]]},
-    "Get All Backlinks": {"main": [[{"node": "Parse Ahrefs Data", "type": "main", "index": 0}]]},
+    "Get Top Pages": {"main": [[{"node": "Prepare Backlinks Loop", "type": "main", "index": 0}]]},
+    "Prepare Backlinks Loop": {"main": [[{"node": "Loop Over Offsets", "type": "main", "index": 0}]]},
+    "Loop Over Offsets": {"main": [[{"node": "Get Backlinks Batch", "type": "main", "index": 0}], [{"node": "Collect All Backlinks", "type": "main", "index": 0}]]},
+    "Get Backlinks Batch": {"main": [[{"node": "Loop Over Offsets", "type": "main", "index": 0}]]},
+    "Collect All Backlinks": {"main": [[{"node": "Parse Ahrefs Data", "type": "main", "index": 0}]]},
     "Parse Ahrefs Data": {"main": [[{"node": "Write All Sheets", "type": "main", "index": 0}]]},
     "Write All Sheets": {"main": [[{"node": "Format All Sheets", "type": "main", "index": 0}]]},
     "Format All Sheets": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
   },
   "active": false,
   "settings": {"executionOrder": "v1"},
-  "versionId": "00000000-0000-0000-0000-000000000009",
+  "versionId": "00000000-0000-0000-0000-000000000010",
   "meta": {"instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"},
   "id": "Zovnishnya_skladova_001",
   "tags": []
