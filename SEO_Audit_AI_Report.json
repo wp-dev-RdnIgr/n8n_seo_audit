@@ -1,0 +1,325 @@
+{
+  "name": "SEO Audit AI Report Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seo-audit-ai-report",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-800, 300],
+      "webhookId": "seo-audit-ai-report"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "spreadsheetId", "name": "spreadsheetId", "value": "={{ $json.body.spreadsheetId }}", "type": "string"},
+            {"id": "domain", "name": "domain", "value": "={{ $json.body.domain }}", "type": "string"},
+            {"id": "folderId", "name": "folderId", "value": "={{ $json.body.folderId }}", "type": "string"},
+            {"id": "date_today", "name": "date_today", "value": "={{ $now.toFormat('yyyy-MM-dd') }}", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-variables",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-560, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchGet?ranges=Органічний_трафік!A:Z&ranges=Посилальний_профіль!A:Z&ranges=Топ_сторінки_за_посиланнями!A:Z&ranges=Поведінкові_метрики!A:Z&ranges=Ключові_фрази!A:Z&ranges=Трафікогенеруючі_сторінки!A:Z",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "node-read-sheets",
+      "name": "Read All Sheets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-320, 300],
+      "credentials": {"googleSheetsOAuth2Api": {"id": "hMp9ISVYVcdpImYl", "name": "Google Sheets account"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const domain = $('Set Variables').first().json.domain;\nconst spreadsheetId = $('Set Variables').first().json.spreadsheetId;\nconst folderId = $('Set Variables').first().json.folderId;\nconst dateToday = $('Set Variables').first().json.date_today;\n\nconst valueRanges = $json.valueRanges || [];\n\nfunction parseSheet(values) {\n  if (!values || values.length < 2) return { headers: [], rows: [], stats: {} };\n  const headers = values[0];\n  const rows = values.slice(1);\n  return { headers, rows, count: rows.length };\n}\n\nfunction chunkArray(arr, size) {\n  const chunks = [];\n  for (let i = 0; i < arr.length; i += size) {\n    chunks.push(arr.slice(i, i + size));\n  }\n  return chunks;\n}\n\nfunction summarizeData(data, topN = 100) {\n  const top = data.rows.slice(0, topN);\n  const stats = {\n    totalRows: data.rows.length,\n    headers: data.headers\n  };\n  return { top, stats, headers: data.headers };\n}\n\n// Parse all 6 sheets\nconst sheets = {\n  organic: parseSheet(valueRanges[0]?.values),\n  linkProfile: parseSheet(valueRanges[1]?.values),\n  topPagesByLinks: parseSheet(valueRanges[2]?.values),\n  behavioral: parseSheet(valueRanges[3]?.values),\n  keywords: parseSheet(valueRanges[4]?.values),\n  trafficPages: parseSheet(valueRanges[5]?.values)\n};\n\n// Prepare data for each agent\nconst agent1Data = {\n  name: 'Органічний трафік',\n  data: summarizeData(sheets.organic, 50)\n};\n\nconst agent2Data = {\n  name: 'Посилальний профіль',\n  data: summarizeData(sheets.linkProfile, 50)\n};\n\nconst agent3Data = {\n  name: 'Топ сторінки за посиланнями',\n  data: summarizeData(sheets.topPagesByLinks, 100)\n};\n\nconst agent4Data = {\n  name: 'Поведінкові метрики',\n  data: summarizeData(sheets.behavioral, 50)\n};\n\n// Keywords - chunk by 500 if large\nconst keywordsChunks = sheets.keywords.rows.length > 500 \n  ? chunkArray(sheets.keywords.rows, 500).slice(0, 3) // Max 3 chunks for cost\n  : [sheets.keywords.rows];\n\nconst agent5Data = {\n  name: 'Ключові фрази',\n  data: {\n    headers: sheets.keywords.headers,\n    chunks: keywordsChunks.map((chunk, i) => ({\n      chunkNum: i + 1,\n      totalChunks: keywordsChunks.length,\n      rows: chunk.slice(0, 200) // Limit each chunk\n    })),\n    stats: {\n      totalKeywords: sheets.keywords.rows.length\n    }\n  }\n};\n\nconst agent6Data = {\n  name: 'Трафікогенеруючі сторінки',\n  data: summarizeData(sheets.trafficPages, 100)\n};\n\nreturn [{\n  json: {\n    domain,\n    spreadsheetId,\n    folderId,\n    dateToday,\n    agent1Data,\n    agent2Data,\n    agent3Data,\n    agent4Data,\n    agent5Data,\n    agent6Data\n  }\n}];"
+      },
+      "id": "node-prepare-data",
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з SEO аналітики. Проаналізуй дані органічного трафіку для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent1Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальний стан органічного трафіку\n2. Тренди (зростання/падіння)\n3. Топ-сторінки та їх внесок\n4. Розподіл по країнах (якщо є)\n5. Брендовий vs небрендовий трафік\n6. Проблемні зони\n7. Точки росту та можливості\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent1",
+      "name": "Agent 1 - Organic Traffic",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 0],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з SEO та лінкбілдингу. Проаналізуй посилальний профіль домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent2Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Domain Rating (DR) та його динаміка\n2. Кількість беклінків та реферальних доменів\n3. Якість посилального профілю\n4. Аналіз анкор-листа (переоптимізація?)\n5. Ризики (спам, токсичні посилання)\n6. Рекомендації з покращення\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent2",
+      "name": "Agent 2 - Link Profile",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 150],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з SEO. Проаналізуй топ-сторінки за кількістю посилань для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent3Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Які сторінки отримують найбільше посилань\n2. Співвідношення посилань до трафіку\n3. Типи контенту, що приваблюють посилання\n4. Можливості для лінкбейтингу\n5. Сторінки з потенціалом для покращення\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent3",
+      "name": "Agent 3 - Top Pages Links",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 300],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з веб-аналітики. Проаналізуй поведінкові метрики для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent4Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Джерела трафіку (соціальні мережі, реферали)\n2. Розподіл по соціальних мережах\n3. Топ реферальні сайти та індустрії\n4. Поведінка користувачів\n5. Можливості для залучення трафіку\n6. Рекомендації\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent4",
+      "name": "Agent 4 - Behavioral",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 450],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з SEO та семантики. Проаналізуй ключові фрази для домену {{ $json.domain }}.\n\nДані (вибірка):\n{{ JSON.stringify($json.agent5Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальна кількість ключових слів\n2. Розподіл по позиціях (ТОП-3, ТОП-10, ТОП-20)\n3. Найбільш трафікові ключові слова\n4. Тематичні кластери\n5. Можливості для росту (ключі на 4-10 позиціях)\n6. Конкурентні переваги\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent5",
+      "name": "Agent 5 - Keywords",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 600],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - експерт з SEO. Проаналізуй трафікогенеруючі сторінки для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent6Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Топ сторінки за трафіком\n2. Співвідношення сторінок до загального трафіку\n3. Типи контенту, що генерують трафік\n4. Сторінки з потенціалом оптимізації\n5. Рекомендації щодо контент-стратегії\n\nФормат: структурований текст з підзаголовками."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-agent6",
+      "name": "Agent 6 - Traffic Pages",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [200, 750],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "node-merge",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst domain = $('Set Variables').first().json.domain;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst folderId = $('Set Variables').first().json.folderId;\nconst spreadsheetId = $('Set Variables').first().json.spreadsheetId;\n\n// Collect all agent responses\nconst sections = [];\nfor (const item of items) {\n  if (item.json.message?.content) {\n    sections.push(item.json.message.content);\n  } else if (item.json.text) {\n    sections.push(item.json.text);\n  }\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    spreadsheetId,\n    section1: sections[0] || '',\n    section2: sections[1] || '',\n    section3: sections[2] || '',\n    section4: sections[3] || '',\n    section5: sections[4] || '',\n    section6: sections[5] || '',\n    allSections: sections.join('\\n\\n---\\n\\n')\n  }\n}];"
+      },
+      "id": "node-collect-sections",
+      "name": "Collect Sections",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти - головний SEO-аналітик. На основі детального аналізу всіх розділів SEO-аудиту для домену {{ $json.domain }}, створи фінальний звіт.\n\nАналіз по розділах:\n\n{{ $json.allSections }}\n\n---\n\nСтвори ФІНАЛЬНИЙ ЗВІТ українською мовою з такою структурою:\n\n## EXECUTIVE SUMMARY\n(3-5 речень про загальний стан SEO сайту)\n\n## КЛЮЧОВІ ВИСНОВКИ\n(5-7 найважливіших пунктів)\n\n## КРИТИЧНІ ПРОБЛЕМИ\n(якщо є серйозні проблеми, які потребують негайної уваги)\n\n## СИЛЬНІ СТОРОНИ\n(що робить сайт добре)\n\n## ПРІОРИТЕТНІ РЕКОМЕНДАЦІЇ\n(10 конкретних дій, відсортованих за пріоритетом)\n\n## ПЛАН ДІЙ НА МІСЯЦЬ\n(конкретні кроки на найближчі 30 днів)\n\nВикористовуй emoji для візуального виділення та структурованість."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-final-agent",
+      "name": "Final Summary Agent",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [940, 300],
+      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const domain = $('Set Variables').first().json.domain;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst folderId = $('Set Variables').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1;\nconst section2 = $('Collect Sections').first().json.section2;\nconst section3 = $('Collect Sections').first().json.section3;\nconst section4 = $('Collect Sections').first().json.section4;\nconst section5 = $('Collect Sections').first().json.section5;\nconst section6 = $('Collect Sections').first().json.section6;\n\nconst finalSummary = $json.message?.content || $json.text || '';\n\n// Build document content\nconst docContent = `SEO АУДИТ: ${domain}\nДата: ${dateToday}\n\n${'═'.repeat(50)}\n\n${finalSummary}\n\n${'═'.repeat(50)}\n\n1. ОРГАНІЧНИЙ ТРАФІК\n${'─'.repeat(30)}\n\n${section1}\n\n${'═'.repeat(50)}\n\n2. ПОСИЛАЛЬНИЙ ПРОФІЛЬ\n${'─'.repeat(30)}\n\n${section2}\n\n${'═'.repeat(50)}\n\n3. ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ\n${'─'.repeat(30)}\n\n${section3}\n\n${'═'.repeat(50)}\n\n4. ПОВЕДІНКОВІ МЕТРИКИ\n${'─'.repeat(30)}\n\n${section4}\n\n${'═'.repeat(50)}\n\n5. КЛЮЧОВІ ФРАЗИ\n${'─'.repeat(30)}\n\n${section5}\n\n${'═'.repeat(50)}\n\n6. ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ\n${'─'.repeat(30)}\n\n${section6}\n`;\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит - ${domain} - ${dateToday}`,\n    docContent\n  }\n}];"
+      },
+      "id": "node-prepare-doc",
+      "name": "Prepare Document",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://docs.googleapis.com/v1/documents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"title\": \"{{ $json.docTitle }}\" }",
+        "options": {}
+      },
+      "id": "node-create-doc",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1420, 300],
+      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.documentId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"insertText\": {\n        \"location\": { \"index\": 1 },\n        \"text\": {{ JSON.stringify($('Prepare Document').first().json.docContent) }}\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-write-doc",
+      "name": "Write Document Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1660, 300],
+      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Create Google Doc').first().json.documentId }}?addParents={{ $('Prepare Document').first().json.folderId }}&removeParents=root",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "node-move-doc",
+      "name": "Move to Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1900, 300],
+      "credentials": {"googleDriveOAuth2Api": {"id": "vhGFSji8bW1qOA1c", "name": "Google Drive for n8n"}}
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Prepare Document').first().json.domain }}\",\n  \"docUrl\": \"https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.documentId }}/edit\",\n  \"docId\": \"{{ $('Create Google Doc').first().json.documentId }}\",\n  \"folderId\": \"{{ $('Prepare Document').first().json.folderId }}\"\n}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2140, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {"main": [[{"node": "Set Variables", "type": "main", "index": 0}]]},
+    "Set Variables": {"main": [[{"node": "Read All Sheets", "type": "main", "index": 0}]]},
+    "Read All Sheets": {"main": [[{"node": "Prepare Data", "type": "main", "index": 0}]]},
+    "Prepare Data": {"main": [
+      [
+        {"node": "Agent 1 - Organic Traffic", "type": "main", "index": 0},
+        {"node": "Agent 2 - Link Profile", "type": "main", "index": 0},
+        {"node": "Agent 3 - Top Pages Links", "type": "main", "index": 0},
+        {"node": "Agent 4 - Behavioral", "type": "main", "index": 0},
+        {"node": "Agent 5 - Keywords", "type": "main", "index": 0},
+        {"node": "Agent 6 - Traffic Pages", "type": "main", "index": 0}
+      ]
+    ]},
+    "Agent 1 - Organic Traffic": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 2 - Link Profile": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 3 - Top Pages Links": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 4 - Behavioral": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 5 - Keywords": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Agent 6 - Traffic Pages": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
+    "Merge Results": {"main": [[{"node": "Collect Sections", "type": "main", "index": 0}]]},
+    "Collect Sections": {"main": [[{"node": "Final Summary Agent", "type": "main", "index": 0}]]},
+    "Final Summary Agent": {"main": [[{"node": "Prepare Document", "type": "main", "index": 0}]]},
+    "Prepare Document": {"main": [[{"node": "Create Google Doc", "type": "main", "index": 0}]]},
+    "Create Google Doc": {"main": [[{"node": "Write Document Content", "type": "main", "index": 0}]]},
+    "Write Document Content": {"main": [[{"node": "Move to Folder", "type": "main", "index": 0}]]},
+    "Move to Folder": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "00000000-0000-0000-0000-000000000001",
+  "meta": {"instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"},
+  "id": "SEO_Audit_AI_Report_001",
+  "tags": []
+}
