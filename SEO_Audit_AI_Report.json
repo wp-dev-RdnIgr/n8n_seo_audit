@@ -238,7 +238,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1;\nconst section2 = $('Collect Sections').first().json.section2;\nconst section3 = $('Collect Sections').first().json.section3;\nconst section4 = $('Collect Sections').first().json.section4;\nconst section5 = $('Collect Sections').first().json.section5;\nconst section6 = $('Collect Sections').first().json.section6;\n\nconst finalSummary = $json.message?.content || $json.text || '';\n\n// Build document content\nconst docContent = `SEO АУДИТ: ${domain}\nДата: ${dateToday}\n\n${'═'.repeat(50)}\n\n${finalSummary}\n\n${'═'.repeat(50)}\n\n1. ОРГАНІЧНИЙ ТРАФІК\n${'─'.repeat(30)}\n\n${section1}\n\n${'═'.repeat(50)}\n\n2. ПОСИЛАЛЬНИЙ ПРОФІЛЬ\n${'─'.repeat(30)}\n\n${section2}\n\n${'═'.repeat(50)}\n\n3. ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ\n${'─'.repeat(30)}\n\n${section3}\n\n${'═'.repeat(50)}\n\n4. ПОВЕДІНКОВІ МЕТРИКИ\n${'─'.repeat(30)}\n\n${section4}\n\n${'═'.repeat(50)}\n\n5. КЛЮЧОВІ ФРАЗИ\n${'─'.repeat(30)}\n\n${section5}\n\n${'═'.repeat(50)}\n\n6. ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ\n${'─'.repeat(30)}\n\n${section6}\n`;\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит - ${domain} - ${dateToday}`,\n    docContent\n  }\n}];"
+        "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday || $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1 || '';\nconst section2 = $('Collect Sections').first().json.section2 || '';\nconst section3 = $('Collect Sections').first().json.section3 || '';\nconst section4 = $('Collect Sections').first().json.section4 || '';\nconst section5 = $('Collect Sections').first().json.section5 || '';\nconst section6 = $('Collect Sections').first().json.section6 || '';\n\nconst finalSummary = $json.message?.content || $json.content || $json.text || '';\n\n// Build sections with tracking for formatting\nconst sections = [\n  { title: 'EXECUTIVE SUMMARY', content: finalSummary, isMain: true },\n  { title: '1. ОРГАНІЧНИЙ ТРАФІК', content: section1 },\n  { title: '2. ПОСИЛАЛЬНИЙ ПРОФІЛЬ', content: section2 },\n  { title: '3. ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', content: section3 },\n  { title: '4. ПОВЕДІНКОВІ МЕТРИКИ', content: section4 },\n  { title: '5. КЛЮЧОВІ ФРАЗИ', content: section5 },\n  { title: '6. ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ', content: section6 }\n];\n\n// Build document and track positions for formatting\nlet docContent = '';\nconst formatRanges = [];\n\n// Main title\nconst mainTitle = `SEO АУДИТ: ${domain}\\n`;\nformatRanges.push({ start: 1, end: 1 + mainTitle.length - 1, type: 'title' });\ndocContent += mainTitle;\n\nconst dateLine = `Дата: ${dateToday}\\n\\n`;\ndocContent += dateLine;\n\n// Add each section\nfor (const section of sections) {\n  const divider = section.isMain ? '' : '━'.repeat(40) + '\\n\\n';\n  docContent += divider;\n  \n  const titleStart = docContent.length + 1;\n  const sectionTitle = section.title + '\\n\\n';\n  formatRanges.push({ \n    start: titleStart, \n    end: titleStart + section.title.length, \n    type: section.isMain ? 'h1' : 'h2' \n  });\n  docContent += sectionTitle;\n  \n  // Clean markdown from content\n  let cleanContent = section.content\n    .replace(/^##\\s+/gm, '')  // Remove ## headers\n    .replace(/^###\\s+/gm, '') // Remove ### headers\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '$1') // Remove bold markers\n    .replace(/^---$/gm, '━'.repeat(30)) // Replace --- with line\n    + '\\n\\n';\n  docContent += cleanContent;\n}\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит - ${domain} - ${dateToday}`,\n    docContent,\n    formatRanges\n  }\n}];"
       },
       "id": "node-prepare-doc",
       "name": "Prepare Document",
@@ -284,6 +284,34 @@
     },
     {
       "parameters": {
+        "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\n\n// Build formatting requests\nconst requests = [];\n\nfor (const range of formatRanges) {\n  if (range.type === 'title') {\n    requests.push({\n      updateTextStyle: {\n        range: { startIndex: range.start, endIndex: range.end },\n        textStyle: {\n          bold: true,\n          fontSize: { magnitude: 24, unit: 'PT' }\n        },\n        fields: 'bold,fontSize'\n      }\n    });\n    requests.push({\n      updateParagraphStyle: {\n        range: { startIndex: range.start, endIndex: range.end },\n        paragraphStyle: {\n          namedStyleType: 'HEADING_1',\n          alignment: 'CENTER'\n        },\n        fields: 'namedStyleType,alignment'\n      }\n    });\n  } else if (range.type === 'h1') {\n    requests.push({\n      updateTextStyle: {\n        range: { startIndex: range.start, endIndex: range.end },\n        textStyle: {\n          bold: true,\n          fontSize: { magnitude: 16, unit: 'PT' }\n        },\n        fields: 'bold,fontSize'\n      }\n    });\n    requests.push({\n      updateParagraphStyle: {\n        range: { startIndex: range.start, endIndex: range.end },\n        paragraphStyle: { namedStyleType: 'HEADING_2' },\n        fields: 'namedStyleType'\n      }\n    });\n  } else if (range.type === 'h2') {\n    requests.push({\n      updateTextStyle: {\n        range: { startIndex: range.start, endIndex: range.end },\n        textStyle: {\n          bold: true,\n          fontSize: { magnitude: 14, unit: 'PT' },\n          foregroundColor: { color: { rgbColor: { red: 0.2, green: 0.3, blue: 0.5 } } }\n        },\n        fields: 'bold,fontSize,foregroundColor'\n      }\n    });\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
+      },
+      "id": "node-build-format",
+      "name": "Build Format Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1820, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $json.requests }) }}",
+        "options": {}
+      },
+      "id": "node-apply-format",
+      "name": "Apply Formatting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1980, 300],
+      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+    },
+    {
+      "parameters": {
         "method": "PATCH",
         "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Create Google Doc').first().json.documentId }}?addParents={{ $('Prepare Document').first().json.folderId }}&removeParents=root",
         "authentication": "predefinedCredentialType",
@@ -294,7 +322,7 @@
       "name": "Move to Folder",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1900, 300],
+      "position": [2140, 300],
       "credentials": {"googleDriveOAuth2Api": {"id": "vhGFSji8bW1qOA1c", "name": "Google Drive for n8n"}}
     },
     {
@@ -307,7 +335,7 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2140, 300]
+      "position": [2300, 300]
     }
   ],
   "pinData": {},
@@ -338,7 +366,9 @@
     "Final Summary Agent": {"main": [[{"node": "Prepare Document", "type": "main", "index": 0}]]},
     "Prepare Document": {"main": [[{"node": "Create Google Doc", "type": "main", "index": 0}]]},
     "Create Google Doc": {"main": [[{"node": "Write Document Content", "type": "main", "index": 0}]]},
-    "Write Document Content": {"main": [[{"node": "Move to Folder", "type": "main", "index": 0}]]},
+    "Write Document Content": {"main": [[{"node": "Build Format Requests", "type": "main", "index": 0}]]},
+    "Build Format Requests": {"main": [[{"node": "Apply Formatting", "type": "main", "index": 0}]]},
+    "Apply Formatting": {"main": [[{"node": "Move to Folder", "type": "main", "index": 0}]]},
     "Move to Folder": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
   },
   "active": false,
