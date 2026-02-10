@@ -166,10 +166,25 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "current_offset", "name": "current_offset", "value": "={{ $json.offset }}", "type": "number"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-offset",
+      "name": "Set Current Offset",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1720, 300]
+    },
+    {
+      "parameters": {
         "endpointUrl": "https://api.ahrefs.com/mcp/mcp",
         "authentication": "bearerAuth",
         "tool": {"__rl": true, "value": "site-explorer-all-backlinks", "mode": "list"},
-        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "offset": "={{ $input.item.json.offset }}", "order_by": "traffic_domain:desc", "history": "live"}},
+        "parameters": {"mappingMode": "defineBelow", "value": {"target": "={{ $('Set Variables').item.json.domain }}", "date": "={{ $('Set Variables').item.json.date_today }}", "select": "url_from,domain_rating_source,traffic_domain,anchor,link_type,is_nofollow,is_content", "limit": 100, "offset": "={{ $json.current_offset }}", "order_by": "traffic_domain:desc", "history": "live"}},
         "options": {}
       },
       "id": "node-get-backlinks-batch",
@@ -260,7 +275,8 @@
     "Get External Anchors": {"main": [[{"node": "Get Top Pages", "type": "main", "index": 0}]]},
     "Get Top Pages": {"main": [[{"node": "Prepare Backlinks Loop", "type": "main", "index": 0}]]},
     "Prepare Backlinks Loop": {"main": [[{"node": "Loop Over Offsets", "type": "main", "index": 0}]]},
-    "Loop Over Offsets": {"main": [[{"node": "Get Backlinks Batch", "type": "main", "index": 0}], [{"node": "Collect All Backlinks", "type": "main", "index": 0}]]},
+    "Loop Over Offsets": {"main": [[{"node": "Set Current Offset", "type": "main", "index": 0}], [{"node": "Collect All Backlinks", "type": "main", "index": 0}]]},
+    "Set Current Offset": {"main": [[{"node": "Get Backlinks Batch", "type": "main", "index": 0}]]},
     "Get Backlinks Batch": {"main": [[{"node": "Loop Over Offsets", "type": "main", "index": 0}]]},
     "Collect All Backlinks": {"main": [[{"node": "Parse Ahrefs Data", "type": "main", "index": 0}]]},
     "Parse Ahrefs Data": {"main": [[{"node": "Write All Sheets", "type": "main", "index": 0}]]},
