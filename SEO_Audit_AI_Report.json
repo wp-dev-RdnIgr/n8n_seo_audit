@@ -12,15 +12,28 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-800, 300],
+      "position": [
+        -800,
+        300
+      ],
       "webhookId": "seo-audit-ai-report"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "spreadsheetId", "name": "spreadsheetId", "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}", "type": "string"},
-            {"id": "date_today", "name": "date_today", "value": "={{ $now.toFormat('yyyy-MM-dd') }}", "type": "string"}
+            {
+              "id": "spreadsheetId",
+              "name": "spreadsheetId",
+              "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "date_today",
+              "name": "date_today",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -29,7 +42,10 @@
       "name": "Set Variables",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-560, 300]
+      "position": [
+        -560,
+        300
+      ]
     },
     {
       "parameters": {
@@ -43,8 +59,16 @@
       "name": "Get Spreadsheet Info",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-400, 300],
-      "credentials": {"googleDriveOAuth2Api": {"id": "vhGFSji8bW1qOA1c", "name": "Google Drive for n8n"}}
+      "position": [
+        -400,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
     },
     {
       "parameters": {
@@ -54,7 +78,10 @@
       "name": "Extract Domain & Folder",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-240, 300]
+      "position": [
+        -240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -68,8 +95,16 @@
       "name": "Read All Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-60, 300],
-      "credentials": {"googleSheetsOAuth2Api": {"id": "hMp9ISVYVcdpImYl", "name": "Google Sheets account"}}
+      "position": [
+        -60,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
     },
     {
       "parameters": {
@@ -79,7 +114,10 @@
       "name": "Prepare Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-80, 300]
+      "position": [
+        -80,
+        300
+      ]
     },
     {
       "parameters": {
@@ -87,7 +125,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з SEO аналітики. Проаналізуй дані органічного трафіку для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent1Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальний стан органічного трафіку\n2. Тренди (зростання/падіння)\n3. Топ-сторінки та їх внесок\n4. Розподіл по країнах (якщо є)\n5. Брендовий vs небрендовий трафік\n6. Проблемні зони\n7. Точки росту та можливості\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з SEO аналітики. Проаналізуй дані органічного трафіку для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent1Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальний стан органічного трафіку\n2. Тренди (зростання/падіння)\n3. Топ-сторінки та їх внесок\n4. Розподіл по країнах (якщо є)\n5. Брендовий vs небрендовий трафік\n6. Проблемні зони\n7. Точки росту та можливості\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• Використовуй нумеровані списки для ТОП-даних\n• Для кожного пункту пиши: назва — значення\n• Приклад: «1. /stabilizator.htm — 8 063 відвідувачів (26%)»\n• Підзаголовки пиши ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -97,8 +135,16 @@
       "name": "Agent 1 - Organic Traffic",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 0],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        0
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -106,7 +152,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з SEO та лінкбілдингу. Проаналізуй посилальний профіль домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent2Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Domain Rating (DR) та його динаміка\n2. Кількість беклінків та реферальних доменів\n3. Якість посилального профілю\n4. Аналіз анкор-листа (переоптимізація?)\n5. Ризики (спам, токсичні посилання)\n6. Рекомендації з покращення\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з SEO та лінкбілдингу. Проаналізуй посилальний профіль домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent2Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Domain Rating (DR) та його динаміка\n2. Кількість беклінків та реферальних доменів\n3. Якість посилального профілю\n4. Аналіз анкор-листа (переоптимізація?)\n5. Ризики (спам, токсичні посилання)\n6. Рекомендації з покращення\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• Використовуй нумеровані списки для даних\n• Для метрик пиши: «Метрика: значення»\n• Підзаголовки пиши ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -116,8 +162,16 @@
       "name": "Agent 2 - Link Profile",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 150],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        150
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -125,7 +179,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з SEO. Проаналізуй топ-сторінки за кількістю посилань для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent3Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Які сторінки отримують найбільше посилань\n2. Співвідношення посилань до трафіку\n3. Типи контенту, що приваблюють посилання\n4. Можливості для лінкбейтингу\n5. Сторінки з потенціалом для покращення\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з SEO. Проаналізуй топ-сторінки за кількістю посилань для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent3Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Які сторінки отримують найбільше посилань\n2. Співвідношення посилань до трафіку\n3. Типи контенту, що приваблюють посилання\n4. Можливості для лінкбейтингу\n5. Сторінки з потенціалом для покращення\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• ТОП сторінок подавай як нумерований список\n• Формат: «1. /url — X посилань, Y трафік»\n• Підзаголовки ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -135,8 +189,16 @@
       "name": "Agent 3 - Top Pages Links",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 300],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -144,7 +206,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з веб-аналітики. Проаналізуй поведінкові метрики для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent4Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Джерела трафіку (соціальні мережі, реферали)\n2. Розподіл по соціальних мережах\n3. Топ реферальні сайти та індустрії\n4. Поведінка користувачів\n5. Можливості для залучення трафіку\n6. Рекомендації\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з веб-аналітики. Проаналізуй поведінкові метрики для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent4Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Джерела трафіку (соціальні мережі, реферали)\n2. Розподіл по соціальних мережах\n3. Топ реферальні сайти та індустрії\n4. Поведінка користувачів\n5. Можливості для залучення трафіку\n6. Рекомендації\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• Дані подавай списками з відсотками\n• Формат: «• YouTube — 49% трафіку»\n• Підзаголовки ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -154,8 +216,16 @@
       "name": "Agent 4 - Behavioral",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 450],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        450
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -163,7 +233,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з SEO та семантики. Проаналізуй ключові фрази для домену {{ $json.domain }}.\n\nДані (вибірка):\n{{ JSON.stringify($json.agent5Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальна кількість ключових слів\n2. Розподіл по позиціях (ТОП-3, ТОП-10, ТОП-20)\n3. Найбільш трафікові ключові слова\n4. Тематичні кластери\n5. Можливості для росту (ключі на 4-10 позиціях)\n6. Конкурентні переваги\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з SEO та семантики. Проаналізуй ключові фрази для домену {{ $json.domain }}.\n\nДані (вибірка):\n{{ JSON.stringify($json.agent5Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Загальна кількість ключових слів\n2. Розподіл по позиціях (ТОП-3, ТОП-10, ТОП-20)\n3. Найбільш трафікові ключові слова\n4. Тематичні кластери\n5. Можливості для росту (ключі на 4-10 позиціях)\n6. Конкурентні переваги\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• ТОП ключів подавай нумерованим списком\n• Формат: «1. ключ — позиція X, трафік Y»\n• Підзаголовки ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -173,8 +243,16 @@
       "name": "Agent 5 - Keywords",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 600],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        600
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -182,7 +260,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Ти - експерт з SEO. Проаналізуй трафікогенеруючі сторінки для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent6Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Топ сторінки за трафіком\n2. Співвідношення сторінок до загального трафіку\n3. Типи контенту, що генерують трафік\n4. Сторінки з потенціалом оптимізації\n5. Рекомендації щодо контент-стратегії\n\nФормат: структурований текст з підзаголовками."
+              "content": "=Ти - експерт з SEO. Проаналізуй трафікогенеруючі сторінки для домену {{ $json.domain }}.\n\nДані:\n{{ JSON.stringify($json.agent6Data.data, null, 2) }}\n\nСтвори аналітичний звіт українською мовою:\n1. Топ сторінки за трафіком\n2. Співвідношення сторінок до загального трафіку\n3. Типи контенту, що генерують трафік\n4. Сторінки з потенціалом оптимізації\n5. Рекомендації щодо контент-стратегії\n\nВАЖЛИВО - ФОРМАТ:\n• НЕ використовуй markdown-таблиці (|---|)\n• ТОП сторінок подавай нумерованим списком\n• Формат: «1. /url — X відвідувачів (Y%)»\n• Підзаголовки ВЕЛИКИМИ ЛІТЕРАМИ\n• Після кожного підзаголовка — порожній рядок"
             }
           ]
         },
@@ -192,8 +270,16 @@
       "name": "Agent 6 - Traffic Pages",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [200, 750],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        200,
+        750
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -205,7 +291,10 @@
       "name": "Merge Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [500, 300]
+      "position": [
+        500,
+        300
+      ]
     },
     {
       "parameters": {
@@ -215,7 +304,10 @@
       "name": "Collect Sections",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 300]
+      "position": [
+        700,
+        300
+      ]
     },
     {
       "parameters": {
@@ -233,8 +325,16 @@
       "name": "Final Summary Agent",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [940, 300],
-      "credentials": {"openAiApi": {"id": "openai-credentials", "name": "OpenAI"}}
+      "position": [
+        940,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
     },
     {
       "parameters": {
@@ -244,7 +344,10 @@
       "name": "Prepare Document",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1180, 300]
+      "position": [
+        1180,
+        300
+      ]
     },
     {
       "parameters": {
@@ -261,8 +364,16 @@
       "name": "Create Google Doc",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1420, 300],
-      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+      "position": [
+        1420,
+        300
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "google-docs-credentials",
+          "name": "Google Docs"
+        }
+      }
     },
     {
       "parameters": {
@@ -279,18 +390,29 @@
       "name": "Write Document Content",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1660, 300],
-      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+      "position": [
+        1660,
+        300
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "google-docs-credentials",
+          "name": "Google Docs"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 }\n};\n\nconst requests = [];\n\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', spaceAbove: { magnitude: 0, unit: 'PT' }, spaceBelow: { magnitude: 10, unit: 'PT' } },\n          fields: 'alignment,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
+        "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\nconst docContent = $('Prepare Document').first().json.docContent || '';\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 },\n  bodyText: { red: 0.2, green: 0.2, blue: 0.2 }\n};\n\nconst requests = [];\n\n// STEP 1: Apply default body text style to ENTIRE document\nconst docLength = docContent.length;\nif (docLength > 1) {\n  requests.push({\n    updateTextStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      textStyle: {\n        fontSize: { magnitude: 11, unit: 'PT' },\n        foregroundColor: { color: { rgbColor: colors.bodyText } },\n        weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n      },\n      fields: 'fontSize,foregroundColor,weightedFontFamily'\n    }\n  });\n  requests.push({\n    updateParagraphStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      paragraphStyle: {\n        lineSpacing: 135,\n        spaceAbove: { magnitude: 6, unit: 'PT' },\n        spaceBelow: { magnitude: 6, unit: 'PT' }\n      },\n      fields: 'lineSpacing,spaceAbove,spaceBelow'\n    }\n  });\n}\n\n// STEP 2: Apply specific formatting for headers, titles, etc.\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', spaceAbove: { magnitude: 0, unit: 'PT' }, spaceBelow: { magnitude: 10, unit: 'PT' } },\n          fields: 'alignment,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER' },\n          fields: 'alignment'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
       },
       "id": "node-build-format",
       "name": "Build Format Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1820, 300]
+      "position": [
+        1820,
+        300
+      ]
     },
     {
       "parameters": {
@@ -307,8 +429,16 @@
       "name": "Apply Formatting",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1980, 300],
-      "credentials": {"googleDocsOAuth2Api": {"id": "google-docs-credentials", "name": "Google Docs"}}
+      "position": [
+        1980,
+        300
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "google-docs-credentials",
+          "name": "Google Docs"
+        }
+      }
     },
     {
       "parameters": {
@@ -322,8 +452,16 @@
       "name": "Move to Folder",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2140, 300],
-      "credentials": {"googleDriveOAuth2Api": {"id": "vhGFSji8bW1qOA1c", "name": "Google Drive for n8n"}}
+      "position": [
+        2140,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
     },
     {
       "parameters": {
@@ -335,46 +473,279 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2300, 300]
+      "position": [
+        2300,
+        300
+      ]
     }
   ],
   "pinData": {},
   "connections": {
-    "Webhook": {"main": [[{"node": "Set Variables", "type": "main", "index": 0}]]},
-    "Set Variables": {"main": [[{"node": "Get Spreadsheet Info", "type": "main", "index": 0}]]},
-    "Get Spreadsheet Info": {"main": [[{"node": "Extract Domain & Folder", "type": "main", "index": 0}]]},
-    "Extract Domain & Folder": {"main": [[{"node": "Read All Sheets", "type": "main", "index": 0}]]},
-    "Read All Sheets": {"main": [[{"node": "Prepare Data", "type": "main", "index": 0}]]},
-    "Prepare Data": {"main": [
-      [
-        {"node": "Agent 1 - Organic Traffic", "type": "main", "index": 0},
-        {"node": "Agent 2 - Link Profile", "type": "main", "index": 0},
-        {"node": "Agent 3 - Top Pages Links", "type": "main", "index": 0},
-        {"node": "Agent 4 - Behavioral", "type": "main", "index": 0},
-        {"node": "Agent 5 - Keywords", "type": "main", "index": 0},
-        {"node": "Agent 6 - Traffic Pages", "type": "main", "index": 0}
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
-    ]},
-    "Agent 1 - Organic Traffic": {"main": [[{"node": "Merge Results", "type": "main", "index": 0}]]},
-    "Agent 2 - Link Profile": {"main": [[{"node": "Merge Results", "type": "main", "index": 1}]]},
-    "Agent 3 - Top Pages Links": {"main": [[{"node": "Merge Results", "type": "main", "index": 2}]]},
-    "Agent 4 - Behavioral": {"main": [[{"node": "Merge Results", "type": "main", "index": 3}]]},
-    "Agent 5 - Keywords": {"main": [[{"node": "Merge Results", "type": "main", "index": 4}]]},
-    "Agent 6 - Traffic Pages": {"main": [[{"node": "Merge Results", "type": "main", "index": 5}]]},
-    "Merge Results": {"main": [[{"node": "Collect Sections", "type": "main", "index": 0}]]},
-    "Collect Sections": {"main": [[{"node": "Final Summary Agent", "type": "main", "index": 0}]]},
-    "Final Summary Agent": {"main": [[{"node": "Prepare Document", "type": "main", "index": 0}]]},
-    "Prepare Document": {"main": [[{"node": "Create Google Doc", "type": "main", "index": 0}]]},
-    "Create Google Doc": {"main": [[{"node": "Write Document Content", "type": "main", "index": 0}]]},
-    "Write Document Content": {"main": [[{"node": "Build Format Requests", "type": "main", "index": 0}]]},
-    "Build Format Requests": {"main": [[{"node": "Apply Formatting", "type": "main", "index": 0}]]},
-    "Apply Formatting": {"main": [[{"node": "Move to Folder", "type": "main", "index": 0}]]},
-    "Move to Folder": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Get Spreadsheet Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Spreadsheet Info": {
+      "main": [
+        [
+          {
+            "node": "Extract Domain & Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Domain & Folder": {
+      "main": [
+        [
+          {
+            "node": "Read All Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read All Sheets": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Agent 1 - Organic Traffic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 2 - Link Profile",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 3 - Top Pages Links",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 4 - Behavioral",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 5 - Keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 6 - Traffic Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1 - Organic Traffic": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2 - Link Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Agent 3 - Top Pages Links": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Agent 4 - Behavioral": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Agent 5 - Keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Agent 6 - Traffic Pages": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Collect Sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Sections": {
+      "main": [
+        [
+          {
+            "node": "Final Summary Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Document": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Write Document Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Document Content": {
+      "main": [
+        [
+          {
+            "node": "Build Format Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Format Requests": {
+      "main": [
+        [
+          {
+            "node": "Apply Formatting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Formatting": {
+      "main": [
+        [
+          {
+            "node": "Move to Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to Folder": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
-  "settings": {"executionOrder": "v1"},
+  "settings": {
+    "executionOrder": "v1"
+  },
   "versionId": "00000000-0000-0000-0000-000000000001",
-  "meta": {"instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"},
+  "meta": {
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
   "id": "SEO_Audit_AI_Report_001",
   "tags": []
 }
