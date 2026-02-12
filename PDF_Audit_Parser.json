@@ -82,7 +82,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.data;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.text;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "clean-text",
       "name": "Clean Text & Remove Brand",
