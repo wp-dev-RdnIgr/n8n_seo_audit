@@ -26,7 +26,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract Google Drive file ID from URL\nconst pdfUrl = $input.first().json.pdfUrl || '';\nlet fileId = '';\n\nif (!pdfUrl) {\n  throw new Error('PDF URL is empty. Please provide a valid Google Drive URL.');\n}\n\n// Handle different Google Drive URL formats\nif (pdfUrl.includes('/file/d/')) {\n  fileId = pdfUrl.split('/file/d/')[1].split('/')[0];\n} else if (pdfUrl.includes('id=')) {\n  fileId = pdfUrl.split('id=')[1].split('&')[0];\n} else if (pdfUrl.includes('drive.google.com/open')) {\n  fileId = pdfUrl.split('id=')[1];\n}\n\nif (!fileId) {\n  throw new Error('Could not extract file ID from URL: ' + pdfUrl);\n}\n\nreturn {\n  fileId: fileId,\n  downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,\n  outputSheetName: $input.first().json.outputSheetName\n};"
+        "jsCode": "// Extract Google Drive file ID from URL\nconst pdfUrl = $input.first().json.pdfUrl || '';\nlet fileId = '';\n\nif (!pdfUrl) {\n  throw new Error('PDF URL is empty. Please provide a valid Google Drive URL.');\n}\n\n// Handle different Google Drive URL formats\nif (pdfUrl.includes('/file/d/')) {\n  fileId = pdfUrl.split('/file/d/')[1].split('/')[0];\n} else if (pdfUrl.includes('id=')) {\n  fileId = pdfUrl.split('id=')[1].split('&')[0];\n} else if (pdfUrl.includes('drive.google.com/open')) {\n  fileId = pdfUrl.split('id=')[1];\n}\n\nif (!fileId) {\n  throw new Error('Could not extract file ID from URL: ' + pdfUrl);\n}\n\nreturn {\n  fileId: fileId,\n  downloadUrl: 'https://drive.google.com/uc?export=download&id=' + fileId,\n  outputSheetName: $input.first().json.outputSheetName\n};"
       },
       "id": "extract-file-id",
       "name": "Extract File ID",
@@ -70,7 +70,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.text;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.text;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/\\u0410\\u0443\\u0434\\u0438\\u0442\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "clean-text",
       "name": "Clean Text & Remove Brand",
@@ -141,10 +141,10 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare all sheet data\nconst input = $input.first().json;\nconst data = $('Parse AI Response').first().json.parsedData;\nconst spreadsheetId = input.spreadsheetId || input.id;\nconst spreadsheetUrl = input.spreadsheetUrl || input.url;\n\n// Helper function to create row arrays\nfunction createRows(headers, dataArray, mapping) {\n  const rows = [headers];\n  if (Array.isArray(dataArray)) {\n    dataArray.forEach(item => {\n      rows.push(mapping(item));\n    });\n  }\n  return rows;\n}\n\n// Prepare data for each sheet\nconst sheets = {\n  // 1. General Info\n  generalInfo: {\n    sheetName: '1. Загальна інформація',\n    data: [\n      ['Параметр', 'Значення'],\n      ['URL сайту', data.generalInfo?.siteUrl || ''],\n      ['Дата аудиту', data.generalInfo?.auditDate || ''],\n      ['Режим сканування', data.generalInfo?.scanMode || ''],\n      ['Параметри для аналізу', data.generalInfo?.parametersAnalyzed || '']\n    ]\n  },\n  \n  // 2. Summary - URL Breakdown\n  summary: {\n    sheetName: '2. Зведення',\n    data: [\n      ['Перевірено URL', data.summary?.totalUrlsChecked || 0],\n      [''],\n      ['Тип URL', 'Кількість', 'Відсоток'],\n      ...(data.summary?.urlBreakdown || []).map(item => [item.type, item.count, item.percent]),\n      [''],\n      ['URL з помилками', data.summary?.urlsWithErrors?.total || 0, data.summary?.urlsWithErrors?.percent || ''],\n      [''],\n      ['Тип помилки', 'Кількість', 'Відсоток'],\n      ...(data.summary?.urlsWithErrors?.breakdown || []).map(item => [item.type, item.count, item.percent])\n    ]\n  },\n  \n  // 3. Content Types\n  contentTypes: {\n    sheetName: '3. Типи контенту',\n    data: [\n      ['Тип контенту', 'Кількість', 'Відсоток'],\n      ...(data.contentTypes || []).map(item => [item.type, item.count, item.percent])\n    ]\n  },\n  \n  // 4. URL Structure\n  urlStructure: {\n    sheetName: '4. Структура URL',\n    data: [\n      ['Хост', 'Сегмент URL', 'Кількість', 'Відсоток'],\n      ...(data.urlStructure || []).map(item => [item.host, item.segment, item.count, item.percent])\n    ]\n  },\n  \n  // 5. Server Response Codes\n  responseCodes: {\n    sheetName: '5. Коди відповідей',\n    data: [\n      ['Код', 'Опис', 'Кількість', 'Відсоток'],\n      ...(data.serverResponseCodes || []).map(item => [item.code, item.description, item.count, item.percent])\n    ]\n  },\n  \n  // 6. Indexability\n  indexability: {\n    sheetName: '6. Індексація',\n    data: [\n      ['Відкритість для пошуку'],\n      ['Статус', 'Кількість', 'Відсоток'],\n      ...(data.indexability?.searchOpenness || []).map(item => [item.status, item.count, item.percent]),\n      [''],\n      ['Причини закриття'],\n      ['Причина', 'Кількість', 'Відсоток'],\n      ...(data.indexability?.closureReasons || []).map(item => [item.reason, item.count, item.percent])\n    ]\n  },\n  \n  // 7. Meta Robots & Canonical\n  metaRobots: {\n    sheetName: '7. Meta Robots',\n    data: [\n      ['Meta Robots директиви'],\n      ['Директива', 'Кількість', 'Відсоток'],\n      ...(data.metaRobots || []).map(item => [item.directive, item.count, item.percent]),\n      [''],\n      ['Використання canonical'],\n      ['Статус', 'Кількість', 'Відсоток'],\n      ...(data.canonicalUsage || []).map(item => [item.status, item.count, item.percent])\n    ]\n  },\n  \n  // 8. URL Depth & Nesting\n  urlDepth: {\n    sheetName: '8. Глибина URL',\n    data: [\n      ['Глибина (кліки від головної)'],\n      ['Глибина', 'Кількість URL'],\n      ...(data.urlDepth || []).map(item => [item.depth, item.count]),\n      [''],\n      ['Вкладеність URL (сегменти)'],\n      ['Вкладеність', 'Кількість URL'],\n      ...(data.urlNesting || []).map(item => [item.nesting, item.count])\n    ]\n  },\n  \n  // 9. Loading Speed HTML\n  speedHtml: {\n    sheetName: '9. Швидкість HTML',\n    data: [\n      ['Час відповіді сервера (HTML)'],\n      ['Метрика', 'Значення'],\n      ['Максимальний', (data.loadingSpeedHtml?.maxMs || 0) + ' мс'],\n      ['Мінімальний', (data.loadingSpeedHtml?.minMs || 0) + ' мс'],\n      ['Медіана', (data.loadingSpeedHtml?.medianMs || 0) + ' мс'],\n      [''],\n      ['Розподіл за швидкістю'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.loadingSpeedHtml?.distribution || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 10. Loading Speed Resources\n  speedResources: {\n    sheetName: '10. Швидкість ресурсів',\n    data: [\n      ['Час відповіді сервера (зображення та ресурси)'],\n      ['Метрика', 'Значення'],\n      ['Максимальний', (data.loadingSpeedResources?.maxMs || 0) + ' мс'],\n      ['Мінімальний', (data.loadingSpeedResources?.minMs || 0) + ' мс'],\n      ['Медіана', (data.loadingSpeedResources?.medianMs || 0) + ' мс'],\n      [''],\n      ['Розподіл за швидкістю'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.loadingSpeedResources?.distribution || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 11. Protocols\n  protocols: {\n    sheetName: '11. Протоколи',\n    data: [\n      ['Протокол внутрішніх HTML'],\n      ['Протокол', 'Кількість', 'Відсоток'],\n      ...(data.protocols?.html || []).map(item => [item.protocol, item.count, item.percent]),\n      [''],\n      ['Протокол зображень та ресурсів'],\n      ['Протокол', 'Кількість', 'Відсоток'],\n      ...(data.protocols?.resources || []).map(item => [item.protocol, item.count, item.percent])\n    ]\n  },\n  \n  // 12. SEO Elements\n  seoElements: {\n    sheetName: '12. SEO-елементи',\n    data: [\n      ['Унікальність Title, Description, H1'],\n      ['Елемент', 'Унікальні', 'Дублюються', 'Відсутні'],\n      ...(data.seoElements?.uniqueness || []).map(item => [item.element, item.unique, item.duplicated, item.missing]),\n      [''],\n      ['Довжина Title, Description, H1'],\n      ['Елемент', 'Оптимальні', 'Короткі', 'Довгі'],\n      ...(data.seoElements?.length || []).map(item => [item.element, item.optimal, item.short, item.long])\n    ]\n  },\n  \n  // 13. Content Metrics\n  contentMetrics: {\n    sheetName: '13. Метрики контенту',\n    data: [\n      ['Кількість символів на сторінці'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.charactersPerPage || []).map(item => [item.category, item.count, item.percent]),\n      [''],\n      ['Кількість слів на сторінці'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.wordsPerPage || []).map(item => [item.category, item.count, item.percent]),\n      [''],\n      ['Розмір зображень'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.imageSizes || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 14. Errors\n  errors: {\n    sheetName: '14. Помилки',\n    data: [\n      ['Критичність помилок'],\n      ['Рівень', 'Кількість'],\n      ['Висока', data.errors?.criticality?.high || 0],\n      ['Середня', data.errors?.criticality?.medium || 0],\n      ['Низька', data.errors?.criticality?.low || 0],\n      [''],\n      ['Топ важливих помилок'],\n      ['Помилка', 'Кількість', 'Відсоток'],\n      ...(data.errors?.topErrors || []).map(item => [item.error, item.count, item.percent]),\n      [''],\n      ['Помилки високої критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.highCriticality || []).map(item => [item.error, item.exampleUrl, item.count]),\n      [''],\n      ['Помилки середньої критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.mediumCriticality || []).map(item => [item.error, item.exampleUrl, item.count]),\n      [''],\n      ['Помилки низької критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.lowCriticality || []).map(item => [item.error, item.exampleUrl, item.count])\n    ]\n  },\n  \n  // 15. Scan Settings\n  scanSettings: {\n    sheetName: '15. Налаштування',\n    data: [\n      ['Проаналізовані дані'],\n      ['Параметр', 'Значення'],\n      ['Проскановано URL', data.scanSettings?.analyzedData?.scannedUrls || ''],\n      ['Сегментація', data.scanSettings?.analyzedData?.segmentation || ''],\n      ['Обрано параметрів', data.scanSettings?.analyzedData?.parametersSelected || ''],\n      [''],\n      ['Швидкість сканування'],\n      ['Макс. час очікування', data.scanSettings?.speedSettings?.maxTimeout || ''],\n      ['JavaScript рендеринг', data.scanSettings?.speedSettings?.jsRendering || '']\n    ]\n  }\n};\n\nconst sheetNames = Object.values(sheets).map(s => s.sheetName);\n\n// First rename the default sheet (sheetId: 0) to the first sheet name\nconst renameFirstSheet = {\n  updateSheetProperties: {\n    properties: {\n      sheetId: 0,\n      title: sheetNames[0]\n    },\n    fields: 'title'\n  }\n};\n\n// Prepare requests: rename first sheet + add remaining sheets\nconst addSheetRequests = [\n  renameFirstSheet,\n  ...sheetNames.slice(1).map((name, idx) => ({\n    addSheet: {\n      properties: {\n        title: name,\n        index: idx + 1\n      }\n    }\n  }))\n];\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: spreadsheetUrl,\n  sheets: sheets,\n  sheetNames: sheetNames,\n  addSheetRequests: addSheetRequests\n};"
+        "jsCode": "// Build all data for a single sheet with section dividers\nconst data = $('Parse AI Response').first().json.parsedData;\nconst input = $input.first().json;\nconst spreadsheetId = input.spreadsheetId || input.id;\nconst spreadsheetUrl = input.spreadsheetUrl || input.url;\n\nconst rows = [];\nconst sectionRows = [];\nconst tableHeaderRows = [];\nconst subHeaderRows = [];\n\nfunction section(title) {\n  sectionRows.push(rows.length);\n  rows.push([title, '', '', '', '', '']);\n}\n\nfunction th() {\n  tableHeaderRows.push(rows.length);\n  var args = [];\n  for (var i = 0; i < arguments.length; i++) args.push(arguments[i]);\n  while (args.length < 6) args.push('');\n  rows.push(args);\n}\n\nfunction sub(title) {\n  subHeaderRows.push(rows.length);\n  rows.push([title, '', '', '', '', '']);\n}\n\nfunction r() {\n  var args = [];\n  for (var i = 0; i < arguments.length; i++) args.push(arguments[i]);\n  while (args.length < 6) args.push('');\n  rows.push(args);\n}\n\nfunction empty() {\n  rows.push(['', '', '', '', '', '']);\n}\n\n// ===== TITLE =====\nsection('SEO АУДИТ — ЗВІТ');\nempty();\n\n// ===== 1. GENERAL INFO =====\nsection('1. ЗАГАЛЬНА ІНФОРМАЦІЯ');\nth('Параметр', 'Значення');\nr('URL сайту', data.generalInfo?.siteUrl || '');\nr('Дата аудиту', data.generalInfo?.auditDate || '');\nr('Режим сканування', data.generalInfo?.scanMode || '');\nr('Параметри для аналізу', data.generalInfo?.parametersAnalyzed || '');\nempty();\n\n// ===== 2. SUMMARY =====\nsection('2. ЗВЕДЕННЯ');\nr('Перевірено URL', data.summary?.totalUrlsChecked || 0);\nempty();\nsub('Розподіл URL за типом');\nth('Тип', 'Кількість', 'Відсоток');\n(data.summary?.urlBreakdown || []).forEach(function(item) { r(item.type, item.count, item.percent); });\nempty();\nsub('URL з помилками');\nr('Всього URL з помилками', data.summary?.urlsWithErrors?.total || 0, data.summary?.urlsWithErrors?.percent || '');\nth('Тип помилки', 'Кількість', 'Відсоток');\n(data.summary?.urlsWithErrors?.breakdown || []).forEach(function(item) { r(item.type, item.count, item.percent); });\nempty();\n\n// ===== 3. CONTENT TYPES =====\nsection('3. ТИПИ КОНТЕНТУ');\nth('Тип контенту', 'Кількість', 'Відсоток');\n(data.contentTypes || []).forEach(function(item) { r(item.type, item.count, item.percent); });\nempty();\n\n// ===== 4. URL STRUCTURE =====\nsection('4. СТРУКТУРА URL');\nth('Хост', 'Сегмент', 'Кількість', 'Відсоток');\n(data.urlStructure || []).forEach(function(item) { r(item.host, item.segment, item.count, item.percent); });\nempty();\n\n// ===== 5. SERVER RESPONSE CODES =====\nsection('5. КОДИ ВІДПОВІДЕЙ СЕРВЕРА');\nth('Код', 'Опис', 'Кількість', 'Відсоток');\n(data.serverResponseCodes || []).forEach(function(item) { r(item.code, item.description, item.count, item.percent); });\nempty();\n\n// ===== 6. INDEXABILITY =====\nsection('6. ІНДЕКСАЦІЯ');\nsub('Відкритість для пошуку');\nth('Статус', 'Кількість', 'Відсоток');\n(data.indexability?.searchOpenness || []).forEach(function(item) { r(item.status, item.count, item.percent); });\nempty();\nsub('Причини закриття від індексації');\nth('Причина', 'Кількість', 'Відсоток');\n(data.indexability?.closureReasons || []).forEach(function(item) { r(item.reason, item.count, item.percent); });\nempty();\n\n// ===== 7. META ROBOTS & CANONICAL =====\nsection('7. META ROBOTS & CANONICAL');\nsub('Meta Robots директиви');\nth('Директива', 'Кількість', 'Відсоток');\n(data.metaRobots || []).forEach(function(item) { r(item.directive, item.count, item.percent); });\nempty();\nsub('Використання canonical');\nth('Статус', 'Кількість', 'Відсоток');\n(data.canonicalUsage || []).forEach(function(item) { r(item.status, item.count, item.percent); });\nempty();\n\n// ===== 8. URL DEPTH =====\nsection('8. ГЛИБИНА ТА ВКЛАДЕНІСТЬ URL');\nsub('Глибина (кліки від головної)');\nth('Глибина', 'Кількість URL');\n(data.urlDepth || []).forEach(function(item) { r(item.depth, item.count); });\nempty();\nsub('Вкладеність URL (сегменти)');\nth('Вкладеність', 'Кількість URL');\n(data.urlNesting || []).forEach(function(item) { r(item.nesting, item.count); });\nempty();\n\n// ===== 9. LOADING SPEED HTML =====\nsection('9. ШВИДКІСТЬ ЗАВАНТАЖЕННЯ HTML');\nth('Метрика', 'Значення');\nr('Максимальний час', (data.loadingSpeedHtml?.maxMs || 0) + ' мс');\nr('Мінімальний час', (data.loadingSpeedHtml?.minMs || 0) + ' мс');\nr('Медіана', (data.loadingSpeedHtml?.medianMs || 0) + ' мс');\nempty();\nsub('Розподіл за швидкістю');\nth('Категорія', 'Кількість', 'Відсоток');\n(data.loadingSpeedHtml?.distribution || []).forEach(function(item) { r(item.category, item.count, item.percent); });\nempty();\n\n// ===== 10. LOADING SPEED RESOURCES =====\nsection('10. ШВИДКІСТЬ ЗАВАНТАЖЕННЯ РЕСУРСІВ');\nth('Метрика', 'Значення');\nr('Максимальний час', (data.loadingSpeedResources?.maxMs || 0) + ' мс');\nr('Мінімальний час', (data.loadingSpeedResources?.minMs || 0) + ' мс');\nr('Медіана', (data.loadingSpeedResources?.medianMs || 0) + ' мс');\nempty();\nsub('Розподіл за швидкістю');\nth('Категорія', 'Кількість', 'Відсоток');\n(data.loadingSpeedResources?.distribution || []).forEach(function(item) { r(item.category, item.count, item.percent); });\nempty();\n\n// ===== 11. PROTOCOLS =====\nsection('11. ПРОТОКОЛИ');\nsub('Протокол внутрішніх HTML');\nth('Протокол', 'Кількість', 'Відсоток');\n(data.protocols?.html || []).forEach(function(item) { r(item.protocol, item.count, item.percent); });\nempty();\nsub('Протокол зображень та ресурсів');\nth('Протокол', 'Кількість', 'Відсоток');\n(data.protocols?.resources || []).forEach(function(item) { r(item.protocol, item.count, item.percent); });\nempty();\n\n// ===== 12. SEO ELEMENTS =====\nsection('12. SEO-ЕЛЕМЕНТИ');\nsub('Унікальність Title, Description, H1');\nth('Елемент', 'Унікальні', 'Дублюються', 'Відсутні');\n(data.seoElements?.uniqueness || []).forEach(function(item) { r(item.element, item.unique, item.duplicated, item.missing); });\nempty();\nsub('Довжина Title, Description, H1');\nth('Елемент', 'Оптимальні', 'Короткі', 'Довгі');\n(data.seoElements?.length || []).forEach(function(item) { r(item.element, item.optimal, item.short, item.long); });\nempty();\n\n// ===== 13. CONTENT METRICS =====\nsection('13. МЕТРИКИ КОНТЕНТУ');\nsub('Кількість символів на сторінці');\nth('Категорія', 'Кількість', 'Відсоток');\n(data.contentMetrics?.charactersPerPage || []).forEach(function(item) { r(item.category, item.count, item.percent); });\nempty();\nsub('Кількість слів на сторінці');\nth('Категорія', 'Кількість', 'Відсоток');\n(data.contentMetrics?.wordsPerPage || []).forEach(function(item) { r(item.category, item.count, item.percent); });\nempty();\nsub('Розмір зображень');\nth('Категорія', 'Кількість', 'Відсоток');\n(data.contentMetrics?.imageSizes || []).forEach(function(item) { r(item.category, item.count, item.percent); });\nempty();\n\n// ===== 14. ERRORS =====\nsection('14. ПОМИЛКИ');\nsub('Критичність помилок');\nth('Рівень', 'Кількість');\nr('Висока', data.errors?.criticality?.high || 0);\nr('Середня', data.errors?.criticality?.medium || 0);\nr('Низька', data.errors?.criticality?.low || 0);\nempty();\nsub('Топ помилок');\nth('Помилка', 'Кількість', 'Відсоток');\n(data.errors?.topErrors || []).forEach(function(item) { r(item.error, item.count, item.percent); });\nempty();\nsub('Помилки високої критичності');\nth('Помилка', 'Приклад URL', 'Кількість');\n(data.errors?.highCriticality || []).forEach(function(item) { r(item.error, item.exampleUrl, item.count); });\nempty();\nsub('Помилки середньої критичності');\nth('Помилка', 'Приклад URL', 'Кількість');\n(data.errors?.mediumCriticality || []).forEach(function(item) { r(item.error, item.exampleUrl, item.count); });\nempty();\nsub('Помилки низької критичності');\nth('Помилка', 'Приклад URL', 'Кількість');\n(data.errors?.lowCriticality || []).forEach(function(item) { r(item.error, item.exampleUrl, item.count); });\nempty();\n\n// ===== 15. SCAN SETTINGS =====\nsection('15. НАЛАШТУВАННЯ СКАНУВАННЯ');\nth('Параметр', 'Значення');\nr('Проскановано URL', data.scanSettings?.analyzedData?.scannedUrls || '');\nr('Сегментація', data.scanSettings?.analyzedData?.segmentation || '');\nr('Обрано параметрів', data.scanSettings?.analyzedData?.parametersSelected || '');\nr('Макс. час очікування', data.scanSettings?.speedSettings?.maxTimeout || '');\nr('JavaScript рендеринг', data.scanSettings?.speedSettings?.jsRendering || '');\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: spreadsheetUrl,\n  rows: rows,\n  sectionRows: sectionRows,\n  tableHeaderRows: tableHeaderRows,\n  subHeaderRows: subHeaderRows,\n  totalRows: rows.length\n};"
       },
-      "id": "prepare-sheet-data",
-      "name": "Prepare Sheet Data",
+      "id": "build-sheet-data",
+      "name": "Build Sheet Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2200, 300]
@@ -152,16 +152,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}:batchUpdate",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchUpdate",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ requests: $json.addSheetRequests }) }}",
+        "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": [{ \"range\": \"Sheet1!A1\", \"values\": {{ JSON.stringify($json.rows) }} }]\n}",
         "options": {}
       },
-      "id": "create-sheets",
-      "name": "Create All Sheets",
+      "id": "write-data",
+      "name": "Write Data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [2420, 300],
@@ -174,10 +174,10 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare batch value updates for all sheets\nconst prevData = $('Prepare Sheet Data').first().json;\nconst spreadsheetId = prevData.spreadsheetId;\nconst sheets = prevData.sheets;\n\n// Create value ranges for all sheets\nconst valueRanges = Object.values(sheets).map(sheet => ({\n  range: `'${sheet.sheetName}'!A1`,\n  values: sheet.data\n}));\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: prevData.spreadsheetUrl,\n  valueRanges: valueRanges\n};"
+        "jsCode": "// Build formatting requests for Google Sheets API\nconst sd = $('Build Sheet Data').first().json;\nconst spreadsheetId = sd.spreadsheetId;\nconst sectionRows = sd.sectionRows;\nconst tableHeaderRows = sd.tableHeaderRows;\nconst subHeaderRows = sd.subHeaderRows;\nconst totalRows = sd.totalRows;\nconst cols = 6;\n\nconst req = [];\n\n// 0. Default font for all cells\nreq.push({\n  repeatCell: {\n    range: { sheetId: 0, startRowIndex: 0, endRowIndex: totalRows, startColumnIndex: 0, endColumnIndex: cols },\n    cell: { userEnteredFormat: { textFormat: { fontFamily: 'Google Sans', fontSize: 10 }, verticalAlignment: 'MIDDLE' } },\n    fields: 'userEnteredFormat(textFormat(fontFamily,fontSize),verticalAlignment)'\n  }\n});\n\n// 1. Rename sheet\nreq.push({\n  updateSheetProperties: {\n    properties: { sheetId: 0, title: 'SEO Аудит' },\n    fields: 'title'\n  }\n});\n\n// 2. Column widths\nvar widths = [350, 200, 120, 120, 120, 120];\nwidths.forEach(function(w, i) {\n  req.push({\n    updateDimensionProperties: {\n      range: { sheetId: 0, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 },\n      properties: { pixelSize: w },\n      fields: 'pixelSize'\n    }\n  });\n});\n\n// 3. Title row — first section row, extra large centered\nif (sectionRows.length > 0) {\n  var ti = sectionRows[0];\n  req.push({ mergeCells: { range: { sheetId: 0, startRowIndex: ti, endRowIndex: ti + 1, startColumnIndex: 0, endColumnIndex: cols }, mergeType: 'MERGE_ALL' } });\n  req.push({ repeatCell: {\n    range: { sheetId: 0, startRowIndex: ti, endRowIndex: ti + 1, startColumnIndex: 0, endColumnIndex: cols },\n    cell: { userEnteredFormat: {\n      backgroundColor: { red: 0.102, green: 0.451, blue: 0.910 },\n      textFormat: { bold: true, fontSize: 14, foregroundColor: { red: 1, green: 1, blue: 1 }, fontFamily: 'Google Sans' },\n      horizontalAlignment: 'CENTER',\n      verticalAlignment: 'MIDDLE'\n    } },\n    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'\n  } });\n  req.push({ updateDimensionProperties: {\n    range: { sheetId: 0, dimension: 'ROWS', startIndex: ti, endIndex: ti + 1 },\n    properties: { pixelSize: 44 },\n    fields: 'pixelSize'\n  } });\n}\n\n// 4. Section headers (skip title at index 0) — dark blue, white bold\nsectionRows.slice(1).forEach(function(ri) {\n  req.push({ mergeCells: { range: { sheetId: 0, startRowIndex: ri, endRowIndex: ri + 1, startColumnIndex: 0, endColumnIndex: cols }, mergeType: 'MERGE_ALL' } });\n  req.push({ repeatCell: {\n    range: { sheetId: 0, startRowIndex: ri, endRowIndex: ri + 1, startColumnIndex: 0, endColumnIndex: cols },\n    cell: { userEnteredFormat: {\n      backgroundColor: { red: 0.102, green: 0.451, blue: 0.910 },\n      textFormat: { bold: true, fontSize: 11, foregroundColor: { red: 1, green: 1, blue: 1 }, fontFamily: 'Google Sans' },\n      horizontalAlignment: 'LEFT',\n      verticalAlignment: 'MIDDLE'\n    } },\n    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'\n  } });\n  req.push({ updateDimensionProperties: {\n    range: { sheetId: 0, dimension: 'ROWS', startIndex: ri, endIndex: ri + 1 },\n    properties: { pixelSize: 36 },\n    fields: 'pixelSize'\n  } });\n});\n\n// 5. Sub-headers — light blue bg, blue bold text, merged\nsubHeaderRows.forEach(function(ri) {\n  req.push({ mergeCells: { range: { sheetId: 0, startRowIndex: ri, endRowIndex: ri + 1, startColumnIndex: 0, endColumnIndex: cols }, mergeType: 'MERGE_ALL' } });\n  req.push({ repeatCell: {\n    range: { sheetId: 0, startRowIndex: ri, endRowIndex: ri + 1, startColumnIndex: 0, endColumnIndex: cols },\n    cell: { userEnteredFormat: {\n      backgroundColor: { red: 0.910, green: 0.941, blue: 0.996 },\n      textFormat: { bold: true, fontSize: 10, foregroundColor: { red: 0.102, green: 0.451, blue: 0.910 }, fontFamily: 'Google Sans' },\n      horizontalAlignment: 'LEFT',\n      verticalAlignment: 'MIDDLE'\n    } },\n    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'\n  } });\n  req.push({ updateDimensionProperties: {\n    range: { sheetId: 0, dimension: 'ROWS', startIndex: ri, endIndex: ri + 1 },\n    properties: { pixelSize: 30 },\n    fields: 'pixelSize'\n  } });\n});\n\n// 6. Table header rows — gray bg, bold text, bottom border\ntableHeaderRows.forEach(function(ri) {\n  req.push({ repeatCell: {\n    range: { sheetId: 0, startRowIndex: ri, endRowIndex: ri + 1, startColumnIndex: 0, endColumnIndex: cols },\n    cell: { userEnteredFormat: {\n      backgroundColor: { red: 0.945, green: 0.953, blue: 0.957 },\n      textFormat: { bold: true, fontSize: 10, fontFamily: 'Google Sans' },\n      horizontalAlignment: 'LEFT',\n      verticalAlignment: 'MIDDLE'\n    } },\n    fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'\n  } });\n});\n\n// 7. Light horizontal grid lines across all data\nreq.push({ updateBorders: {\n  range: { sheetId: 0, startRowIndex: 0, endRowIndex: totalRows, startColumnIndex: 0, endColumnIndex: cols },\n  innerHorizontal: { style: 'SOLID', width: 1, color: { red: 0.918, green: 0.933, blue: 0.945 } }\n} });\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: sd.spreadsheetUrl,\n  formatRequests: req\n};"
       },
-      "id": "prepare-batch-update",
-      "name": "Prepare Batch Update",
+      "id": "build-format",
+      "name": "Build Format Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2640, 300]
@@ -185,16 +185,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchUpdate",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}:batchUpdate",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": {{ JSON.stringify($json.valueRanges) }}\n}",
+        "jsonBody": "={{ JSON.stringify({ requests: $json.formatRequests }) }}",
         "options": {}
       },
-      "id": "write-all-data",
-      "name": "Write All Data",
+      "id": "apply-format",
+      "name": "Apply Formatting",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [2860, 300],
@@ -207,36 +207,13 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet Data').first().json.spreadsheetId }}:batchUpdate",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": {\n          \"sheetId\": 0,\n          \"startRowIndex\": 0,\n          \"endRowIndex\": 1\n        },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": {\"red\": 0.2, \"green\": 0.6, \"blue\": 0.86},\n            \"textFormat\": {\"bold\": true, \"foregroundColor\": {\"red\": 1, \"green\": 1, \"blue\": 1}}\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": {\n          \"sheetId\": 0,\n          \"dimension\": \"COLUMNS\",\n          \"startIndex\": 0,\n          \"endIndex\": 5\n        }\n      }\n    }\n  ]\n}",
-        "options": {}
-      },
-      "id": "format-sheets",
-      "name": "Format Sheets",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [3080, 300],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "google-sheets-creds",
-          "name": "Google Sheets OAuth2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Calculate processing stats and return final response\nconst startTime = $('Clean Text & Remove Brand').first().json.timestamp;\nconst endTime = new Date().toISOString();\nconst processingTime = Math.round((new Date(endTime) - new Date(startTime)) / 1000);\n\nconst spreadsheetUrl = $('Prepare Sheet Data').first().json.spreadsheetUrl;\nconst sheetNames = $('Prepare Sheet Data').first().json.sheetNames;\n\nreturn {\n  success: true,\n  spreadsheetUrl: spreadsheetUrl,\n  totalSheets: sheetNames.length,\n  sheetNames: sheetNames,\n  processingTime: processingTime\n};"
+        "jsCode": "// Calculate processing stats and return final response\nconst startTime = $('Clean Text & Remove Brand').first().json.timestamp;\nconst endTime = new Date().toISOString();\nconst processingTime = Math.round((new Date(endTime) - new Date(startTime)) / 1000);\n\nconst spreadsheetUrl = $('Build Sheet Data').first().json.spreadsheetUrl;\nconst totalRows = $('Build Sheet Data').first().json.totalRows;\n\nreturn {\n  success: true,\n  spreadsheetUrl: spreadsheetUrl,\n  sheetName: 'SEO Аудит',\n  totalRows: totalRows,\n  processingTime: processingTime\n};"
       },
       "id": "prepare-response",
       "name": "Prepare Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3300, 300]
+      "position": [3080, 300]
     },
     {
       "parameters": {
@@ -248,7 +225,7 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [3520, 300]
+      "position": [3300, 300]
     }
   ],
   "connections": {
@@ -294,30 +271,25 @@
     },
     "Create Result Spreadsheet": {
       "main": [
-        [{"node": "Prepare Sheet Data", "type": "main", "index": 0}]
+        [{"node": "Build Sheet Data", "type": "main", "index": 0}]
       ]
     },
-    "Prepare Sheet Data": {
+    "Build Sheet Data": {
       "main": [
-        [{"node": "Create All Sheets", "type": "main", "index": 0}]
+        [{"node": "Write Data", "type": "main", "index": 0}]
       ]
     },
-    "Create All Sheets": {
+    "Write Data": {
       "main": [
-        [{"node": "Prepare Batch Update", "type": "main", "index": 0}]
+        [{"node": "Build Format Requests", "type": "main", "index": 0}]
       ]
     },
-    "Prepare Batch Update": {
+    "Build Format Requests": {
       "main": [
-        [{"node": "Write All Data", "type": "main", "index": 0}]
+        [{"node": "Apply Formatting", "type": "main", "index": 0}]
       ]
     },
-    "Write All Data": {
-      "main": [
-        [{"node": "Format Sheets", "type": "main", "index": 0}]
-      ]
-    },
-    "Format Sheets": {
+    "Apply Formatting": {
       "main": [
         [{"node": "Prepare Response", "type": "main", "index": 0}]
       ]
@@ -335,5 +307,5 @@
   "tags": [],
   "triggerCount": 0,
   "updatedAt": "2024-01-01T00:00:00.000Z",
-  "versionId": "1"
+  "versionId": "2"
 }
