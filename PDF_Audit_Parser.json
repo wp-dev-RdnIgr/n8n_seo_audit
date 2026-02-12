@@ -134,6 +134,7 @@
     },
     {
       "parameters": {
+        "resource": "spreadsheet",
         "operation": "create",
         "title": "={{ $json.outputSheetName }}",
         "options": {}
