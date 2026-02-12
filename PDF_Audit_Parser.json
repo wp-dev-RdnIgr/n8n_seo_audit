@@ -20,11 +20,11 @@
           "string": [
             {
               "name": "pdfUrl",
-              "value": "={{ $json.body.pdfUrl }}"
+              "value": "={{ $json.body?.pdfUrl || $json.pdfUrl || '' }}"
             },
             {
               "name": "outputSheetName",
-              "value": "={{ $json.body.outputName || 'SEO Audit Report - ' + $now.format('dd.MM.yyyy HH:mm') }}"
+              "value": "={{ $json.body?.outputName || $json.outputName || 'SEO Audit Report - ' + $now.format('dd.MM.yyyy HH:mm') }}"
             }
           ]
         },
@@ -38,7 +38,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract Google Drive file ID from URL\nconst pdfUrl = $input.first().json.pdfUrl;\nlet fileId = '';\n\n// Handle different Google Drive URL formats\nif (pdfUrl.includes('/file/d/')) {\n  fileId = pdfUrl.split('/file/d/')[1].split('/')[0];\n} else if (pdfUrl.includes('id=')) {\n  fileId = pdfUrl.split('id=')[1].split('&')[0];\n} else if (pdfUrl.includes('drive.google.com/open')) {\n  fileId = pdfUrl.split('id=')[1];\n}\n\nreturn {\n  fileId: fileId,\n  downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,\n  outputSheetName: $input.first().json.outputSheetName\n};"
+        "jsCode": "// Extract Google Drive file ID from URL\nconst pdfUrl = $input.first().json.pdfUrl || '';\nlet fileId = '';\n\nif (!pdfUrl) {\n  throw new Error('PDF URL is empty. Please provide a valid Google Drive URL.');\n}\n\n// Handle different Google Drive URL formats\nif (pdfUrl.includes('/file/d/')) {\n  fileId = pdfUrl.split('/file/d/')[1].split('/')[0];\n} else if (pdfUrl.includes('id=')) {\n  fileId = pdfUrl.split('id=')[1].split('&')[0];\n} else if (pdfUrl.includes('drive.google.com/open')) {\n  fileId = pdfUrl.split('id=')[1];\n}\n\nif (!fileId) {\n  throw new Error('Could not extract file ID from URL: ' + pdfUrl);\n}\n\nreturn {\n  fileId: fileId,\n  downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,\n  outputSheetName: $input.first().json.outputSheetName\n};"
       },
       "id": "extract-file-id",
       "name": "Extract File ID",
