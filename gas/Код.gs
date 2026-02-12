@@ -1,5 +1,5 @@
 // ============================================
-// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics
+// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed
 // ============================================
 
 function doGet(e) {
@@ -9,7 +9,8 @@ function doGet(e) {
     'audit':       { file: 'form', title: 'Аналіз домену' },
     'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
-    'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' }
+    'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' },
+    'pagespeed':   { file: 'pagespeed_form', title: 'PageSpeed Test' }
   };
 
   var config = pages[page] || pages['audit'];
@@ -241,6 +242,55 @@ function submitGKP(formData) {
       totalKeywords: totalKeywords,
       totalClusters: totalSeeds,
       message: 'Знайдено ' + totalKeywords + ' ключових слів з ' + totalSeeds + ' сід-фраз'
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: PageSpeed Test
+// ============================================
+
+function submitPageSpeedTest(formData) {
+  // Валідація
+  if (!formData.spreadsheetUrl || !formData.spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+    return { success: false, error: 'Невірний формат посилання на таблицю' };
+  }
+
+  // Витягти spreadsheetId з URL
+  var match = formData.spreadsheetUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!match) {
+    return { success: false, error: 'Не вдалося отримати ID таблиці' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/pagespeed-test';
+
+  var payload = {
+    spreadsheetId: match[1],
+    testMobile: formData.testMobile !== false,
+    testDesktop: formData.testDesktop !== false,
+    batchSize: 5,
+    delaySeconds: 5
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    return {
+      success: true,
+      spreadsheetUrl: result.spreadsheet_url,
+      totalUrls: result.total_urls || 0,
+      processingTime: result.processing_time_seconds || 0,
+      message: 'PageSpeed тест завершено для ' + (result.total_urls || 0) + ' URL'
     };
   } catch (error) {
     return { success: false, error: error.toString() };
