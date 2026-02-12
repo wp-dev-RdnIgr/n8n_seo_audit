@@ -16,24 +16,12 @@
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "pdfUrl",
-              "value": "={{ $json.body?.pdfUrl || $json.pdfUrl || '' }}"
-            },
-            {
-              "name": "outputSheetName",
-              "value": "={{ $json.body?.outputName || $json.outputName || 'SEO Audit Report - ' + $now.format('dd.MM.yyyy HH:mm') }}"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// Extract data from webhook body\nconst webhookData = $input.first().json;\nconst body = webhookData.body || {};\n\nreturn {\n  pdfUrl: body.pdfUrl || '',\n  outputSheetName: body.outputName || 'SEO Audit Report - ' + new Date().toISOString().slice(0, 10)\n};"
       },
       "id": "set-variables",
       "name": "Set Variables",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [440, 300]
     },
     {
