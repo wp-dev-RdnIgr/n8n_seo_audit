@@ -6,6 +6,8 @@ function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page : 'audit';
 
   var pages = {
+    'audit': { file: 'form', title: 'Аналіз домену' },
+    'gkp':   { file: 'gkp_form', title: 'Семантичне ядро (GKP)' }
     'audit':       { file: 'form', title: 'Аналіз конкурентів' },
     'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
@@ -65,6 +67,18 @@ function submitAudit(domain) {
 }
 
 // ============================================
+// БЕКЕНД: AI Аналіз таблиці
+// ============================================
+
+function submitAIAnalysis(spreadsheetUrl) {
+  if (!spreadsheetUrl || !spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+    return { success: false, error: 'Невірний формат посилання на таблицю' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/seo-audit-ai-report';
+
+  var payload = {
+    url: spreadsheetUrl
 // БЕКЕНД: GKP Етап 1 - Генерація ідей
 // ============================================
 
@@ -96,6 +110,9 @@ function submitGKPIdeas(formData) {
 
     return {
       success: true,
+      docUrl: result.docUrl,
+      domain: result.domain,
+      message: 'AI звіт створено для ' + result.domain
       spreadsheetUrl: result.spreadsheet_url,
       totalKeywords: result.total_keywords || 0,
       totalBatches: result.total_batches_processed || 0,
@@ -107,6 +124,7 @@ function submitGKPIdeas(formData) {
 }
 
 // ============================================
+// БЕКЕНД: Семантичне ядро (GKP)
 // БЕКЕНД: GKP Етап 2 - Отримання метрик
 // ============================================
 

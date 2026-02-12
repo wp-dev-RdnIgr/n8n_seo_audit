@@ -410,12 +410,12 @@
     <div class="card">
       <div class="header">
         <div class="logo">📊</div>
-        <h1>Аналіз конкурентів</h1>
-        <p>Збір даних з Ahrefs, Serpstat та SimilarWeb</p>
+        <h1>Аналіз домену</h1>
+        <p>Комплексний SEO-аналіз з Ahrefs, Serpstat та SimilarWeb</p>
       </div>
-      
+
       <div class="form-group">
-        <label>Домен конкурента</label>
+        <label>Домен для аналізу</label>
         <div class="input-wrapper">
           <input 
             type="text" 
@@ -502,6 +502,37 @@
         </div>
       </div>
       
+      <!-- AI Analysis Section -->
+      <div class="sheets" id="aiSection">
+        <div class="sheets-title">🤖 AI Аналіз таблиці</div>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+          Вставте посилання на готову таблицю для генерації AI-звіту у Google Docs
+        </p>
+        <div class="form-group">
+          <label>Посилання на таблицю</label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="spreadsheetUrl"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              autocomplete="off"
+              spellcheck="false"
+            >
+            <span class="input-icon">📋</span>
+          </div>
+        </div>
+        <button class="btn" id="aiSubmitBtn" onclick="handleAISubmit()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
+          <span>🤖 Згенерувати AI звіт</span>
+        </button>
+        <div class="result" id="aiResult">
+          <div class="result-header">
+            <div class="result-icon" id="aiResultIcon"></div>
+            <h3 id="aiResultTitle"></h3>
+          </div>
+          <p id="aiResultMessage"></p>
+        </div>
+      </div>
+
       <div class="footer">
         <div class="footer-time">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -583,7 +614,80 @@
         handleSubmit();
       }
     });
-    
+
+    document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleAISubmit();
+      }
+    });
+
+    // AI Analysis Submit
+    function handleAISubmit() {
+      const urlInput = document.getElementById('spreadsheetUrl');
+      const submitBtn = document.getElementById('aiSubmitBtn');
+      const resultDiv = document.getElementById('aiResult');
+
+      const url = urlInput.value.trim();
+
+      if (!url) {
+        showAIError('Вставте посилання на таблицю');
+        return;
+      }
+
+      if (!url.includes('docs.google.com/spreadsheets')) {
+        showAIError('Невірний формат посилання. Має бути Google Sheets URL');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      resultDiv.className = 'result';
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+
+          if (response.success) {
+            showAISuccess(response);
+          } else {
+            showAIError(response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          showAIError(error.toString());
+        })
+        .submitAIAnalysis(url);
+    }
+
+    function showAISuccess(data) {
+      const resultDiv = document.getElementById('aiResult');
+      const resultIcon = document.getElementById('aiResultIcon');
+      const resultTitle = document.getElementById('aiResultTitle');
+      const resultMessage = document.getElementById('aiResultMessage');
+
+      resultDiv.className = 'result success';
+      resultIcon.textContent = '✓';
+      resultTitle.textContent = 'AI звіт створено';
+      resultMessage.innerHTML =
+        data.message +
+        '<a href="' + data.docUrl + '" target="_blank" style="background: #e0e7ff; border-color: #c7d2fe; color: #4338ca;">Відкрити Google Doc →</a>';
+    }
+
+    function showAIError(message) {
+      const resultDiv = document.getElementById('aiResult');
+      const resultIcon = document.getElementById('aiResultIcon');
+      const resultTitle = document.getElementById('aiResultTitle');
+      const resultMessage = document.getElementById('aiResultMessage');
+
+      resultDiv.className = 'result error';
+      resultIcon.textContent = '✕';
+      resultTitle.textContent = 'Помилка';
+      resultMessage.textContent = message;
+    }
+
     document.getElementById('domain').focus();
   </script>
 </body>
