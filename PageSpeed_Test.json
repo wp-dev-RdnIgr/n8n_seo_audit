@@ -70,7 +70,7 @@
             {
               "id": "apiKey",
               "name": "apiKey",
-              "value": "={{ $json.body.apiKey || 'YOUR_PAGESPEED_API_KEY' }}",
+              "value": "={{ $json.body.apiKey || 'AIzaSyANhdoZFJJj6aa5d_GQIokvgm5VExL_2ys' }}",
               "type": "string"
             }
           ]
