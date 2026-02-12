@@ -58,13 +58,51 @@
     },
     {
       "parameters": {
-        "jsCode": "// Convert PDF binary to base64 and build OpenAI API request body.\n// The PDF file is sent DIRECTLY to GPT-4o — no code-based text extraction.\n// n8n 2.x stores binary data on filesystem; binaryData.data is a reference,\n// NOT actual base64. Use helpers.getBinaryDataBuffer() to get real content.\nconst binaryData = $input.first().binary.data;\nconst dataBuffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst base64Data = dataBuffer.toString('base64');\nconst mimeType = binaryData.mimeType || 'application/pdf';\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// JSON template that AI must fill in\nvar tpl = {\n  generalInfo: { siteUrl: '', auditDate: '', scanMode: '', parametersAnalyzed: '' },\n  summary: {\n    totalUrlsChecked: 0,\n    urlBreakdown: [{ type: '', count: 0, percent: '' }],\n    urlsWithErrors: { total: 0, percent: '', breakdown: [{ type: '', count: 0, percent: '' }] }\n  },\n  contentTypes: [{ type: '', count: 0, percent: '' }],\n  topHosts: [{ host: '', urlCount: 0, percent: '' }],\n  urlStructure: [{ host: '', segment: '', count: 0, percent: '' }],\n  serverResponseCodes: [{ code: '', description: '', count: 0, percent: '' }],\n  indexability: {\n    searchOpenness: [{ status: '', count: 0, percent: '' }],\n    closureReasons: [{ reason: '', count: 0, percent: '' }]\n  },\n  metaRobots: [{ directive: '', count: 0, percent: '' }],\n  canonicalUsage: [{ status: '', count: 0, percent: '' }],\n  urlDepth: [{ depth: 0, count: 0 }],\n  urlNesting: [{ nesting: 0, count: 0 }],\n  loadingSpeedHtml: { maxMs: 0, minMs: 0, medianMs: 0, distribution: [{ category: '', count: 0, percent: '' }] },\n  loadingSpeedResources: { maxMs: 0, minMs: 0, medianMs: 0, distribution: [{ category: '', count: 0, percent: '' }] },\n  protocols: {\n    html: [{ protocol: '', count: 0, percent: '' }],\n    resources: [{ protocol: '', count: 0, percent: '' }]\n  },\n  seoElements: {\n    uniqueness: [{ element: '', unique: '', duplicated: '', missing: '' }],\n    length: [{ element: '', optimal: '', short: '', long: '' }]\n  },\n  contentMetrics: {\n    charactersPerPage: [{ category: '', count: 0, percent: '' }],\n    wordsPerPage: [{ category: '', count: 0, percent: '' }],\n    imageSizes: [{ category: '', count: 0, percent: '' }]\n  },\n  errors: {\n    criticality: { high: 0, medium: 0, low: 0 },\n    topErrors: [{ error: '', count: 0, percent: '' }],\n    highCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    mediumCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    lowCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    notDetected: ['']\n  },\n  scanSettings: {\n    analyzedData: { scannedUrls: '', segmentation: '', parametersSelected: '' },\n    speedSettings: { maxTimeout: '', jsRendering: '' },\n    crawlInstructions: {},\n    crawlLimits: {},\n    generalSettings: {},\n    advancedSettings: {}\n  }\n};\n\nvar systemPrompt = 'Ти експерт з парсингу SEO-аудит звітів. Тобі надано PDF-файл технічного SEO-аудиту. Прочитай його та витягни ВСІ дані, структурувавши їх у форматі JSON.\\n\\nВАЖЛИВО:\\n1. Витягни АБСОЛЮТНО ВСІ числові дані, відсотки, URL-приклади\\n2. НЕ пропускай жодного розділу чи підрозділу\\n3. Зберігай точність чисел та відсотків\\n4. Для помилок завжди включай приклад URL якщо він є\\n5. Відповідь має бути ТІЛЬКИ валідним JSON без markdown\\n6. Ігноруй будь-які згадки брендів ПЗ (Netpeak, Screaming Frog тощо)';\n\nvar userPrompt = 'Проаналізуй цей SEO-аудит PDF та витягни ВСІ дані у такому JSON форматі:\\n\\n' + JSON.stringify(tpl, null, 2);\n\nvar requestBody = {\n  model: 'gpt-4o',\n  input: [\n    { role: 'developer', content: systemPrompt },\n    {\n      role: 'user',\n      content: [\n        {\n          type: 'input_file',\n          filename: 'seo_audit.pdf',\n          file_data: 'data:' + mimeType + ';base64,' + base64Data\n        },\n        { type: 'input_text', text: userPrompt }\n      ]\n    }\n  ],\n  temperature: 0.1,\n  max_output_tokens: 16000\n};\n\nreturn {\n  requestBody: requestBody,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
+        "method": "POST",
+        "url": "https://api.openai.com/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formData",
+              "name": "purpose",
+              "value": "assistants"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "upload-pdf-openai",
+      "name": "Upload PDF to OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build OpenAI Responses API request using uploaded file_id.\n// The PDF was uploaded via Files API; now we reference it by ID.\nconst uploadResult = $input.first().json;\nconst fileId = uploadResult.id;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\nif (!fileId) {\n  throw new Error('File upload failed — no file ID returned. Response: ' + JSON.stringify(uploadResult).substring(0, 500));\n}\n\n// JSON template that AI must fill in\nvar tpl = {\n  generalInfo: { siteUrl: '', auditDate: '', scanMode: '', parametersAnalyzed: '' },\n  summary: {\n    totalUrlsChecked: 0,\n    urlBreakdown: [{ type: '', count: 0, percent: '' }],\n    urlsWithErrors: { total: 0, percent: '', breakdown: [{ type: '', count: 0, percent: '' }] }\n  },\n  contentTypes: [{ type: '', count: 0, percent: '' }],\n  topHosts: [{ host: '', urlCount: 0, percent: '' }],\n  urlStructure: [{ host: '', segment: '', count: 0, percent: '' }],\n  serverResponseCodes: [{ code: '', description: '', count: 0, percent: '' }],\n  indexability: {\n    searchOpenness: [{ status: '', count: 0, percent: '' }],\n    closureReasons: [{ reason: '', count: 0, percent: '' }]\n  },\n  metaRobots: [{ directive: '', count: 0, percent: '' }],\n  canonicalUsage: [{ status: '', count: 0, percent: '' }],\n  urlDepth: [{ depth: 0, count: 0 }],\n  urlNesting: [{ nesting: 0, count: 0 }],\n  loadingSpeedHtml: { maxMs: 0, minMs: 0, medianMs: 0, distribution: [{ category: '', count: 0, percent: '' }] },\n  loadingSpeedResources: { maxMs: 0, minMs: 0, medianMs: 0, distribution: [{ category: '', count: 0, percent: '' }] },\n  protocols: {\n    html: [{ protocol: '', count: 0, percent: '' }],\n    resources: [{ protocol: '', count: 0, percent: '' }]\n  },\n  seoElements: {\n    uniqueness: [{ element: '', unique: '', duplicated: '', missing: '' }],\n    length: [{ element: '', optimal: '', short: '', long: '' }]\n  },\n  contentMetrics: {\n    charactersPerPage: [{ category: '', count: 0, percent: '' }],\n    wordsPerPage: [{ category: '', count: 0, percent: '' }],\n    imageSizes: [{ category: '', count: 0, percent: '' }]\n  },\n  errors: {\n    criticality: { high: 0, medium: 0, low: 0 },\n    topErrors: [{ error: '', count: 0, percent: '' }],\n    highCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    mediumCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    lowCriticality: [{ error: '', exampleUrl: '', count: 0 }],\n    notDetected: ['']\n  },\n  scanSettings: {\n    analyzedData: { scannedUrls: '', segmentation: '', parametersSelected: '' },\n    speedSettings: { maxTimeout: '', jsRendering: '' },\n    crawlInstructions: {},\n    crawlLimits: {},\n    generalSettings: {},\n    advancedSettings: {}\n  }\n};\n\nvar systemPrompt = 'Ти експерт з парсингу SEO-аудит звітів. Тобі надано PDF-файл технічного SEO-аудиту. Прочитай його та витягни ВСІ дані, структурувавши їх у форматі JSON.\\n\\nВАЖЛИВО:\\n1. Витягни АБСОЛЮТНО ВСІ числові дані, відсотки, URL-приклади\\n2. НЕ пропускай жодного розділу чи підрозділу\\n3. Зберігай точність чисел та відсотків\\n4. Для помилок завжди включай приклад URL якщо він є\\n5. Відповідь має бути ТІЛЬКИ валідним JSON без markdown\\n6. Ігноруй будь-які згадки брендів ПЗ (Netpeak, Screaming Frog тощо)';\n\nvar userPrompt = 'Проаналізуй цей SEO-аудит PDF та витягни ВСІ дані у такому JSON форматі:\\n\\n' + JSON.stringify(tpl, null, 2);\n\nvar requestBody = {\n  model: 'gpt-4o',\n  input: [\n    { role: 'developer', content: systemPrompt },\n    {\n      role: 'user',\n      content: [\n        {\n          type: 'input_file',\n          file_id: fileId\n        },\n        { type: 'input_text', text: userPrompt }\n      ]\n    }\n  ],\n  temperature: 0.1,\n  max_output_tokens: 16000\n};\n\nreturn {\n  requestBody: requestBody,\n  openaiFileId: fileId,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "build-ai-request",
       "name": "Build AI Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, 300]
+      "position": [1320, 300]
     },
     {
       "parameters": {
@@ -83,7 +121,7 @@
       "name": "AI Parse PDF",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1320, 300],
+      "position": [1540, 300],
       "credentials": {
         "openAiApi": {
           "id": "openai-creds",
@@ -99,7 +137,7 @@
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1540, 300]
+      "position": [1760, 300]
     },
     {
       "parameters": {
@@ -112,7 +150,7 @@
       "name": "Create Result Spreadsheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1760, 300],
+      "position": [1980, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "google-sheets-creds",
@@ -128,7 +166,7 @@
       "name": "Build Sheet Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1980, 300]
+      "position": [2200, 300]
     },
     {
       "parameters": {
@@ -145,7 +183,7 @@
       "name": "Write Data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2200, 300],
+      "position": [2420, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "google-sheets-creds",
@@ -161,7 +199,7 @@
       "name": "Build Format Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2420, 300]
+      "position": [2640, 300]
     },
     {
       "parameters": {
@@ -178,7 +216,7 @@
       "name": "Apply Formatting",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2640, 300],
+      "position": [2860, 300],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "google-sheets-creds",
@@ -194,19 +232,39 @@
       "name": "Prepare Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2860, 300]
+      "position": [3080, 300]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.openai.com/v1/files/{{ $('Build AI Request').first().json.openaiFileId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {}
+      },
+      "id": "delete-openai-file",
+      "name": "Delete OpenAI File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3300, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI API"
+        }
+      }
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $json }}",
+        "responseBody": "={{ $('Prepare Response').first().json }}",
         "options": {}
       },
       "id": "respond",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [3080, 300]
+      "position": [3520, 300]
     }
   ],
   "connections": {
@@ -226,6 +284,11 @@
       ]
     },
     "Download PDF": {
+      "main": [
+        [{"node": "Upload PDF to OpenAI", "type": "main", "index": 0}]
+      ]
+    },
+    "Upload PDF to OpenAI": {
       "main": [
         [{"node": "Build AI Request", "type": "main", "index": 0}]
       ]
@@ -272,6 +335,11 @@
     },
     "Prepare Response": {
       "main": [
+        [{"node": "Delete OpenAI File", "type": "main", "index": 0}]
+      ]
+    },
+    "Delete OpenAI File": {
+      "main": [
         [{"node": "Respond", "type": "main", "index": 0}]
       ]
     }
@@ -283,5 +351,5 @@
   "tags": [],
   "triggerCount": 0,
   "updatedAt": "2024-01-01T00:00:00.000Z",
-  "versionId": "3"
+  "versionId": "4"
 }
