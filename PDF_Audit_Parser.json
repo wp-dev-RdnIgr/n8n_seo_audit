@@ -156,7 +156,7 @@
         "authentication": "oAuth2",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"requests\": [\n    {{ $json.sheetNames.slice(1).map((name, idx) => `{\"addSheet\": {\"properties\": {\"title\": \"${name}\", \"index\": ${idx + 1}}}}`).join(',') }}\n  ]\n}",
+        "jsonBody": "={{ JSON.stringify({ requests: $json.sheetNames.slice(1).map((name, idx) => ({ addSheet: { properties: { title: name, index: idx + 1 }}})) }) }}",
         "options": {}
       },
       "id": "create-sheets",
