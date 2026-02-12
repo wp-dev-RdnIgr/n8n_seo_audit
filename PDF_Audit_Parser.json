@@ -176,7 +176,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": [{ \"range\": \"Sheet1!A1\", \"values\": {{ JSON.stringify($json.rows) }} }]\n}",
+        "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": [{ \"range\": \"A1\", \"values\": {{ JSON.stringify($json.rows) }} }]\n}",
         "options": {}
       },
       "id": "write-data",
