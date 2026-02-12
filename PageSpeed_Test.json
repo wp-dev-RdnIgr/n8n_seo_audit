@@ -267,7 +267,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Format final results for writing to sheets\nconst state = $input.first().json;\nconst results = state.allResults || [];\n\n// Mobile Results Sheet\nconst mobileRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  ...results.map(r => [\n    r.url,\n    r.mobile.error ? 'Error' : r.mobile.performance,\n    r.mobile.fcpDisplay,\n    r.mobile.lcpDisplay,\n    r.mobile.tbtDisplay,\n    r.mobile.clsDisplay,\n    r.mobile.speedIndexDisplay,\n    r.mobile.ttiDisplay,\n    r.mobile.accessibility || 'N/A',\n    r.mobile.bestPractices || 'N/A',\n    r.mobile.seo || 'N/A'\n  ])\n];\n\n// Desktop Results Sheet\nconst desktopRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  ...results.map(r => [\n    r.url,\n    r.desktop.error ? 'Error' : r.desktop.performance,\n    r.desktop.fcpDisplay,\n    r.desktop.lcpDisplay,\n    r.desktop.tbtDisplay,\n    r.desktop.clsDisplay,\n    r.desktop.speedIndexDisplay,\n    r.desktop.ttiDisplay,\n    r.desktop.accessibility || 'N/A',\n    r.desktop.bestPractices || 'N/A',\n    r.desktop.seo || 'N/A'\n  ])\n];\n\n// Comparison Sheet\nconst comparisonRows = [\n  ['URL', 'Mobile Perf', 'Desktop Perf', 'Diff', 'Mobile LCP', 'Desktop LCP', 'Mobile CLS', 'Desktop CLS'],\n  ...results.map(r => {\n    const mobilePerf = r.mobile.performance || 0;\n    const desktopPerf = r.desktop.performance || 0;\n    const diff = desktopPerf - mobilePerf;\n    return [\n      r.url,\n      mobilePerf || 'N/A',\n      desktopPerf || 'N/A',\n      diff > 0 ? '+' + diff : diff,\n      r.mobile.lcpDisplay,\n      r.desktop.lcpDisplay,\n      r.mobile.clsDisplay,\n      r.desktop.clsDisplay\n    ];\n  })\n];\n\n// Recommendations Sheet (aggregated)\nconst recsMap = new Map();\nresults.forEach(r => {\n  const allRecs = [...(r.mobile.recommendations || []), ...(r.desktop.recommendations || [])];\n  allRecs.forEach(rec => {\n    recsMap.set(rec, (recsMap.get(rec) || 0) + 1);\n  });\n});\n\nconst recommendationsRows = [\n  ['Recommendation', 'Affected URLs Count'],\n  ...Array.from(recsMap.entries())\n    .sort((a, b) => b[1] - a[1])\n    .map(([rec, count]) => [rec, count])\n];\n\nconst processingTime = Math.round((Date.now() - state.startTime) / 1000);\n\nreturn [{\n  json: {\n    spreadsheetId: state.spreadsheetId,\n    mobileRows: mobileRows,\n    desktopRows: desktopRows,\n    comparisonRows: comparisonRows,\n    recommendationsRows: recommendationsRows,\n    totalUrls: results.length,\n    processingTime: processingTime\n  }\n}];"
+        "jsCode": "// Format final results for writing to sheets\nconst state = $input.first().json;\nconst results = state.allResults || [];\n\n// Explanation rows (descriptions for each column)\nconst mobileExplanation = [\n  'Адреса сторінки',\n  'Загальна оцінка 0-100',\n  'First Contentful Paint - час до першого контенту',\n  'Largest Contentful Paint - час до найбільшого елементу',\n  'Total Blocking Time - час блокування',\n  'Cumulative Layout Shift - зміщення макету',\n  'Швидкість відображення контенту',\n  'Time to Interactive - час до інтерактивності',\n  'Оцінка доступності 0-100',\n  'Кращі практики 0-100',\n  'SEO оцінка 0-100'\n];\n\nconst comparisonExplanation = [\n  'Адреса сторінки',\n  'Оцінка Mobile',\n  'Оцінка Desktop',\n  'Різниця (Desktop - Mobile)',\n  'LCP Mobile',\n  'LCP Desktop',\n  'CLS Mobile',\n  'CLS Desktop'\n];\n\nconst recsExplanation = [\n  'Рекомендація від Google PageSpeed',\n  'Кількість URL з цією проблемою'\n];\n\n// Mobile Results Sheet\nconst mobileRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  mobileExplanation,\n  ...results.map(r => [\n    r.url,\n    r.mobile.error ? 'Error' : r.mobile.performance,\n    r.mobile.fcpDisplay,\n    r.mobile.lcpDisplay,\n    r.mobile.tbtDisplay,\n    r.mobile.clsDisplay,\n    r.mobile.speedIndexDisplay,\n    r.mobile.ttiDisplay,\n    r.mobile.accessibility || 'N/A',\n    r.mobile.bestPractices || 'N/A',\n    r.mobile.seo || 'N/A'\n  ])\n];\n\n// Desktop Results Sheet\nconst desktopRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  mobileExplanation,\n  ...results.map(r => [\n    r.url,\n    r.desktop.error ? 'Error' : r.desktop.performance,\n    r.desktop.fcpDisplay,\n    r.desktop.lcpDisplay,\n    r.desktop.tbtDisplay,\n    r.desktop.clsDisplay,\n    r.desktop.speedIndexDisplay,\n    r.desktop.ttiDisplay,\n    r.desktop.accessibility || 'N/A',\n    r.desktop.bestPractices || 'N/A',\n    r.desktop.seo || 'N/A'\n  ])\n];\n\n// Comparison Sheet\nconst comparisonRows = [\n  ['URL', 'Mobile Perf', 'Desktop Perf', 'Diff', 'Mobile LCP', 'Desktop LCP', 'Mobile CLS', 'Desktop CLS'],\n  comparisonExplanation,\n  ...results.map(r => {\n    const mobilePerf = r.mobile.performance || 0;\n    const desktopPerf = r.desktop.performance || 0;\n    const diff = desktopPerf - mobilePerf;\n    return [\n      r.url,\n      mobilePerf || 'N/A',\n      desktopPerf || 'N/A',\n      diff > 0 ? '+' + diff : diff,\n      r.mobile.lcpDisplay,\n      r.desktop.lcpDisplay,\n      r.mobile.clsDisplay,\n      r.desktop.clsDisplay\n    ];\n  })\n];\n\n// Recommendations Sheet (aggregated)\nconst recsMap = new Map();\nresults.forEach(r => {\n  const allRecs = [...(r.mobile.recommendations || []), ...(r.desktop.recommendations || [])];\n  allRecs.forEach(rec => {\n    recsMap.set(rec, (recsMap.get(rec) || 0) + 1);\n  });\n});\n\nconst recommendationsRows = [\n  ['Recommendation', 'Affected URLs Count'],\n  recsExplanation,\n  ...Array.from(recsMap.entries())\n    .sort((a, b) => b[1] - a[1])\n    .map(([rec, count]) => [rec, count])\n];\n\n// Prepare data summaries for AI analysis\nconst avgMobilePerf = results.length > 0 ? Math.round(results.reduce((sum, r) => sum + (r.mobile.performance || 0), 0) / results.length) : 0;\nconst avgDesktopPerf = results.length > 0 ? Math.round(results.reduce((sum, r) => sum + (r.desktop.performance || 0), 0) / results.length) : 0;\n\nconst mobileSummary = results.map(r => `${r.url}: Performance=${r.mobile.performance}, LCP=${r.mobile.lcpDisplay}, CLS=${r.mobile.clsDisplay}, TBT=${r.mobile.tbtDisplay}`).join('\\n');\nconst desktopSummary = results.map(r => `${r.url}: Performance=${r.desktop.performance}, LCP=${r.desktop.lcpDisplay}, CLS=${r.desktop.clsDisplay}, TBT=${r.desktop.tbtDisplay}`).join('\\n');\nconst comparisonSummary = results.map(r => `${r.url}: Mobile=${r.mobile.performance}, Desktop=${r.desktop.performance}, Diff=${(r.desktop.performance||0)-(r.mobile.performance||0)}`).join('\\n');\nconst recsSummary = Array.from(recsMap.entries()).sort((a,b) => b[1]-a[1]).map(([rec, count]) => `${rec}: ${count} URLs`).join('\\n');\n\nconst processingTime = Math.round((Date.now() - state.startTime) / 1000);\n\nreturn [{\n  json: {\n    spreadsheetId: state.spreadsheetId,\n    mobileRows: mobileRows,\n    desktopRows: desktopRows,\n    comparisonRows: comparisonRows,\n    recommendationsRows: recommendationsRows,\n    totalUrls: results.length,\n    processingTime: processingTime,\n    avgMobilePerf: avgMobilePerf,\n    avgDesktopPerf: avgDesktopPerf,\n    mobileSummary: mobileSummary,\n    desktopSummary: desktopSummary,\n    comparisonSummary: comparisonSummary,\n    recsSummary: recsSummary\n  }\n}];"
       },
       "id": "node-format-results",
       "name": "Format Results",
@@ -283,7 +283,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"valueInputOption\": \"RAW\",\n  \"data\": [\n    {\"range\": \"'Mobile Results'!A1\", \"values\": {{ JSON.stringify($json.mobileRows) }}},\n    {\"range\": \"'Desktop Results'!A1\", \"values\": {{ JSON.stringify($json.desktopRows) }}},\n    {\"range\": \"'Comparison'!A1\", \"values\": {{ JSON.stringify($json.comparisonRows) }}},\n    {\"range\": \"'Recommendations'!A1\", \"values\": {{ JSON.stringify($json.recommendationsRows) }}}\n  ]\n}",
+        "jsonBody": "={\n  \"valueInputOption\": \"RAW\",\n  \"data\": [\n    {\"range\": \"'Mobile Results'!A1\", \"values\": {{ JSON.stringify($('Merge AI Comments').first().json.mobileRows) }}},\n    {\"range\": \"'Desktop Results'!A1\", \"values\": {{ JSON.stringify($('Merge AI Comments').first().json.desktopRows) }}},\n    {\"range\": \"'Comparison'!A1\", \"values\": {{ JSON.stringify($('Merge AI Comments').first().json.comparisonRows) }}},\n    {\"range\": \"'Recommendations'!A1\", \"values\": {{ JSON.stringify($('Merge AI Comments').first().json.recommendationsRows) }}}\n  ]\n}",
         "options": {}
       },
       "id": "node-write-results",
@@ -301,7 +301,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Format Results').first().json.spreadsheetId }}:batchUpdate",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Merge AI Comments').first().json.spreadsheetId }}:batchUpdate",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -324,14 +324,51 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Format Results').first().json.spreadsheetId }}\",\n  \"total_urls\": {{ $('Format Results').first().json.totalUrls }},\n  \"processing_time_seconds\": {{ $('Format Results').first().json.processingTime }}\n}",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Merge AI Comments').first().json.spreadsheetId }}\",\n  \"total_urls\": {{ $('Merge AI Comments').first().json.totalUrls }},\n  \"processing_time_seconds\": {{ $('Merge AI Comments').first().json.processingTime }}\n}",
         "options": {}
       },
       "id": "node-respond",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.2,
-      "position": [3660, 400]
+      "position": [4140, 400]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "content": "=Ти SEO-експерт. Проаналізуй результати PageSpeed тесту і дай короткий висновок українською мовою.\n\n## MOBILE RESULTS (середній бал: {{ $json.avgMobilePerf }})\n{{ $json.mobileSummary }}\n\n## DESKTOP RESULTS (середній бал: {{ $json.avgDesktopPerf }})\n{{ $json.desktopSummary }}\n\n## ПОРІВНЯННЯ\n{{ $json.comparisonSummary }}\n\n## РЕКОМЕНДАЦІЇ\n{{ $json.recsSummary }}\n\nНапиши 4 окремі висновки (по 2-3 речення кожен):\n1. MOBILE: [аналіз мобільної версії]\n2. DESKTOP: [аналіз десктопної версії]\n3. COMPARISON: [порівняння mobile vs desktop]\n4. RECOMMENDATIONS: [пріоритетні дії]\n\nВідповідай ТІЛЬКИ у форматі JSON:\n{\"mobile\": \"...\", \"desktop\": \"...\", \"comparison\": \"...\", \"recommendations\": \"...\"}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 1000
+        }
+      },
+      "id": "node-ai-analysis",
+      "name": "AI Analysis",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [3180, 600],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response and prepare for writing\nconst formatData = $('Format Results').first().json;\nconst aiResponse = $('AI Analysis').first().json;\n\n// Parse AI JSON response\nlet aiComments = { mobile: '', desktop: '', comparison: '', recommendations: '' };\ntry {\n  const content = aiResponse.message?.content || aiResponse.text || '';\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    aiComments = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  aiComments = {\n    mobile: 'Не вдалося згенерувати аналіз',\n    desktop: 'Не вдалося згенерувати аналіз',\n    comparison: 'Не вдалося згенерувати аналіз',\n    recommendations: 'Не вдалося згенерувати аналіз'\n  };\n}\n\n// Add AI comments to each sheet (after data rows)\nconst mobileRows = [...formatData.mobileRows, [], ['📊 AI АНАЛІЗ:'], [aiComments.mobile]];\nconst desktopRows = [...formatData.desktopRows, [], ['📊 AI АНАЛІЗ:'], [aiComments.desktop]];\nconst comparisonRows = [...formatData.comparisonRows, [], ['📊 AI АНАЛІЗ:'], [aiComments.comparison]];\nconst recommendationsRows = [...formatData.recommendationsRows, [], ['📊 AI АНАЛІЗ:'], [aiComments.recommendations]];\n\nreturn [{\n  json: {\n    ...formatData,\n    mobileRows: mobileRows,\n    desktopRows: desktopRows,\n    comparisonRows: comparisonRows,\n    recommendationsRows: recommendationsRows\n  }\n}];"
+      },
+      "id": "node-merge-ai",
+      "name": "Merge AI Comments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3420, 600]
     }
   ],
   "connections": {
@@ -386,6 +423,12 @@
       "main": [[{ "node": "Process Current Batch", "type": "main", "index": 0 }]]
     },
     "Format Results": {
+      "main": [[{ "node": "AI Analysis", "type": "main", "index": 0 }]]
+    },
+    "AI Analysis": {
+      "main": [[{ "node": "Merge AI Comments", "type": "main", "index": 0 }]]
+    },
+    "Merge AI Comments": {
       "main": [[{ "node": "Write Results", "type": "main", "index": 0 }]]
     },
     "Write Results": {
