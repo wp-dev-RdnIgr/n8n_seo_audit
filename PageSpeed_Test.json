@@ -1,0 +1,415 @@
+{
+  "name": "PageSpeed Test",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## ⚡ PageSpeed Test Workflow\n\n**Endpoint:** `POST /webhook/pagespeed-test`\n\n**Вход:** spreadsheetId с URLs в колонке A\n**Выход:** таблица с результатами PageSpeed\n\n**API:** Google PageSpeed Insights v5\n**Батчинг:** по 5 URLs, пауза 5 сек",
+        "height": 240,
+        "width": 340
+      },
+      "id": "sticky-main",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pagespeed-test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-180, 300],
+      "webhookId": "pagespeed-test"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sourceSpreadsheetId",
+              "name": "sourceSpreadsheetId",
+              "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "testMobile",
+              "name": "testMobile",
+              "value": "={{ $json.body.testMobile !== false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "testDesktop",
+              "name": "testDesktop",
+              "value": "={{ $json.body.testDesktop !== false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "batchSize",
+              "name": "batchSize",
+              "value": "={{ $json.body.batchSize || 5 }}",
+              "type": "number"
+            },
+            {
+              "id": "delaySeconds",
+              "name": "delaySeconds",
+              "value": "={{ $json.body.delaySeconds || 5 }}",
+              "type": "number"
+            },
+            {
+              "id": "startTime",
+              "name": "startTime",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-vars",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [60, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.sourceSpreadsheetId }}/values/A:A?majorDimension=COLUMNS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "node-read-urls",
+      "name": "Read Source URLs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [300, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and validate URLs from sheet\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst urls = column.slice(1) // skip header\n  .filter(url => url && url.trim())\n  .filter(url => /^https?:\\/\\//i.test(url.trim()))\n  .map(url => url.trim());\n\nconst batchSize = parseInt($('Set Variables').first().json.batchSize) || 5;\nconst batches = [];\nfor (let i = 0; i < urls.length; i += batchSize) {\n  batches.push(urls.slice(i, i + batchSize));\n}\n\nreturn [{\n  json: {\n    allUrls: urls,\n    batches: batches,\n    totalUrls: urls.length,\n    totalBatches: batches.length,\n    currentBatch: 0,\n    allResults: [],\n    testMobile: $('Set Variables').first().json.testMobile,\n    testDesktop: $('Set Variables').first().json.testDesktop,\n    startTime: $('Set Variables').first().json.startTime\n  }\n}];"
+      },
+      "id": "node-parse-urls",
+      "name": "Parse URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"title\": \"PageSpeed Report - {{ $now.format('yyyy-MM-dd HH:mm') }}\"\n  },\n  \"sheets\": [\n    {\"properties\": {\"title\": \"Mobile Results\", \"sheetId\": 0}},\n    {\"properties\": {\"title\": \"Desktop Results\", \"sheetId\": 1}},\n    {\"properties\": {\"title\": \"Comparison\", \"sheetId\": 2}},\n    {\"properties\": {\"title\": \"Recommendations\", \"sheetId\": 3}}\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-create-sheet",
+      "name": "Create Result Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [780, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge create sheet result with parsed data\nconst sheetResult = $input.first().json;\nconst parsedData = $('Parse URLs').first().json;\n\nreturn [{\n  json: {\n    ...parsedData,\n    spreadsheetId: sheetResult.spreadsheetId\n  }\n}];"
+      },
+      "id": "node-merge-init",
+      "name": "Merge Init Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1020, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get state from previous iteration or initial\nlet state;\ntry {\n  state = $('Merge Batch Results').first().json;\n} catch(e) {\n  state = $('Merge Init Data').first().json;\n}\n\nconst batch = state.batches[state.currentBatch] || [];\nreturn [{ json: { ...state, currentUrls: batch } }];"
+      },
+      "id": "node-process-batch",
+      "name": "Process Current Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1260, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split current batch into individual items for API calls\nconst state = $input.first().json;\nreturn state.currentUrls.map(url => ({ json: { ...state, currentUrl: url } }));"
+      },
+      "id": "node-split-items",
+      "name": "Split to Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePagesSpeedApiOAuth2",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-pagespeed-mobile",
+      "name": "PageSpeed Mobile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1740, 200],
+      "continueOnFail": true,
+      "credentials": {
+        "googlePagesSpeedApiOAuth2": {
+          "id": "pagespeed-api-key",
+          "name": "PageSpeed API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePagesSpeedApiOAuth2",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-pagespeed-desktop",
+      "name": "PageSpeed Desktop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1740, 400],
+      "continueOnFail": true,
+      "credentials": {
+        "googlePagesSpeedApiOAuth2": {
+          "id": "pagespeed-api-key",
+          "name": "PageSpeed API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "node-merge-results",
+      "name": "Merge Mobile Desktop",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [1980, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse PageSpeed results for each URL\nfunction parseMetrics(response, url) {\n  if (!response || response.error) {\n    return {\n      url: url,\n      error: response?.error?.message || 'Request failed',\n      performance: null,\n      accessibility: null,\n      bestPractices: null,\n      seo: null,\n      fcp: null,\n      lcp: null,\n      tbt: null,\n      cls: null,\n      speedIndex: null,\n      tti: null,\n      fcpDisplay: 'Error',\n      lcpDisplay: 'Error',\n      tbtDisplay: 'Error',\n      clsDisplay: 'Error',\n      recommendations: []\n    };\n  }\n  \n  const lighthouse = response.lighthouseResult;\n  const audits = lighthouse?.audits || {};\n  const categories = lighthouse?.categories || {};\n  \n  return {\n    url: url,\n    performance: Math.round((categories?.performance?.score || 0) * 100),\n    accessibility: Math.round((categories?.accessibility?.score || 0) * 100),\n    bestPractices: Math.round((categories?.['best-practices']?.score || 0) * 100),\n    seo: Math.round((categories?.seo?.score || 0) * 100),\n    \n    // Core Web Vitals (raw values in ms)\n    fcp: audits?.['first-contentful-paint']?.numericValue || null,\n    lcp: audits?.['largest-contentful-paint']?.numericValue || null,\n    tbt: audits?.['total-blocking-time']?.numericValue || null,\n    cls: audits?.['cumulative-layout-shift']?.numericValue || null,\n    \n    // Additional metrics\n    speedIndex: audits?.['speed-index']?.numericValue || null,\n    tti: audits?.['interactive']?.numericValue || null,\n    \n    // Display values (formatted strings)\n    fcpDisplay: audits?.['first-contentful-paint']?.displayValue || 'N/A',\n    lcpDisplay: audits?.['largest-contentful-paint']?.displayValue || 'N/A',\n    tbtDisplay: audits?.['total-blocking-time']?.displayValue || 'N/A',\n    clsDisplay: audits?.['cumulative-layout-shift']?.displayValue || 'N/A',\n    speedIndexDisplay: audits?.['speed-index']?.displayValue || 'N/A',\n    ttiDisplay: audits?.['interactive']?.displayValue || 'N/A',\n    \n    // Recommendations (opportunities with savings)\n    recommendations: Object.values(audits)\n      .filter(a => a.score !== null && a.score < 0.9 && a.details?.type === 'opportunity')\n      .sort((a, b) => (b.numericValue || 0) - (a.numericValue || 0))\n      .slice(0, 5)\n      .map(a => a.title)\n  };\n}\n\nconst items = $input.all();\nconst batchResults = [];\n\n// Each item has mobile and desktop results merged by position\nfor (const item of items) {\n  const url = item.json.currentUrl;\n  const mobileData = item.json;\n  \n  // Find corresponding desktop result\n  // Since we merged by position, mobile is in main json, desktop should be in paired data\n  const desktopItem = items.find(i => i.json.currentUrl === url && i !== item);\n  const desktopData = desktopItem?.json || {};\n  \n  batchResults.push({\n    url: url,\n    mobile: parseMetrics(mobileData.lighthouseResult ? mobileData : null, url),\n    desktop: parseMetrics(desktopData.lighthouseResult ? desktopData : null, url)\n  });\n}\n\n// Get state from first item\nconst state = $('Process Current Batch').first().json;\n\nreturn [{ json: { ...state, batchResults: batchResults } }];"
+      },
+      "id": "node-parse-results",
+      "name": "Parse Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate items back and merge with state\nconst items = $input.all();\n\n// Get state from Process Current Batch\nlet state = $('Process Current Batch').first().json;\n\n// Collect all batch results\nconst batchResults = [];\nfor (const item of items) {\n  const url = item.json.currentUrl;\n  const mobileResponse = $('PageSpeed Mobile').all().find(m => m.json.currentUrl === url || m.json.id?.analysisUTCTimestamp);\n  const desktopResponse = $('PageSpeed Desktop').all().find(d => d.json.currentUrl === url || d.json.id?.analysisUTCTimestamp);\n  \n  function parseMetrics(response) {\n    if (!response || response.error) {\n      return {\n        error: response?.error?.message || 'Failed',\n        performance: null,\n        accessibility: null,\n        bestPractices: null,\n        seo: null,\n        fcpDisplay: 'Error',\n        lcpDisplay: 'Error',\n        tbtDisplay: 'Error',\n        clsDisplay: 'Error',\n        speedIndexDisplay: 'Error',\n        ttiDisplay: 'Error',\n        recommendations: []\n      };\n    }\n    \n    const lighthouse = response.lighthouseResult || response;\n    const audits = lighthouse?.audits || {};\n    const categories = lighthouse?.categories || {};\n    \n    return {\n      performance: Math.round((categories?.performance?.score || 0) * 100),\n      accessibility: Math.round((categories?.accessibility?.score || 0) * 100),\n      bestPractices: Math.round((categories?.['best-practices']?.score || 0) * 100),\n      seo: Math.round((categories?.seo?.score || 0) * 100),\n      fcpDisplay: audits?.['first-contentful-paint']?.displayValue || 'N/A',\n      lcpDisplay: audits?.['largest-contentful-paint']?.displayValue || 'N/A',\n      tbtDisplay: audits?.['total-blocking-time']?.displayValue || 'N/A',\n      clsDisplay: audits?.['cumulative-layout-shift']?.displayValue || 'N/A',\n      speedIndexDisplay: audits?.['speed-index']?.displayValue || 'N/A',\n      ttiDisplay: audits?.['interactive']?.displayValue || 'N/A',\n      recommendations: Object.values(audits)\n        .filter(a => a.score !== null && a.score < 0.9 && a.details?.type === 'opportunity')\n        .slice(0, 5)\n        .map(a => a.title)\n    };\n  }\n  \n  batchResults.push({\n    url: url,\n    mobile: parseMetrics(mobileResponse?.json),\n    desktop: parseMetrics(desktopResponse?.json)\n  });\n}\n\n// Merge with previous results\nconst allResults = [...(state.allResults || []), ...batchResults];\nconst nextBatch = state.currentBatch + 1;\nconst hasMore = nextBatch < state.totalBatches;\n\nreturn [{\n  json: {\n    ...state,\n    allResults: allResults,\n    currentBatch: nextBatch,\n    hasMore: hasMore,\n    progress: Math.round((nextBatch / state.totalBatches) * 100)\n  }\n}];"
+      },
+      "id": "node-merge-batch",
+      "name": "Merge Batch Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasMore",
+              "leftValue": "={{ $json.hasMore }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-has-more",
+      "name": "Has More Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2700, 300]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "node-wait",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2940, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final results for writing to sheets\nconst state = $input.first().json;\nconst results = state.allResults || [];\n\n// Mobile Results Sheet\nconst mobileRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  ...results.map(r => [\n    r.url,\n    r.mobile.error ? 'Error' : r.mobile.performance,\n    r.mobile.fcpDisplay,\n    r.mobile.lcpDisplay,\n    r.mobile.tbtDisplay,\n    r.mobile.clsDisplay,\n    r.mobile.speedIndexDisplay,\n    r.mobile.ttiDisplay,\n    r.mobile.accessibility || 'N/A',\n    r.mobile.bestPractices || 'N/A',\n    r.mobile.seo || 'N/A'\n  ])\n];\n\n// Desktop Results Sheet\nconst desktopRows = [\n  ['URL', 'Performance', 'FCP', 'LCP', 'TBT', 'CLS', 'Speed Index', 'TTI', 'Accessibility', 'Best Practices', 'SEO'],\n  ...results.map(r => [\n    r.url,\n    r.desktop.error ? 'Error' : r.desktop.performance,\n    r.desktop.fcpDisplay,\n    r.desktop.lcpDisplay,\n    r.desktop.tbtDisplay,\n    r.desktop.clsDisplay,\n    r.desktop.speedIndexDisplay,\n    r.desktop.ttiDisplay,\n    r.desktop.accessibility || 'N/A',\n    r.desktop.bestPractices || 'N/A',\n    r.desktop.seo || 'N/A'\n  ])\n];\n\n// Comparison Sheet\nconst comparisonRows = [\n  ['URL', 'Mobile Perf', 'Desktop Perf', 'Diff', 'Mobile LCP', 'Desktop LCP', 'Mobile CLS', 'Desktop CLS'],\n  ...results.map(r => {\n    const mobilePerf = r.mobile.performance || 0;\n    const desktopPerf = r.desktop.performance || 0;\n    const diff = desktopPerf - mobilePerf;\n    return [\n      r.url,\n      mobilePerf || 'N/A',\n      desktopPerf || 'N/A',\n      diff > 0 ? '+' + diff : diff,\n      r.mobile.lcpDisplay,\n      r.desktop.lcpDisplay,\n      r.mobile.clsDisplay,\n      r.desktop.clsDisplay\n    ];\n  })\n];\n\n// Recommendations Sheet (aggregated)\nconst recsMap = new Map();\nresults.forEach(r => {\n  const allRecs = [...(r.mobile.recommendations || []), ...(r.desktop.recommendations || [])];\n  allRecs.forEach(rec => {\n    recsMap.set(rec, (recsMap.get(rec) || 0) + 1);\n  });\n});\n\nconst recommendationsRows = [\n  ['Recommendation', 'Affected URLs Count'],\n  ...Array.from(recsMap.entries())\n    .sort((a, b) => b[1] - a[1])\n    .map(([rec, count]) => [rec, count])\n];\n\nconst processingTime = Math.round((Date.now() - state.startTime) / 1000);\n\nreturn [{\n  json: {\n    spreadsheetId: state.spreadsheetId,\n    mobileRows: mobileRows,\n    desktopRows: desktopRows,\n    comparisonRows: comparisonRows,\n    recommendationsRows: recommendationsRows,\n    totalUrls: results.length,\n    processingTime: processingTime\n  }\n}];"
+      },
+      "id": "node-format-results",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2940, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"valueInputOption\": \"RAW\",\n  \"data\": [\n    {\"range\": \"'Mobile Results'!A1\", \"values\": {{ JSON.stringify($json.mobileRows) }}},\n    {\"range\": \"'Desktop Results'!A1\", \"values\": {{ JSON.stringify($json.desktopRows) }}},\n    {\"range\": \"'Comparison'!A1\", \"values\": {{ JSON.stringify($json.comparisonRows) }}},\n    {\"range\": \"'Recommendations'!A1\", \"values\": {{ JSON.stringify($json.recommendationsRows) }}}\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-write-results",
+      "name": "Write Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3180, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Format Results').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.063, \"green\": 0.725, \"blue\": 0.506 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 1, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.063, \"green\": 0.725, \"blue\": 0.506 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 2, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.231, \"green\": 0.349, \"blue\": 0.596 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 3, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.961, \"green\": 0.620, \"blue\": 0.043 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 11 }\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": { \"sheetId\": 1, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 11 }\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": { \"sheetId\": 2, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 8 }\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": { \"range\": { \"sheetId\": 0, \"startRowIndex\": 0 } }\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": { \"range\": { \"sheetId\": 1, \"startRowIndex\": 0 } }\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": { \"range\": { \"sheetId\": 2, \"startRowIndex\": 0 } }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-format-sheet",
+      "name": "Format Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3420, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Format Results').first().json.spreadsheetId }}\",\n  \"total_urls\": {{ $('Format Results').first().json.totalUrls }},\n  \"processing_time_seconds\": {{ $('Format Results').first().json.processingTime }}\n}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [3660, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Set Variables", "type": "main", "index": 0 }]]
+    },
+    "Set Variables": {
+      "main": [[{ "node": "Read Source URLs", "type": "main", "index": 0 }]]
+    },
+    "Read Source URLs": {
+      "main": [[{ "node": "Parse URLs", "type": "main", "index": 0 }]]
+    },
+    "Parse URLs": {
+      "main": [[{ "node": "Create Result Sheet", "type": "main", "index": 0 }]]
+    },
+    "Create Result Sheet": {
+      "main": [[{ "node": "Merge Init Data", "type": "main", "index": 0 }]]
+    },
+    "Merge Init Data": {
+      "main": [[{ "node": "Process Current Batch", "type": "main", "index": 0 }]]
+    },
+    "Process Current Batch": {
+      "main": [[{ "node": "Split to Items", "type": "main", "index": 0 }]]
+    },
+    "Split to Items": {
+      "main": [
+        [
+          { "node": "PageSpeed Mobile", "type": "main", "index": 0 },
+          { "node": "PageSpeed Desktop", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "PageSpeed Mobile": {
+      "main": [[{ "node": "Merge Mobile Desktop", "type": "main", "index": 0 }]]
+    },
+    "PageSpeed Desktop": {
+      "main": [[{ "node": "Merge Mobile Desktop", "type": "main", "index": 1 }]]
+    },
+    "Merge Mobile Desktop": {
+      "main": [[{ "node": "Merge Batch Results", "type": "main", "index": 0 }]]
+    },
+    "Merge Batch Results": {
+      "main": [[{ "node": "Has More Batches?", "type": "main", "index": 0 }]]
+    },
+    "Has More Batches?": {
+      "main": [
+        [{ "node": "Wait", "type": "main", "index": 0 }],
+        [{ "node": "Format Results", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait": {
+      "main": [[{ "node": "Process Current Batch", "type": "main", "index": 0 }]]
+    },
+    "Format Results": {
+      "main": [[{ "node": "Write Results", "type": "main", "index": 0 }]]
+    },
+    "Write Results": {
+      "main": [[{ "node": "Format Sheet", "type": "main", "index": 0 }]]
+    },
+    "Format Sheet": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "active": false,
+  "versionId": "1"
+}

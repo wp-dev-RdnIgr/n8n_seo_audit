@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { width: 100%; max-width: 480px; }
+    .card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    }
+    .header { text-align: center; margin-bottom: 32px; }
+    .logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+    .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.4; }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    input[type="text"]:focus { border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12); }
+    .hint { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+    .options { display: flex; gap: 12px; margin-bottom: 20px; }
+    .option-card {
+      flex: 1;
+      padding: 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      background: #f8fafc;
+    }
+    .option-card.selected { border-color: #10b981; background: #f0fdf4; }
+    .option-card:hover { border-color: #10b981; }
+    .option-icon { font-size: 24px; margin-bottom: 6px; }
+    .option-label { font-size: 12px; font-weight: 600; color: #374151; }
+
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35); }
+    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+    .btn-loading span { visibility: hidden; }
+    .btn-loading::after {
+      content: "";
+      position: absolute; top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result { margin-top: 20px; padding: 16px 18px; border-radius: 10px; display: none; }
+    .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
+    .result-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
+    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
+
+    .metrics-preview {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .metrics-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 14px; letter-spacing: 0.5px; }
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .metric-badge {
+      min-width: 42px; height: 24px;
+      padding: 0 8px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: white;
+    }
+    .badge-green { background: #10b981; }
+    .badge-orange { background: #f59e0b; }
+    .badge-red { background: #ef4444; }
+    .badge-blue { background: #3b82f6; }
+    .metric-info { flex: 1; }
+    .metric-name { font-size: 13px; font-weight: 500; color: #1e293b; }
+    .metric-desc { font-size: 11px; color: #94a3b8; }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .footer-brand { color: #10b981; font-weight: 600; }
+
+    .warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #92400e;
+    }
+    .warning-title { font-weight: 600; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">&#9889;</div>
+        <h1>PageSpeed Test</h1>
+        <p>&#1052;&#1072;&#1089;&#1086;&#1074;&#1080;&#1081; &#1072;&#1085;&#1072;&#1083;&#1110;&#1079; &#1096;&#1074;&#1080;&#1076;&#1082;&#1086;&#1089;&#1090;&#1110; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1103; &#1089;&#1090;&#1086;&#1088;&#1110;&#1085;&#1086;&#1082; &#1095;&#1077;&#1088;&#1077;&#1079; Google PageSpeed Insights API</p>
+      </div>
+
+      <div class="warning">
+        <div class="warning-title">&#9888;&#65039; &#1063;&#1072;&#1089; &#1074;&#1080;&#1082;&#1086;&#1085;&#1072;&#1085;&#1085;&#1103;</div>
+        &#1058;&#1077;&#1089;&#1090;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103; &#1079;&#1072;&#1081;&#1084;&#1072;&#1108; ~30 &#1089;&#1077;&#1082; &#1085;&#1072; URL. &#1044;&#1083;&#1103; 50 URL &#8212; &#1073;&#1083;&#1080;&#1079;&#1100;&#1082;&#1086; 10-15 &#1093;&#1074;&#1080;&#1083;&#1080;&#1085;.
+      </div>
+
+      <div class="form-group">
+        <label>&#1055;&#1086;&#1089;&#1080;&#1083;&#1072;&#1085;&#1085;&#1103; &#1085;&#1072; &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1102; &#1079; URLs</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="spreadsheetUrl"
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <span class="input-icon">&#128203;</span>
+        </div>
+        <p class="hint">URLs &#1084;&#1072;&#1102;&#1090;&#1100; &#1073;&#1091;&#1090;&#1080; &#1074; &#1087;&#1077;&#1088;&#1096;&#1086;&#1084;&#1091; &#1089;&#1090;&#1086;&#1074;&#1087;&#1094;&#1110; (A). &#1055;&#1077;&#1088;&#1096;&#1080;&#1081; &#1088;&#1103;&#1076;&#1086;&#1082; - &#1079;&#1072;&#1075;&#1086;&#1083;&#1086;&#1074;&#1086;&#1082;.</p>
+      </div>
+
+      <label style="margin-bottom: 12px;">&#1058;&#1080;&#1087; &#1090;&#1077;&#1089;&#1090;&#1091;</label>
+      <div class="options">
+        <div class="option-card selected" id="optMobile" onclick="toggleOption('mobile')">
+          <div class="option-icon">&#128241;</div>
+          <div class="option-label">Mobile</div>
+        </div>
+        <div class="option-card selected" id="optDesktop" onclick="toggleOption('desktop')">
+          <div class="option-icon">&#128421;&#65039;</div>
+          <div class="option-label">Desktop</div>
+        </div>
+      </div>
+
+      <button class="btn" id="submitBtn" onclick="handleSubmit()">
+        <span>&#128640; &#1047;&#1072;&#1087;&#1091;&#1089;&#1090;&#1080;&#1090;&#1080; &#1090;&#1077;&#1089;&#1090;</span>
+      </button>
+
+      <div class="result" id="result"></div>
+
+      <div class="metrics-preview">
+        <div class="metrics-title">&#1052;&#1077;&#1090;&#1088;&#1080;&#1082;&#1080; &#1091; &#1079;&#1074;&#1110;&#1090;&#1110;</div>
+        <div class="metric-item">
+          <div class="metric-badge badge-green">90+</div>
+          <div class="metric-info">
+            <div class="metric-name">Performance Score</div>
+            <div class="metric-desc">&#1047;&#1072;&#1075;&#1072;&#1083;&#1100;&#1085;&#1072; &#1086;&#1094;&#1110;&#1085;&#1082;&#1072; &#1087;&#1088;&#1086;&#1076;&#1091;&#1082;&#1090;&#1080;&#1074;&#1085;&#1086;&#1089;&#1090;&#1110; (0-100)</div>
+          </div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-badge badge-orange">LCP</div>
+          <div class="metric-info">
+            <div class="metric-name">Largest Contentful Paint</div>
+            <div class="metric-desc">&#1063;&#1072;&#1089; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1103; &#1085;&#1072;&#1081;&#1073;&#1110;&#1083;&#1100;&#1096;&#1086;&#1075;&#1086; &#1077;&#1083;&#1077;&#1084;&#1077;&#1085;&#1090;&#1091;</div>
+          </div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-badge badge-red">CLS</div>
+          <div class="metric-info">
+            <div class="metric-name">Cumulative Layout Shift</div>
+            <div class="metric-desc">&#1047;&#1084;&#1110;&#1097;&#1077;&#1085;&#1085;&#1103; &#1084;&#1072;&#1082;&#1077;&#1090;&#1091; &#1087;&#1088;&#1080; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1110;</div>
+          </div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-badge badge-blue">TBT</div>
+          <div class="metric-info">
+            <div class="metric-name">Total Blocking Time</div>
+            <div class="metric-desc">&#1063;&#1072;&#1089; &#1073;&#1083;&#1086;&#1082;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103; &#1086;&#1089;&#1085;&#1086;&#1074;&#1085;&#1086;&#1075;&#1086; &#1087;&#1086;&#1090;&#1086;&#1082;&#1091;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>&#9203; ~30 &#1089;&#1077;&#1082; &#1085;&#1072; URL</span>
+        <span class="footer-brand">WebPromo</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var testMobile = true;
+    var testDesktop = true;
+
+    function toggleOption(type) {
+      if (type === 'mobile') {
+        testMobile = !testMobile;
+        document.getElementById('optMobile').classList.toggle('selected', testMobile);
+      } else {
+        testDesktop = !testDesktop;
+        document.getElementById('optDesktop').classList.toggle('selected', testDesktop);
+      }
+    }
+
+    function handleSubmit() {
+      var urlInput = document.getElementById('spreadsheetUrl');
+      var submitBtn = document.getElementById('submitBtn');
+      var resultDiv = document.getElementById('result');
+
+      var url = urlInput.value.trim();
+
+      if (!url) {
+        showError('&#1042;&#1089;&#1090;&#1072;&#1074;&#1090;&#1077; &#1087;&#1086;&#1089;&#1080;&#1083;&#1072;&#1085;&#1085;&#1103; &#1085;&#1072; &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1102;');
+        return;
+      }
+
+      if (!url.includes('docs.google.com/spreadsheets')) {
+        showError('&#1053;&#1077;&#1074;&#1110;&#1088;&#1085;&#1080;&#1081; &#1092;&#1086;&#1088;&#1084;&#1072;&#1090;. &#1052;&#1072;&#1108; &#1073;&#1091;&#1090;&#1080; Google Sheets URL');
+        return;
+      }
+
+      if (!testMobile && !testDesktop) {
+        showError('&#1042;&#1080;&#1073;&#1077;&#1088;&#1110;&#1090;&#1100; &#1093;&#1086;&#1095;&#1072; &#1073; &#1086;&#1076;&#1080;&#1085; &#1090;&#1080;&#1087; &#1090;&#1077;&#1089;&#1090;&#1091; (Mobile/Desktop)');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      resultDiv.className = 'result';
+      resultDiv.style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+
+          if (response.success) {
+            showSuccess(response);
+          } else {
+            showError(response.error || '&#1053;&#1077;&#1074;&#1110;&#1076;&#1086;&#1084;&#1072; &#1087;&#1086;&#1084;&#1080;&#1083;&#1082;&#1072;');
+          }
+        })
+        .withFailureHandler(function(error) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
+          showError(error.toString());
+        })
+        .submitPageSpeedTest({
+          spreadsheetUrl: url,
+          testMobile: testMobile,
+          testDesktop: testDesktop
+        });
+    }
+
+    function showSuccess(data) {
+      var resultDiv = document.getElementById('result');
+      resultDiv.className = 'result success';
+      resultDiv.innerHTML =
+        '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">' +
+          '<div class="result-icon">&#10003;</div>' +
+          '<h3 style="color: #15803d; font-size: 14px; font-weight: 600;">&#1058;&#1077;&#1089;&#1090; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1077;&#1085;&#1086;</h3>' +
+        '</div>' +
+        '<p style="font-size: 13px; color: #475569; margin-bottom: 12px;">' +
+          '&#1055;&#1088;&#1086;&#1090;&#1077;&#1089;&#1090;&#1086;&#1074;&#1072;&#1085;&#1086; ' + data.totalUrls + ' URL &#1079;&#1072; ' + data.processingTime + ' &#1089;&#1077;&#1082;' +
+        '</p>' +
+        '<a href="' + data.spreadsheetUrl + '" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 500; color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 8px; text-decoration: none;">' +
+          '&#1042;&#1110;&#1076;&#1082;&#1088;&#1080;&#1090;&#1080; &#1088;&#1077;&#1079;&#1091;&#1083;&#1100;&#1090;&#1072;&#1090;&#1080; &#8594;' +
+        '</a>';
+    }
+
+    function showError(message) {
+      var resultDiv = document.getElementById('result');
+      resultDiv.className = 'result error';
+      resultDiv.innerHTML =
+        '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">' +
+          '<div class="result-icon">&#10007;</div>' +
+          '<h3 style="color: #dc2626; font-size: 14px; font-weight: 600;">&#1055;&#1086;&#1084;&#1080;&#1083;&#1082;&#1072;</h3>' +
+        '</div>' +
+        '<p style="font-size: 13px; color: #475569;">' + message + '</p>';
+    }
+
+    document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handleSubmit();
+    });
+  </script>
+</body>
+</html>
