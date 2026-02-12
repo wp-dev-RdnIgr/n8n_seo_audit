@@ -16,24 +16,12 @@
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "pdfUrl",
-              "value": "={{ $json.body?.pdfUrl || $json.pdfUrl || '' }}"
-            },
-            {
-              "name": "outputSheetName",
-              "value": "={{ $json.body?.outputName || $json.outputName || 'SEO Audit Report - ' + $now.format('dd.MM.yyyy HH:mm') }}"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// Extract data from webhook body\nconst webhookData = $input.first().json;\nconst body = webhookData.body || {};\n\nreturn {\n  pdfUrl: body.pdfUrl || '',\n  outputSheetName: body.outputName || 'SEO Audit Report - ' + new Date().toISOString().slice(0, 10)\n};"
       },
       "id": "set-variables",
       "name": "Set Variables",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [440, 300]
     },
     {
@@ -82,7 +70,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.data;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.text;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "clean-text",
       "name": "Clean Text & Remove Brand",
