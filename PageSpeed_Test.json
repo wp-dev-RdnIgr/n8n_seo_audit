@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## ⚡ PageSpeed Test Workflow\n\n**Endpoint:** `POST /webhook/pagespeed-test`\n\n**Вход:** spreadsheetId с URLs в колонке A\n**Выход:** таблица с результатами PageSpeed\n\n**API:** Google PageSpeed Insights v5\n**Батчинг:** по 5 URLs, пауза 5 сек",
+        "content": "## ⚡ PageSpeed Test Workflow\n\n**Endpoint:** `POST /webhook/pagespeed-test`\n\n**Вход:** spreadsheetId с URLs в колонке A\n**Выход:** таблица с результатами PageSpeed\n\n**API:** Google PageSpeed Insights v5\n**Батчинг:** по 5 URLs, пауза 5 сек\n\n**⚠️ НАСТРОЙКА:**\n1. Замените `YOUR_PAGESPEED_API_KEY` в ноде Set Variables\n2. Получить ключ: console.cloud.google.com → APIs → Credentials",
         "height": 240,
         "width": 340
       },
@@ -66,6 +66,12 @@
               "name": "startTime",
               "value": "={{ Date.now() }}",
               "type": "number"
+            },
+            {
+              "id": "apiKey",
+              "name": "apiKey",
+              "value": "={{ $json.body.apiKey || 'AIzaSyANhdoZFJJj6aa5d_GQIokvgm5VExL_2ys' }}",
+              "type": "string"
             }
           ]
         },
@@ -163,9 +169,8 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googlePagesSpeedApiOAuth2",
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&key={{ $('Set Variables').first().json.apiKey }}",
+        "authentication": "none",
         "options": {
           "timeout": 120000
         }
@@ -175,20 +180,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [1740, 200],
-      "continueOnFail": true,
-      "credentials": {
-        "googlePagesSpeedApiOAuth2": {
-          "id": "pagespeed-api-key",
-          "name": "PageSpeed API"
-        }
-      }
+      "continueOnFail": true
     },
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googlePagesSpeedApiOAuth2",
+        "url": "=https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={{ encodeURIComponent($json.currentUrl) }}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo&key={{ $('Set Variables').first().json.apiKey }}",
+        "authentication": "none",
         "options": {
           "timeout": 120000
         }
@@ -198,13 +196,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [1740, 400],
-      "continueOnFail": true,
-      "credentials": {
-        "googlePagesSpeedApiOAuth2": {
-          "id": "pagespeed-api-key",
-          "name": "PageSpeed API"
-        }
-      }
+      "continueOnFail": true
     },
     {
       "parameters": {
