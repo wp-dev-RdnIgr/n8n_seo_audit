@@ -6,7 +6,7 @@ function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page : 'audit';
 
   var pages = {
-    'audit': { file: 'form', title: 'Аналіз конкурентів' },
+    'audit': { file: 'form', title: 'Аналіз домену' },
     'gkp':   { file: 'gkp_form', title: 'Семантичне ядро (GKP)' }
   };
 
@@ -56,6 +56,43 @@ function submitAudit(domain) {
       success: true,
       spreadsheetUrl: result.spreadsheet_url,
       message: result.message || 'Аудит запущено!'
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: AI Аналіз таблиці
+// ============================================
+
+function submitAIAnalysis(spreadsheetUrl) {
+  if (!spreadsheetUrl || !spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+    return { success: false, error: 'Невірний формат посилання на таблицю' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/seo-audit-ai-report';
+
+  var payload = {
+    url: spreadsheetUrl
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    return {
+      success: true,
+      docUrl: result.docUrl,
+      domain: result.domain,
+      message: 'AI звіт створено для ' + result.domain
     };
   } catch (error) {
     return { success: false, error: error.toString() };
