@@ -15,7 +15,7 @@
       align-items: center;
       justify-content: center;
     }
-    .container { width: 100%; max-width: 480px; }
+    .container { width: 100%; max-width: 520px; }
     .card {
       background: #ffffff;
       border: 1px solid rgba(0, 0, 0, 0.06);
@@ -23,7 +23,7 @@
       padding: 36px 32px;
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     }
-    .header { text-align: center; margin-bottom: 32px; }
+    .header { text-align: center; margin-bottom: 28px; }
     .logo {
       width: 56px; height: 56px;
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -53,7 +53,42 @@
       transition: all 0.2s ease;
     }
     input[type="text"]:focus { border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12); }
-    .hint { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+    .table-hint {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .table-hint-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .table-example {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .table-example .row {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 4px 0;
+    }
+    .table-example .row:last-child { border-bottom: none; }
+    .table-example .col-a {
+      width: 40px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .table-example .col-val {
+      flex: 1;
+      color: #334155;
+    }
+    .table-example .header-row { background: #f1f5f9; margin: 0 -8px; padding: 4px 8px; border-radius: 4px; }
 
     .options { display: flex; gap: 12px; margin-bottom: 20px; }
     .option-card {
@@ -99,9 +134,22 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .time-note {
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+
     .result { margin-top: 20px; padding: 16px 18px; border-radius: 10px; display: none; }
     .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
     .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
     .result-icon {
       width: 28px; height: 28px;
       border-radius: 7px;
@@ -110,6 +158,25 @@
     }
     .result.success .result-icon { background: #dcfce7; color: #16a34a; }
     .result.error .result-icon { background: #fee2e2; color: #dc2626; }
+    .result-title { font-size: 14px; font-weight: 600; }
+    .result.success .result-title { color: #15803d; }
+    .result.error .result-title { color: #dc2626; }
+    .result-text { font-size: 13px; color: #475569; margin-bottom: 12px; }
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .result-link:hover { background: #bbf7d0; }
 
     .metrics-preview {
       margin-top: 28px;
@@ -147,23 +214,10 @@
       padding-top: 16px;
       border-top: 1px solid #f3f4f6;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: center;
       font-size: 12px;
-      color: #64748b;
     }
     .footer-brand { color: #10b981; font-weight: 600; }
-
-    .warning {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 12px;
-      color: #92400e;
-    }
-    .warning-title { font-weight: 600; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -172,16 +226,11 @@
       <div class="header">
         <div class="logo">&#9889;</div>
         <h1>PageSpeed Test</h1>
-        <p>&#1052;&#1072;&#1089;&#1086;&#1074;&#1080;&#1081; &#1072;&#1085;&#1072;&#1083;&#1110;&#1079; &#1096;&#1074;&#1080;&#1076;&#1082;&#1086;&#1089;&#1090;&#1110; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1103; &#1089;&#1090;&#1086;&#1088;&#1110;&#1085;&#1086;&#1082; &#1095;&#1077;&#1088;&#1077;&#1079; Google PageSpeed Insights API</p>
-      </div>
-
-      <div class="warning">
-        <div class="warning-title">&#9888;&#65039; &#1063;&#1072;&#1089; &#1074;&#1080;&#1082;&#1086;&#1085;&#1072;&#1085;&#1085;&#1103;</div>
-        &#1058;&#1077;&#1089;&#1090;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103; &#1079;&#1072;&#1081;&#1084;&#1072;&#1108; ~30 &#1089;&#1077;&#1082; &#1085;&#1072; URL. &#1044;&#1083;&#1103; 50 URL &#8212; &#1073;&#1083;&#1080;&#1079;&#1100;&#1082;&#1086; 10-15 &#1093;&#1074;&#1080;&#1083;&#1080;&#1085;.
+        <p>Масовий аналіз швидкості завантаження сторінок через Google PageSpeed Insights API</p>
       </div>
 
       <div class="form-group">
-        <label>&#1055;&#1086;&#1089;&#1080;&#1083;&#1072;&#1085;&#1085;&#1103; &#1085;&#1072; &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1102; &#1079; URLs</label>
+        <label>Посилання на таблицю з URLs</label>
         <div class="input-wrapper">
           <input
             type="text"
@@ -192,10 +241,31 @@
           >
           <span class="input-icon">&#128203;</span>
         </div>
-        <p class="hint">URLs &#1084;&#1072;&#1102;&#1090;&#1100; &#1073;&#1091;&#1090;&#1080; &#1074; &#1087;&#1077;&#1088;&#1096;&#1086;&#1084;&#1091; &#1089;&#1090;&#1086;&#1074;&#1087;&#1094;&#1110; (A). &#1055;&#1077;&#1088;&#1096;&#1080;&#1081; &#1088;&#1103;&#1076;&#1086;&#1082; - &#1079;&#1072;&#1075;&#1086;&#1083;&#1086;&#1074;&#1086;&#1082;.</p>
+
+        <div class="table-hint">
+          <div class="table-hint-title">Структура таблиці:</div>
+          <div class="table-example">
+            <div class="row header-row">
+              <div class="col-a">A1</div>
+              <div class="col-val">URL (заголовок)</div>
+            </div>
+            <div class="row">
+              <div class="col-a">A2</div>
+              <div class="col-val">https://example.com/</div>
+            </div>
+            <div class="row">
+              <div class="col-a">A3</div>
+              <div class="col-val">https://example.com/page/</div>
+            </div>
+            <div class="row">
+              <div class="col-a">...</div>
+              <div class="col-val">інші URLs</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <label style="margin-bottom: 12px;">&#1058;&#1080;&#1087; &#1090;&#1077;&#1089;&#1090;&#1091;</label>
+      <label style="margin-bottom: 12px;">Тип тесту</label>
       <div class="options">
         <div class="option-card selected" id="optMobile" onclick="toggleOption('mobile')">
           <div class="option-icon">&#128241;</div>
@@ -208,45 +278,46 @@
       </div>
 
       <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>&#128640; &#1047;&#1072;&#1087;&#1091;&#1089;&#1090;&#1080;&#1090;&#1080; &#1090;&#1077;&#1089;&#1090;</span>
+        <span>&#128640; Запустити тест</span>
       </button>
+
+      <div class="time-note">&#9203; Приблизний час: ~30 секунд на кожен URL</div>
 
       <div class="result" id="result"></div>
 
       <div class="metrics-preview">
-        <div class="metrics-title">&#1052;&#1077;&#1090;&#1088;&#1080;&#1082;&#1080; &#1091; &#1079;&#1074;&#1110;&#1090;&#1110;</div>
+        <div class="metrics-title">Метрики у звіті</div>
         <div class="metric-item">
           <div class="metric-badge badge-green">90+</div>
           <div class="metric-info">
             <div class="metric-name">Performance Score</div>
-            <div class="metric-desc">&#1047;&#1072;&#1075;&#1072;&#1083;&#1100;&#1085;&#1072; &#1086;&#1094;&#1110;&#1085;&#1082;&#1072; &#1087;&#1088;&#1086;&#1076;&#1091;&#1082;&#1090;&#1080;&#1074;&#1085;&#1086;&#1089;&#1090;&#1110; (0-100)</div>
+            <div class="metric-desc">Загальна оцінка продуктивності (0-100)</div>
           </div>
         </div>
         <div class="metric-item">
           <div class="metric-badge badge-orange">LCP</div>
           <div class="metric-info">
             <div class="metric-name">Largest Contentful Paint</div>
-            <div class="metric-desc">&#1063;&#1072;&#1089; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1103; &#1085;&#1072;&#1081;&#1073;&#1110;&#1083;&#1100;&#1096;&#1086;&#1075;&#1086; &#1077;&#1083;&#1077;&#1084;&#1077;&#1085;&#1090;&#1091;</div>
+            <div class="metric-desc">Час завантаження найбільшого елементу</div>
           </div>
         </div>
         <div class="metric-item">
           <div class="metric-badge badge-red">CLS</div>
           <div class="metric-info">
             <div class="metric-name">Cumulative Layout Shift</div>
-            <div class="metric-desc">&#1047;&#1084;&#1110;&#1097;&#1077;&#1085;&#1085;&#1103; &#1084;&#1072;&#1082;&#1077;&#1090;&#1091; &#1087;&#1088;&#1080; &#1079;&#1072;&#1074;&#1072;&#1085;&#1090;&#1072;&#1078;&#1077;&#1085;&#1085;&#1110;</div>
+            <div class="metric-desc">Зміщення макету при завантаженні</div>
           </div>
         </div>
         <div class="metric-item">
           <div class="metric-badge badge-blue">TBT</div>
           <div class="metric-info">
             <div class="metric-name">Total Blocking Time</div>
-            <div class="metric-desc">&#1063;&#1072;&#1089; &#1073;&#1083;&#1086;&#1082;&#1091;&#1074;&#1072;&#1085;&#1085;&#1103; &#1086;&#1089;&#1085;&#1086;&#1074;&#1085;&#1086;&#1075;&#1086; &#1087;&#1086;&#1090;&#1086;&#1082;&#1091;</div>
+            <div class="metric-desc">Час блокування основного потоку</div>
           </div>
         </div>
       </div>
 
       <div class="footer">
-        <span>&#9203; ~30 &#1089;&#1077;&#1082; &#1085;&#1072; URL</span>
         <span class="footer-brand">WebPromo</span>
       </div>
     </div>
@@ -274,17 +345,17 @@
       var url = urlInput.value.trim();
 
       if (!url) {
-        showError('&#1042;&#1089;&#1090;&#1072;&#1074;&#1090;&#1077; &#1087;&#1086;&#1089;&#1080;&#1083;&#1072;&#1085;&#1085;&#1103; &#1085;&#1072; &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1102;');
+        showError('Вставте посилання на таблицю');
         return;
       }
 
       if (!url.includes('docs.google.com/spreadsheets')) {
-        showError('&#1053;&#1077;&#1074;&#1110;&#1088;&#1085;&#1080;&#1081; &#1092;&#1086;&#1088;&#1084;&#1072;&#1090;. &#1052;&#1072;&#1108; &#1073;&#1091;&#1090;&#1080; Google Sheets URL');
+        showError('Невірний формат. Має бути Google Sheets URL');
         return;
       }
 
       if (!testMobile && !testDesktop) {
-        showError('&#1042;&#1080;&#1073;&#1077;&#1088;&#1110;&#1090;&#1100; &#1093;&#1086;&#1095;&#1072; &#1073; &#1086;&#1076;&#1080;&#1085; &#1090;&#1080;&#1087; &#1090;&#1077;&#1089;&#1090;&#1091; (Mobile/Desktop)');
+        showError('Виберіть хоча б один тип тесту (Mobile/Desktop)');
         return;
       }
 
@@ -301,7 +372,7 @@
           if (response.success) {
             showSuccess(response);
           } else {
-            showError(response.error || '&#1053;&#1077;&#1074;&#1110;&#1076;&#1086;&#1084;&#1072; &#1087;&#1086;&#1084;&#1080;&#1083;&#1082;&#1072;');
+            showError(response.error || 'Невідома помилка');
           }
         })
         .withFailureHandler(function(error) {
@@ -320,15 +391,16 @@
       var resultDiv = document.getElementById('result');
       resultDiv.className = 'result success';
       resultDiv.innerHTML =
-        '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">' +
+        '<div class="result-header">' +
           '<div class="result-icon">&#10003;</div>' +
-          '<h3 style="color: #15803d; font-size: 14px; font-weight: 600;">&#1058;&#1077;&#1089;&#1090; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1077;&#1085;&#1086;</h3>' +
+          '<div class="result-title">Тест завершено!</div>' +
         '</div>' +
-        '<p style="font-size: 13px; color: #475569; margin-bottom: 12px;">' +
-          '&#1055;&#1088;&#1086;&#1090;&#1077;&#1089;&#1090;&#1086;&#1074;&#1072;&#1085;&#1086; ' + data.totalUrls + ' URL &#1079;&#1072; ' + data.processingTime + ' &#1089;&#1077;&#1082;' +
+        '<p class="result-text">' +
+          'Протестовано <strong>' + data.totalUrls + '</strong> URL за <strong>' + data.processingTime + '</strong> секунд. ' +
+          'Результати з AI-аналізом готові.' +
         '</p>' +
-        '<a href="' + data.spreadsheetUrl + '" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 500; color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 8px; text-decoration: none;">' +
-          '&#1042;&#1110;&#1076;&#1082;&#1088;&#1080;&#1090;&#1080; &#1088;&#1077;&#1079;&#1091;&#1083;&#1100;&#1090;&#1072;&#1090;&#1080; &#8594;' +
+        '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
+          '&#128200; Відкрити таблицю з результатами' +
         '</a>';
     }
 
@@ -336,11 +408,11 @@
       var resultDiv = document.getElementById('result');
       resultDiv.className = 'result error';
       resultDiv.innerHTML =
-        '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">' +
+        '<div class="result-header">' +
           '<div class="result-icon">&#10007;</div>' +
-          '<h3 style="color: #dc2626; font-size: 14px; font-weight: 600;">&#1055;&#1086;&#1084;&#1080;&#1083;&#1082;&#1072;</h3>' +
+          '<div class="result-title">Помилка</div>' +
         '</div>' +
-        '<p style="font-size: 13px; color: #475569;">' + message + '</p>';
+        '<p class="result-text">' + message + '</p>';
     }
 
     document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
