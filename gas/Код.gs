@@ -1,5 +1,5 @@
 // ============================================
-// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed
+// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed | ?page=pdf_audit
 // ============================================
 
 function doGet(e) {
@@ -10,7 +10,8 @@ function doGet(e) {
     'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
     'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' },
-    'pagespeed':   { file: 'pagespeed_form', title: 'PageSpeed Test' }
+    'pagespeed':   { file: 'pagespeed_form', title: 'PageSpeed Test' },
+    'pdf_audit':   { file: 'pdf_audit_form', title: 'PDF Audit Parser' }
   };
 
   var config = pages[page] || pages['audit'];
@@ -291,6 +292,47 @@ function submitPageSpeedTest(formData) {
       totalUrls: result.total_urls || 0,
       processingTime: result.processing_time_seconds || 0,
       message: 'PageSpeed тест завершено для ' + (result.total_urls || 0) + ' URL'
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: PDF Audit Parser
+// ============================================
+
+function submitPdfAuditParse(formData) {
+  // Валідація
+  if (!formData.pdfUrl || !formData.pdfUrl.includes('drive.google.com')) {
+    return { success: false, error: 'Невірний формат посилання на PDF файл. Має бути Google Drive URL' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/parse-pdf-audit';
+
+  var payload = {
+    pdfUrl: formData.pdfUrl,
+    outputName: formData.outputName || 'SEO Audit Report - ' + new Date().toISOString().slice(0, 10)
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    timeout: 300000  // 5 хвилин таймаут для великих PDF
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    return {
+      success: true,
+      spreadsheetUrl: result.spreadsheetUrl,
+      totalSheets: result.totalSheets || 15,
+      processingTime: result.processingTime || 0,
+      message: 'PDF документ успішно спарсено'
     };
   } catch (error) {
     return { success: false, error: error.toString() };

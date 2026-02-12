@@ -1,0 +1,347 @@
+{
+  "name": "PDF Audit Parser",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "parse-pdf-audit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "pdfUrl",
+              "value": "={{ $json.body.pdfUrl }}"
+            },
+            {
+              "name": "outputSheetName",
+              "value": "={{ $json.body.outputName || 'SEO Audit Report - ' + $now.format('dd.MM.yyyy HH:mm') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-variables",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Google Drive file ID from URL\nconst pdfUrl = $input.first().json.pdfUrl;\nlet fileId = '';\n\n// Handle different Google Drive URL formats\nif (pdfUrl.includes('/file/d/')) {\n  fileId = pdfUrl.split('/file/d/')[1].split('/')[0];\n} else if (pdfUrl.includes('id=')) {\n  fileId = pdfUrl.split('id=')[1].split('&')[0];\n} else if (pdfUrl.includes('drive.google.com/open')) {\n  fileId = pdfUrl.split('id=')[1];\n}\n\nreturn {\n  fileId: fileId,\n  downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`,\n  outputSheetName: $input.first().json.outputSheetName\n};"
+      },
+      "id": "extract-file-id",
+      "name": "Extract File ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.fileId }}"
+        },
+        "options": {}
+      },
+      "id": "google-drive-download",
+      "name": "Download PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [880, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-creds",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "extract-pdf-text",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split the extracted text into sections for processing\nconst fullText = $input.first().json.data;\nconst outputSheetName = $('Extract File ID').first().json.outputSheetName;\n\n// Clean text from Netpeak brand mentions\nfunction removeBrand(text) {\n  return text\n    .replace(/Netpeak Spider/gi, '')\n    .replace(/Netpeak Software/gi, '')\n    .replace(/Netpeak Checker/gi, '')\n    .replace(/Netpeak/gi, '')\n    .replace(/netpeaksoftware\\.com/gi, '')\n    .replace(/Аудит\\s*\\n/g, '')\n    .replace(/\\d+\\/25\\n?/g, '')\n    .trim();\n}\n\nconst cleanedText = removeBrand(fullText);\n\nreturn {\n  fullText: cleanedText,\n  outputSheetName: outputSheetName,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "clean-text",
+      "name": "Clean Text & Remove Brand",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Ти експерт з парсингу SEO-аудит звітів. Твоя задача - витягти ВСІ дані з технічного SEO-аудиту та структурувати їх у форматі JSON.\n\nВАЖЛИВО:\n1. Витягни АБСОЛЮТНО ВСІ числові дані, відсотки, URL-приклади\n2. НЕ пропускай жодного розділу чи підрозділу\n3. Зберігай точність чисел та відсотків\n4. Для помилок завжди включай приклад URL якщо він є\n5. Відповідь має бути ТІЛЬКИ валідним JSON без markdown"
+            },
+            {
+              "role": "user",
+              "content": "Проаналізуй цей SEO-аудит звіт та витягни ВСІ дані у такому JSON форматі:\n\n{\n  \"generalInfo\": {\n    \"siteUrl\": \"\",\n    \"auditDate\": \"\",\n    \"scanMode\": \"\",\n    \"parametersAnalyzed\": \"\"\n  },\n  \"summary\": {\n    \"totalUrlsChecked\": 0,\n    \"urlBreakdown\": [\n      {\"type\": \"\", \"count\": 0, \"percent\": \"\"}\n    ],\n    \"urlsWithErrors\": {\n      \"total\": 0,\n      \"percent\": \"\",\n      \"breakdown\": [\n        {\"type\": \"\", \"count\": 0, \"percent\": \"\"}\n      ]\n    }\n  },\n  \"contentTypes\": [\n    {\"type\": \"\", \"count\": 0, \"percent\": \"\"}\n  ],\n  \"topHosts\": [\n    {\"host\": \"\", \"urlCount\": 0, \"percent\": \"\"}\n  ],\n  \"urlStructure\": [\n    {\"host\": \"\", \"segment\": \"\", \"count\": 0, \"percent\": \"\"}\n  ],\n  \"serverResponseCodes\": [\n    {\"code\": \"\", \"description\": \"\", \"count\": 0, \"percent\": \"\"}\n  ],\n  \"indexability\": {\n    \"searchOpenness\": [\n      {\"status\": \"\", \"count\": 0, \"percent\": \"\"}\n    ],\n    \"closureReasons\": [\n      {\"reason\": \"\", \"count\": 0, \"percent\": \"\"}\n    ]\n  },\n  \"metaRobots\": [\n    {\"directive\": \"\", \"count\": 0, \"percent\": \"\"}\n  ],\n  \"canonicalUsage\": [\n    {\"status\": \"\", \"count\": 0, \"percent\": \"\"}\n  ],\n  \"urlDepth\": [\n    {\"depth\": 0, \"count\": 0}\n  ],\n  \"urlNesting\": [\n    {\"nesting\": 0, \"count\": 0}\n  ],\n  \"loadingSpeedHtml\": {\n    \"maxMs\": 0,\n    \"minMs\": 0,\n    \"medianMs\": 0,\n    \"distribution\": [\n      {\"category\": \"\", \"count\": 0, \"percent\": \"\"}\n    ]\n  },\n  \"loadingSpeedResources\": {\n    \"maxMs\": 0,\n    \"minMs\": 0,\n    \"medianMs\": 0,\n    \"distribution\": [\n      {\"category\": \"\", \"count\": 0, \"percent\": \"\"}\n    ]\n  },\n  \"protocols\": {\n    \"html\": [{\"protocol\": \"\", \"count\": 0, \"percent\": \"\"}],\n    \"resources\": [{\"protocol\": \"\", \"count\": 0, \"percent\": \"\"}]\n  },\n  \"seoElements\": {\n    \"uniqueness\": [\n      {\"element\": \"\", \"unique\": \"\", \"duplicated\": \"\", \"missing\": \"\"}\n    ],\n    \"length\": [\n      {\"element\": \"\", \"optimal\": \"\", \"short\": \"\", \"long\": \"\"}\n    ]\n  },\n  \"contentMetrics\": {\n    \"charactersPerPage\": [\n      {\"category\": \"\", \"count\": 0, \"percent\": \"\"}\n    ],\n    \"wordsPerPage\": [\n      {\"category\": \"\", \"count\": 0, \"percent\": \"\"}\n    ],\n    \"imageSizes\": [\n      {\"category\": \"\", \"count\": 0, \"percent\": \"\"}\n    ]\n  },\n  \"errors\": {\n    \"criticality\": {\n      \"high\": 0,\n      \"medium\": 0,\n      \"low\": 0\n    },\n    \"topErrors\": [\n      {\"error\": \"\", \"count\": 0, \"percent\": \"\"}\n    ],\n    \"highCriticality\": [\n      {\"error\": \"\", \"exampleUrl\": \"\", \"count\": 0}\n    ],\n    \"mediumCriticality\": [\n      {\"error\": \"\", \"exampleUrl\": \"\", \"count\": 0}\n    ],\n    \"lowCriticality\": [\n      {\"error\": \"\", \"exampleUrl\": \"\", \"count\": 0}\n    ],\n    \"notDetected\": [\"\"]\n  },\n  \"scanSettings\": {\n    \"analyzedData\": {\n      \"scannedUrls\": \"\",\n      \"segmentation\": \"\",\n      \"parametersSelected\": \"\"\n    },\n    \"speedSettings\": {\n      \"maxTimeout\": \"\",\n      \"jsRendering\": \"\"\n    },\n    \"crawlInstructions\": {},\n    \"crawlLimits\": {},\n    \"generalSettings\": {},\n    \"advancedSettings\": {}\n  }\n}\n\nТекст звіту:\n\n{{ $json.fullText }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 16000
+        }
+      },
+      "id": "ai-parser",
+      "name": "AI Parser - Extract All Data",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [1540, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response and prepare data for sheets\nconst aiResponse = $input.first().json.message.content;\nconst outputSheetName = $('Clean Text & Remove Brand').first().json.outputSheetName;\n\nlet parsedData;\ntry {\n  // Remove markdown code blocks if present\n  let cleanJson = aiResponse.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  parsedData = JSON.parse(cleanJson);\n} catch (e) {\n  throw new Error('Failed to parse AI response as JSON: ' + e.message);\n}\n\nreturn {\n  parsedData: parsedData,\n  outputSheetName: outputSheetName\n};"
+      },
+      "id": "parse-ai-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "title": "={{ $json.outputSheetName }}",
+        "options": {}
+      },
+      "id": "create-spreadsheet",
+      "name": "Create Result Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1980, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare all sheet data\nconst input = $input.first().json;\nconst data = $('Parse AI Response').first().json.parsedData;\nconst spreadsheetId = input.id;\nconst spreadsheetUrl = input.url;\n\n// Helper function to create row arrays\nfunction createRows(headers, dataArray, mapping) {\n  const rows = [headers];\n  if (Array.isArray(dataArray)) {\n    dataArray.forEach(item => {\n      rows.push(mapping(item));\n    });\n  }\n  return rows;\n}\n\n// Prepare data for each sheet\nconst sheets = {\n  // 1. General Info\n  generalInfo: {\n    sheetName: '1. Загальна інформація',\n    data: [\n      ['Параметр', 'Значення'],\n      ['URL сайту', data.generalInfo?.siteUrl || ''],\n      ['Дата аудиту', data.generalInfo?.auditDate || ''],\n      ['Режим сканування', data.generalInfo?.scanMode || ''],\n      ['Параметри для аналізу', data.generalInfo?.parametersAnalyzed || '']\n    ]\n  },\n  \n  // 2. Summary - URL Breakdown\n  summary: {\n    sheetName: '2. Зведення',\n    data: [\n      ['Перевірено URL', data.summary?.totalUrlsChecked || 0],\n      [''],\n      ['Тип URL', 'Кількість', 'Відсоток'],\n      ...(data.summary?.urlBreakdown || []).map(item => [item.type, item.count, item.percent]),\n      [''],\n      ['URL з помилками', data.summary?.urlsWithErrors?.total || 0, data.summary?.urlsWithErrors?.percent || ''],\n      [''],\n      ['Тип помилки', 'Кількість', 'Відсоток'],\n      ...(data.summary?.urlsWithErrors?.breakdown || []).map(item => [item.type, item.count, item.percent])\n    ]\n  },\n  \n  // 3. Content Types\n  contentTypes: {\n    sheetName: '3. Типи контенту',\n    data: [\n      ['Тип контенту', 'Кількість', 'Відсоток'],\n      ...(data.contentTypes || []).map(item => [item.type, item.count, item.percent])\n    ]\n  },\n  \n  // 4. URL Structure\n  urlStructure: {\n    sheetName: '4. Структура URL',\n    data: [\n      ['Хост', 'Сегмент URL', 'Кількість', 'Відсоток'],\n      ...(data.urlStructure || []).map(item => [item.host, item.segment, item.count, item.percent])\n    ]\n  },\n  \n  // 5. Server Response Codes\n  responseCodes: {\n    sheetName: '5. Коди відповідей',\n    data: [\n      ['Код', 'Опис', 'Кількість', 'Відсоток'],\n      ...(data.serverResponseCodes || []).map(item => [item.code, item.description, item.count, item.percent])\n    ]\n  },\n  \n  // 6. Indexability\n  indexability: {\n    sheetName: '6. Індексація',\n    data: [\n      ['Відкритість для пошуку'],\n      ['Статус', 'Кількість', 'Відсоток'],\n      ...(data.indexability?.searchOpenness || []).map(item => [item.status, item.count, item.percent]),\n      [''],\n      ['Причини закриття'],\n      ['Причина', 'Кількість', 'Відсоток'],\n      ...(data.indexability?.closureReasons || []).map(item => [item.reason, item.count, item.percent])\n    ]\n  },\n  \n  // 7. Meta Robots & Canonical\n  metaRobots: {\n    sheetName: '7. Meta Robots',\n    data: [\n      ['Meta Robots директиви'],\n      ['Директива', 'Кількість', 'Відсоток'],\n      ...(data.metaRobots || []).map(item => [item.directive, item.count, item.percent]),\n      [''],\n      ['Використання canonical'],\n      ['Статус', 'Кількість', 'Відсоток'],\n      ...(data.canonicalUsage || []).map(item => [item.status, item.count, item.percent])\n    ]\n  },\n  \n  // 8. URL Depth & Nesting\n  urlDepth: {\n    sheetName: '8. Глибина URL',\n    data: [\n      ['Глибина (кліки від головної)'],\n      ['Глибина', 'Кількість URL'],\n      ...(data.urlDepth || []).map(item => [item.depth, item.count]),\n      [''],\n      ['Вкладеність URL (сегменти)'],\n      ['Вкладеність', 'Кількість URL'],\n      ...(data.urlNesting || []).map(item => [item.nesting, item.count])\n    ]\n  },\n  \n  // 9. Loading Speed HTML\n  speedHtml: {\n    sheetName: '9. Швидкість HTML',\n    data: [\n      ['Час відповіді сервера (HTML)'],\n      ['Метрика', 'Значення'],\n      ['Максимальний', (data.loadingSpeedHtml?.maxMs || 0) + ' мс'],\n      ['Мінімальний', (data.loadingSpeedHtml?.minMs || 0) + ' мс'],\n      ['Медіана', (data.loadingSpeedHtml?.medianMs || 0) + ' мс'],\n      [''],\n      ['Розподіл за швидкістю'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.loadingSpeedHtml?.distribution || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 10. Loading Speed Resources\n  speedResources: {\n    sheetName: '10. Швидкість ресурсів',\n    data: [\n      ['Час відповіді сервера (зображення та ресурси)'],\n      ['Метрика', 'Значення'],\n      ['Максимальний', (data.loadingSpeedResources?.maxMs || 0) + ' мс'],\n      ['Мінімальний', (data.loadingSpeedResources?.minMs || 0) + ' мс'],\n      ['Медіана', (data.loadingSpeedResources?.medianMs || 0) + ' мс'],\n      [''],\n      ['Розподіл за швидкістю'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.loadingSpeedResources?.distribution || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 11. Protocols\n  protocols: {\n    sheetName: '11. Протоколи',\n    data: [\n      ['Протокол внутрішніх HTML'],\n      ['Протокол', 'Кількість', 'Відсоток'],\n      ...(data.protocols?.html || []).map(item => [item.protocol, item.count, item.percent]),\n      [''],\n      ['Протокол зображень та ресурсів'],\n      ['Протокол', 'Кількість', 'Відсоток'],\n      ...(data.protocols?.resources || []).map(item => [item.protocol, item.count, item.percent])\n    ]\n  },\n  \n  // 12. SEO Elements\n  seoElements: {\n    sheetName: '12. SEO-елементи',\n    data: [\n      ['Унікальність Title, Description, H1'],\n      ['Елемент', 'Унікальні', 'Дублюються', 'Відсутні'],\n      ...(data.seoElements?.uniqueness || []).map(item => [item.element, item.unique, item.duplicated, item.missing]),\n      [''],\n      ['Довжина Title, Description, H1'],\n      ['Елемент', 'Оптимальні', 'Короткі', 'Довгі'],\n      ...(data.seoElements?.length || []).map(item => [item.element, item.optimal, item.short, item.long])\n    ]\n  },\n  \n  // 13. Content Metrics\n  contentMetrics: {\n    sheetName: '13. Метрики контенту',\n    data: [\n      ['Кількість символів на сторінці'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.charactersPerPage || []).map(item => [item.category, item.count, item.percent]),\n      [''],\n      ['Кількість слів на сторінці'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.wordsPerPage || []).map(item => [item.category, item.count, item.percent]),\n      [''],\n      ['Розмір зображень'],\n      ['Категорія', 'Кількість', 'Відсоток'],\n      ...(data.contentMetrics?.imageSizes || []).map(item => [item.category, item.count, item.percent])\n    ]\n  },\n  \n  // 14. Errors\n  errors: {\n    sheetName: '14. Помилки',\n    data: [\n      ['Критичність помилок'],\n      ['Рівень', 'Кількість'],\n      ['Висока', data.errors?.criticality?.high || 0],\n      ['Середня', data.errors?.criticality?.medium || 0],\n      ['Низька', data.errors?.criticality?.low || 0],\n      [''],\n      ['Топ важливих помилок'],\n      ['Помилка', 'Кількість', 'Відсоток'],\n      ...(data.errors?.topErrors || []).map(item => [item.error, item.count, item.percent]),\n      [''],\n      ['Помилки високої критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.highCriticality || []).map(item => [item.error, item.exampleUrl, item.count]),\n      [''],\n      ['Помилки середньої критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.mediumCriticality || []).map(item => [item.error, item.exampleUrl, item.count]),\n      [''],\n      ['Помилки низької критичності'],\n      ['Помилка', 'Приклад URL', 'Кількість'],\n      ...(data.errors?.lowCriticality || []).map(item => [item.error, item.exampleUrl, item.count])\n    ]\n  },\n  \n  // 15. Scan Settings\n  scanSettings: {\n    sheetName: '15. Налаштування',\n    data: [\n      ['Проаналізовані дані'],\n      ['Параметр', 'Значення'],\n      ['Проскановано URL', data.scanSettings?.analyzedData?.scannedUrls || ''],\n      ['Сегментація', data.scanSettings?.analyzedData?.segmentation || ''],\n      ['Обрано параметрів', data.scanSettings?.analyzedData?.parametersSelected || ''],\n      [''],\n      ['Швидкість сканування'],\n      ['Макс. час очікування', data.scanSettings?.speedSettings?.maxTimeout || ''],\n      ['JavaScript рендеринг', data.scanSettings?.speedSettings?.jsRendering || '']\n    ]\n  }\n};\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: spreadsheetUrl,\n  sheets: sheets,\n  sheetNames: Object.values(sheets).map(s => s.sheetName)\n};"
+      },
+      "id": "prepare-sheet-data",
+      "name": "Prepare Sheet Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}:batchUpdate",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {{ $json.sheetNames.slice(1).map((name, idx) => `{\"addSheet\": {\"properties\": {\"title\": \"${name}\", \"index\": ${idx + 1}}}}`).join(',') }}\n  ]\n}",
+        "options": {}
+      },
+      "id": "create-sheets",
+      "name": "Create All Sheets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2420, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare batch value updates for all sheets\nconst prevData = $('Prepare Sheet Data').first().json;\nconst spreadsheetId = prevData.spreadsheetId;\nconst sheets = prevData.sheets;\n\n// Create value ranges for all sheets\nconst valueRanges = Object.values(sheets).map(sheet => ({\n  range: `'${sheet.sheetName}'!A1`,\n  values: sheet.data\n}));\n\nreturn {\n  spreadsheetId: spreadsheetId,\n  spreadsheetUrl: prevData.spreadsheetUrl,\n  valueRanges: valueRanges\n};"
+      },
+      "id": "prepare-batch-update",
+      "name": "Prepare Batch Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchUpdate",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": {{ JSON.stringify($json.valueRanges) }}\n}",
+        "options": {}
+      },
+      "id": "write-all-data",
+      "name": "Write All Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2860, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet Data').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": {\n          \"sheetId\": 0,\n          \"startRowIndex\": 0,\n          \"endRowIndex\": 1\n        },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": {\"red\": 0.2, \"green\": 0.6, \"blue\": 0.86},\n            \"textFormat\": {\"bold\": true, \"foregroundColor\": {\"red\": 1, \"green\": 1, \"blue\": 1}}\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": {\n          \"sheetId\": 0,\n          \"dimension\": \"COLUMNS\",\n          \"startIndex\": 0,\n          \"endIndex\": 5\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "format-sheets",
+      "name": "Format Sheets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3080, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate processing stats and return final response\nconst startTime = $('Clean Text & Remove Brand').first().json.timestamp;\nconst endTime = new Date().toISOString();\nconst processingTime = Math.round((new Date(endTime) - new Date(startTime)) / 1000);\n\nconst spreadsheetUrl = $('Prepare Sheet Data').first().json.spreadsheetUrl;\nconst sheetNames = $('Prepare Sheet Data').first().json.sheetNames;\n\nreturn {\n  success: true,\n  spreadsheetUrl: spreadsheetUrl,\n  totalSheets: sheetNames.length,\n  sheetNames: sheetNames,\n  processingTime: processingTime\n};"
+      },
+      "id": "prepare-response",
+      "name": "Prepare Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3300, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3520, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{"node": "Set Variables", "type": "main", "index": 0}]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [{"node": "Extract File ID", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract File ID": {
+      "main": [
+        [{"node": "Download PDF", "type": "main", "index": 0}]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [{"node": "Extract PDF Text", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [{"node": "Clean Text & Remove Brand", "type": "main", "index": 0}]
+      ]
+    },
+    "Clean Text & Remove Brand": {
+      "main": [
+        [{"node": "AI Parser - Extract All Data", "type": "main", "index": 0}]
+      ]
+    },
+    "AI Parser - Extract All Data": {
+      "main": [
+        [{"node": "Parse AI Response", "type": "main", "index": 0}]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [{"node": "Create Result Spreadsheet", "type": "main", "index": 0}]
+      ]
+    },
+    "Create Result Spreadsheet": {
+      "main": [
+        [{"node": "Prepare Sheet Data", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Sheet Data": {
+      "main": [
+        [{"node": "Create All Sheets", "type": "main", "index": 0}]
+      ]
+    },
+    "Create All Sheets": {
+      "main": [
+        [{"node": "Prepare Batch Update", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Batch Update": {
+      "main": [
+        [{"node": "Write All Data", "type": "main", "index": 0}]
+      ]
+    },
+    "Write All Data": {
+      "main": [
+        [{"node": "Format Sheets", "type": "main", "index": 0}]
+      ]
+    },
+    "Format Sheets": {
+      "main": [
+        [{"node": "Prepare Response", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [{"node": "Respond", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
