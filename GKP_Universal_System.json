@@ -1,0 +1,962 @@
+{
+  "name": "GKP Universal System",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📥 ЭТАП 1: ГЕНЕРАЦИЯ ИДЕЙ\n\n**Endpoint:** `POST /webhook/gkp-ideas`\n\n**Вход:** до 300 seed-фраз\n**Выход:** таблица с ~3000-10000 идеями\n\n**API:** `generateKeywordIdeas`\n**Батчинг:** по 10 seeds",
+        "height": 240,
+        "width": 320
+      },
+      "id": "sticky-ideas",
+      "name": "Sticky Note - Ideas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1820, 20]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 ЭТАП 2: ПОЛУЧЕНИЕ МЕТРИК\n\n**Endpoint:** `POST /webhook/gkp-metrics`\n\n**Вход:** до 100,000 конкретных фраз\n**Выход:** таблица с точными метриками\n\n**API:** `generateKeywordHistoricalMetrics`\n**Батчинг:** по 10,000 keywords",
+        "height": 240,
+        "width": 340
+      },
+      "id": "sticky-metrics",
+      "name": "Sticky Note - Metrics",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 20]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gkp-ideas",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ideas-001",
+      "name": "Ideas - Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1800, 300],
+      "webhookId": "gkp-ideas"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc_name",
+              "name": "doc_name",
+              "value": "={{ $json.body.doc_name || 'GKP Ideas - ' + $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "language",
+              "name": "language",
+              "value": "={{ $json.body.language || '1001' }}",
+              "type": "string"
+            },
+            {
+              "id": "geo_target",
+              "name": "geo_target",
+              "value": "={{ $json.body.geo_target || '2276' }}",
+              "type": "string"
+            },
+            {
+              "id": "seed_keywords",
+              "name": "seed_keywords",
+              "value": "={{ JSON.stringify(($json.body.seed_keywords || []).slice(0, 300)) }}",
+              "type": "string"
+            },
+            {
+              "id": "source_spreadsheet_id",
+              "name": "source_spreadsheet_id",
+              "value": "={{ $json.body.source_spreadsheet_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "customer_id",
+              "name": "customer_id",
+              "value": "={{ $json.body.customer_id || '3460470607' }}",
+              "type": "string"
+            },
+            {
+              "id": "start_time",
+              "name": "start_time",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ideas-002",
+      "name": "Ideas - Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1560, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasSourceSheet",
+              "leftValue": "={{ $json.source_spreadsheet_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ideas-019",
+      "name": "Ideas - Has Source Sheet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Ideas - Set Variables').item.json.source_spreadsheet_id }}/values/A:A?majorDimension=COLUMNS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "ideas-020",
+      "name": "Ideas - Read Source Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-1080, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract seeds from sheet (skip header row, limit to 300)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst seeds = column.slice(1).filter(k => k && k.trim()).slice(0, 300);\nreturn [{ json: { seeds: seeds } }];"
+      },
+      "id": "ideas-021",
+      "name": "Ideas - Parse Sheet Seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-840, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use seeds from body\nconst seeds = JSON.parse($('Ideas - Set Variables').first().json.seed_keywords || '[]');\nreturn [{ json: { seeds: seeds } }];"
+      },
+      "id": "ideas-022",
+      "name": "Ideas - Use Body Seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1080, 400]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Ideas - Set Variables').item.json.doc_name }}",
+        "options": {}
+      },
+      "id": "ideas-003",
+      "name": "Ideas - Create Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-360, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\n// Get seeds from the previous node (either Parse Sheet Seeds or Use Body Seeds)\nlet allSeeds = [];\ntry {\n  allSeeds = $('Ideas - Parse Sheet Seeds').first().json.seeds || [];\n} catch(e) {\n  allSeeds = $('Ideas - Use Body Seeds').first().json.seeds || [];\n}\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
+      },
+      "id": "ideas-004",
+      "name": "Ideas - Split Batches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Ideas - Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Ideas - Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000{{ $json.pageToken ? ',\\n  \"pageToken\": \"' + $json.pageToken + '\"' : '' }}\n}",
+        "options": {}
+      },
+      "id": "ideas-005",
+      "name": "Ideas - API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [120, 300],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Ideas - Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Ideas - Has More Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Ideas - Split Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nconst hasNextPage = nextPageToken !== null;\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  // Current batch complete, move to next\n  batchesProcessed++;\n  currentSeedBatch++;\n  hasMoreSeedBatches = currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
+      },
+      "id": "ideas-006",
+      "name": "Ideas - Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasNextPage",
+              "leftValue": "={{ $json.hasNextPage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ideas-007",
+      "name": "Ideas - Has Next Page?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "id": "ideas-008",
+      "name": "Ideas - Wait Page",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [840, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($('Ideas - Has Next Page?').item.json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Ideas - Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Ideas - Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000,\n  \"pageToken\": \"{{ $('Ideas - Has Next Page?').item.json.pageToken }}\"\n}",
+        "options": {}
+      },
+      "id": "ideas-009",
+      "name": "Ideas - Next Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [840, 100],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasMoreBatches",
+              "leftValue": "={{ $json.hasMoreSeedBatches }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ideas-010",
+      "name": "Ideas - Has More Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "ideas-011",
+      "name": "Ideas - Wait Batch",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [840, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare for next seed batch\nconst state = $('Ideas - Has More Batches?').first().json;\nreturn [{\n  json: {\n    ...state,\n    pageToken: null\n  }\n}];"
+      },
+      "id": "ideas-012",
+      "name": "Ideas - Prepare Next Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywordSeed\": {\n    \"keywords\": {{ JSON.stringify($json.currentSeeds) }}\n  },\n  \"language\": \"languageConstants/{{ $('Ideas - Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Ideas - Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}",
+        "options": {}
+      },
+      "id": "ideas-013",
+      "name": "Ideas - Next Seed Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [840, 600],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format ideas data for spreadsheet\nconst input = $input.first().json;\nconst allResults = input.allResults || [];\n\n// Deduplicate by keyword text\nconst seen = new Set();\nconst unique = allResults.filter(r => {\n  const key = (r.text || '').toLowerCase();\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\n// Sort by avgMonthlySearches DESC\nunique.sort((a, b) => {\n  const aVol = parseInt(a.keywordIdeaMetrics?.avgMonthlySearches || '0');\n  const bVol = parseInt(b.keywordIdeaMetrics?.avgMonthlySearches || '0');\n  return bVol - aVol;\n});\n\n// Build rows\nconst headerRow = ['Keyword', 'Avg. Monthly Searches', 'Competition', 'Competition Index', 'Source Seed'];\nconst rows = [headerRow];\n\nfor (const r of unique) {\n  const kw = r.text || '';\n  const metrics = r.keywordIdeaMetrics || {};\n  const avg = metrics.avgMonthlySearches ? parseInt(metrics.avgMonthlySearches) : 0;\n  const comp = metrics.competition || 'N/A';\n  const compIndex = metrics.competitionIndex !== undefined ? metrics.competitionIndex : '';\n  const source = r.sourceSeed || '';\n  \n  rows.push([kw, avg, comp, compIndex, source]);\n}\n\nconst processingTime = Math.round((Date.now() - $('Ideas - Set Variables').first().json.start_time) / 1000);\n\nreturn [{\n  json: {\n    rows: rows,\n    totalKeywords: unique.length,\n    batchesProcessed: input.batchesProcessed,\n    processingTime: processingTime,\n    spreadsheetId: input.spreadsheetId\n  }\n}];"
+      },
+      "id": "ideas-014",
+      "name": "Ideas - Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"range\": \"A1\", \"majorDimension\": \"ROWS\", \"values\": $json.rows }) }}",
+        "options": {}
+      },
+      "id": "ideas-015",
+      "name": "Ideas - Write Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [840, 700],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "ideas-016",
+      "name": "Ideas - Wait Write",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [840, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Ideas - Format Data').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.086, \"green\": 0.627, \"blue\": 0.522 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 350 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 1, \"endIndex\": 5 },\n        \"properties\": { \"pixelSize\": 120 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 4, \"endIndex\": 5 },\n        \"properties\": { \"pixelSize\": 250 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": {\n          \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"startColumnIndex\": 0, \"endColumnIndex\": 5 }\n        }\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 0, \"gridProperties\": { \"frozenRowCount\": 1 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "ideas-017",
+      "name": "Ideas - Format Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [840, 900],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Ideas - Format Data').first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $('Ideas - Format Data').first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $('Ideas - Format Data').first().json.totalKeywords }},\n  \"total_batches_processed\": {{ $('Ideas - Format Data').first().json.batchesProcessed }},\n  \"processing_time_seconds\": {{ $('Ideas - Format Data').first().json.processingTime }}\n}",
+        "options": {}
+      },
+      "id": "ideas-018",
+      "name": "Ideas - Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [840, 1000]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gkp-metrics",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "metrics-001",
+      "name": "Metrics - Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [1240, 300],
+      "webhookId": "gkp-metrics"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc_name",
+              "name": "doc_name",
+              "value": "={{ $json.body.doc_name || 'GKP Metrics - ' + $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "language",
+              "name": "language",
+              "value": "={{ $json.body.language || '1001' }}",
+              "type": "string"
+            },
+            {
+              "id": "geo_target",
+              "name": "geo_target",
+              "value": "={{ $json.body.geo_target || '2276' }}",
+              "type": "string"
+            },
+            {
+              "id": "keywords",
+              "name": "keywords",
+              "value": "={{ JSON.stringify($json.body.keywords || []) }}",
+              "type": "string"
+            },
+            {
+              "id": "source_spreadsheet_id",
+              "name": "source_spreadsheet_id",
+              "value": "={{ $json.body.source_spreadsheet_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "customer_id",
+              "name": "customer_id",
+              "value": "={{ $json.body.customer_id || '3460470607' }}",
+              "type": "string"
+            },
+            {
+              "id": "start_time",
+              "name": "start_time",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "metrics-002",
+      "name": "Metrics - Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1480, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasSourceSheet",
+              "leftValue": "={{ $json.source_spreadsheet_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "metrics-003",
+      "name": "Metrics - Has Source Sheet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1720, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Metrics - Set Variables').item.json.source_spreadsheet_id }}/values/A:A?majorDimension=COLUMNS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "metrics-004",
+      "name": "Metrics - Read Source Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1960, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract keywords from sheet (skip header row)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\n// Skip first row (header) and filter empty\nconst keywords = column.slice(1).filter(k => k && k.trim());\n\nreturn [{ json: { keywords: keywords } }];"
+      },
+      "id": "metrics-005",
+      "name": "Metrics - Parse Sheet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use keywords from body\nconst keywords = JSON.parse($('Metrics - Set Variables').first().json.keywords || '[]');\nreturn [{ json: { keywords: keywords } }];"
+      },
+      "id": "metrics-006",
+      "name": "Metrics - Use Body Keywords",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1960, 400]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Metrics - Set Variables').item.json.doc_name }}",
+        "options": {}
+      },
+      "id": "metrics-008",
+      "name": "Metrics - Create Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2680, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split keywords into batches of 10,000 (API limit for Historical Metrics)\n// Get keywords from the previous node (either Parse Sheet or Use Body Keywords)\nlet allKeywords = [];\ntry {\n  allKeywords = $('Metrics - Parse Sheet').first().json.keywords || [];\n} catch(e) {\n  allKeywords = $('Metrics - Use Body Keywords').first().json.keywords || [];\n}\nconst BATCH_SIZE = 10000;\nconst batches = [];\n\nfor (let i = 0; i < allKeywords.length; i += BATCH_SIZE) {\n  batches.push(allKeywords.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: allKeywords.length,\n    currentBatch: 0,\n    allResults: [],\n    keywordsWithData: 0,\n    keywordsNoData: 0,\n    currentKeywords: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId\n  }\n}];"
+      },
+      "id": "metrics-009",
+      "name": "Metrics - Split Batches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2920, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywords\": {{ JSON.stringify($json.currentKeywords) }},\n  \"language\": \"languageConstants/{{ $('Metrics - Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Metrics - Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\"\n}",
+        "options": {}
+      },
+      "id": "metrics-010",
+      "name": "Metrics - API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3160, 300],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\nconst batchState = $('Metrics - Split Batches').first().json;\n\n// Determine state source\nlet state;\ntry {\n  state = $('Metrics - Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\n// Count keywords with/without data\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
+      },
+      "id": "metrics-011",
+      "name": "Metrics - Merge Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "hasMore",
+              "leftValue": "={{ $json.hasMore }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "metrics-012",
+      "name": "Metrics - Check More Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3640, 300]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "metrics-013",
+      "name": "Metrics - Wait Batch",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3880, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
+            { "name": "login-customer-id", "value": "3993420980" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywords\": {{ JSON.stringify($('Metrics - Check More Batches?').item.json.currentKeywords) }},\n  \"language\": \"languageConstants/{{ $('Metrics - Set Variables').item.json.language }}\",\n  \"geoTargetConstants\": [\"geoTargetConstants/{{ $('Metrics - Set Variables').item.json.geo_target }}\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\"\n}",
+        "options": {}
+      },
+      "id": "metrics-014",
+      "name": "Metrics - Next Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [4120, 200],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "QJ9r7jX6BiPCIZvF",
+          "name": "Google Ads account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge next batch results\nconst apiResponse = $input.first().json;\nconst state = $('Metrics - Check More Batches?').first().json;\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...state.allResults, ...newResults];\nconst nextBatch = state.currentBatch + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
+      },
+      "id": "metrics-015",
+      "name": "Metrics - Merge Next",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4360, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format metrics data into spreadsheet rows\nconst input = $input.first().json;\nconst allResults = input.allResults || [];\n\n// Month enum to short name\nconst monthMap = {JANUARY:'Jan',FEBRUARY:'Feb',MARCH:'Mar',APRIL:'Apr',MAY:'May',JUNE:'Jun',JULY:'Jul',AUGUST:'Aug',SEPTEMBER:'Sep',OCTOBER:'Oct',NOVEMBER:'Nov',DECEMBER:'Dec'};\n\n// Get month headers from first result with data\nlet monthHeaders = [];\nfor (const r of allResults) {\n  const volumes = r.keywordMetrics?.monthlySearchVolumes || [];\n  if (volumes.length > 0) {\n    monthHeaders = volumes.map(m => {\n      const name = monthMap[m.month] || m.month;\n      return name + ' ' + m.year;\n    });\n    break;\n  }\n}\n\n// Build header row\nconst headerRow = ['Keyword', 'Avg. Monthly Searches', 'Competition', 'Competition Index', ...monthHeaders];\nconst rows = [headerRow];\n\n// Parse each result\nfor (const r of allResults) {\n  const kw = r.text || r.keyword || '';\n  const metrics = r.keywordMetrics || {};\n  const avg = metrics.avgMonthlySearches ? parseInt(metrics.avgMonthlySearches) : 0;\n  const comp = metrics.competition || 'N/A';\n  const compIndex = metrics.competitionIndex !== undefined ? metrics.competitionIndex : '';\n  \n  const monthlyVolumes = (metrics.monthlySearchVolumes || []).map(m => {\n    return m.monthlySearches ? parseInt(m.monthlySearches) : 0;\n  });\n  \n  // Pad monthly volumes if needed\n  while (monthlyVolumes.length < monthHeaders.length) {\n    monthlyVolumes.push(0);\n  }\n  \n  rows.push([kw, avg, comp, compIndex, ...monthlyVolumes]);\n}\n\nconst processingTime = Math.round((Date.now() - $('Metrics - Set Variables').first().json.start_time) / 1000);\n\nreturn [{\n  json: {\n    rows: rows,\n    totalKeywords: allResults.length,\n    keywordsWithData: input.keywordsWithData,\n    keywordsNoData: input.keywordsNoData,\n    processingTime: processingTime,\n    spreadsheetId: input.spreadsheetId\n  }\n}];"
+      },
+      "id": "metrics-016",
+      "name": "Metrics - Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3640, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"range\": \"A1\", \"majorDimension\": \"ROWS\", \"values\": $json.rows }) }}",
+        "options": {}
+      },
+      "id": "metrics-017",
+      "name": "Metrics - Write Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3880, 500],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "metrics-018",
+      "name": "Metrics - Wait Write",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [4120, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Metrics - Format Data').first().json.spreadsheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"endRowIndex\": 1 },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": { \"red\": 0.086, \"green\": 0.627, \"blue\": 0.522 },\n            \"textFormat\": { \"bold\": true, \"foregroundColor\": { \"red\": 1, \"green\": 1, \"blue\": 1 }, \"fontSize\": 11 }\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 0, \"endIndex\": 1 },\n        \"properties\": { \"pixelSize\": 350 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"updateDimensionProperties\": {\n        \"range\": { \"sheetId\": 0, \"dimension\": \"COLUMNS\", \"startIndex\": 1, \"endIndex\": 20 },\n        \"properties\": { \"pixelSize\": 120 },\n        \"fields\": \"pixelSize\"\n      }\n    },\n    {\n      \"setBasicFilter\": {\n        \"filter\": {\n          \"range\": { \"sheetId\": 0, \"startRowIndex\": 0, \"startColumnIndex\": 0, \"endColumnIndex\": 20 }\n        }\n      }\n    },\n    {\n      \"updateSheetProperties\": {\n        \"properties\": { \"sheetId\": 0, \"gridProperties\": { \"frozenRowCount\": 1 } },\n        \"fields\": \"gridProperties.frozenRowCount\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "metrics-019",
+      "name": "Metrics - Format Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [4360, 500],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Metrics - Format Data').first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $('Metrics - Format Data').first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $('Metrics - Format Data').first().json.totalKeywords }},\n  \"keywords_with_data\": {{ $('Metrics - Format Data').first().json.keywordsWithData }},\n  \"keywords_no_data\": {{ $('Metrics - Format Data').first().json.keywordsNoData }},\n  \"processing_time_seconds\": {{ $('Metrics - Format Data').first().json.processingTime }}\n}",
+        "options": {}
+      },
+      "id": "metrics-020",
+      "name": "Metrics - Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [4600, 500]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ideas - Webhook": {
+      "main": [[{ "node": "Ideas - Set Variables", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Set Variables": {
+      "main": [[{ "node": "Ideas - Has Source Sheet?", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Has Source Sheet?": {
+      "main": [
+        [{ "node": "Ideas - Read Source Sheet", "type": "main", "index": 0 }],
+        [{ "node": "Ideas - Use Body Seeds", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ideas - Read Source Sheet": {
+      "main": [[{ "node": "Ideas - Parse Sheet Seeds", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Parse Sheet Seeds": {
+      "main": [[{ "node": "Ideas - Create Sheet", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Use Body Seeds": {
+      "main": [[{ "node": "Ideas - Create Sheet", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Create Sheet": {
+      "main": [[{ "node": "Ideas - Split Batches", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Split Batches": {
+      "main": [[{ "node": "Ideas - API Request", "type": "main", "index": 0 }]]
+    },
+    "Ideas - API Request": {
+      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Merge Results": {
+      "main": [[{ "node": "Ideas - Has Next Page?", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Has Next Page?": {
+      "main": [
+        [{ "node": "Ideas - Wait Page", "type": "main", "index": 0 }],
+        [{ "node": "Ideas - Has More Batches?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ideas - Wait Page": {
+      "main": [[{ "node": "Ideas - Next Page", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Next Page": {
+      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Has More Batches?": {
+      "main": [
+        [{ "node": "Ideas - Wait Batch", "type": "main", "index": 0 }],
+        [{ "node": "Ideas - Format Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ideas - Wait Batch": {
+      "main": [[{ "node": "Ideas - Prepare Next Batch", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Prepare Next Batch": {
+      "main": [[{ "node": "Ideas - Next Seed Batch", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Next Seed Batch": {
+      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Format Data": {
+      "main": [[{ "node": "Ideas - Write Sheet", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Write Sheet": {
+      "main": [[{ "node": "Ideas - Wait Write", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Wait Write": {
+      "main": [[{ "node": "Ideas - Format Sheet", "type": "main", "index": 0 }]]
+    },
+    "Ideas - Format Sheet": {
+      "main": [[{ "node": "Ideas - Respond", "type": "main", "index": 0 }]]
+    },
+
+    "Metrics - Webhook": {
+      "main": [[{ "node": "Metrics - Set Variables", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Set Variables": {
+      "main": [[{ "node": "Metrics - Has Source Sheet?", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Has Source Sheet?": {
+      "main": [
+        [{ "node": "Metrics - Read Source Sheet", "type": "main", "index": 0 }],
+        [{ "node": "Metrics - Use Body Keywords", "type": "main", "index": 0 }]
+      ]
+    },
+    "Metrics - Read Source Sheet": {
+      "main": [[{ "node": "Metrics - Parse Sheet", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Parse Sheet": {
+      "main": [[{ "node": "Metrics - Create Sheet", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Use Body Keywords": {
+      "main": [[{ "node": "Metrics - Create Sheet", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Create Sheet": {
+      "main": [[{ "node": "Metrics - Split Batches", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Split Batches": {
+      "main": [[{ "node": "Metrics - API Request", "type": "main", "index": 0 }]]
+    },
+    "Metrics - API Request": {
+      "main": [[{ "node": "Metrics - Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Merge Results": {
+      "main": [[{ "node": "Metrics - Check More Batches?", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Check More Batches?": {
+      "main": [
+        [{ "node": "Metrics - Wait Batch", "type": "main", "index": 0 }],
+        [{ "node": "Metrics - Format Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Metrics - Wait Batch": {
+      "main": [[{ "node": "Metrics - Next Batch", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Next Batch": {
+      "main": [[{ "node": "Metrics - Merge Next", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Merge Next": {
+      "main": [[{ "node": "Metrics - Check More Batches?", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Format Data": {
+      "main": [[{ "node": "Metrics - Write Sheet", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Write Sheet": {
+      "main": [[{ "node": "Metrics - Wait Write", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Wait Write": {
+      "main": [[{ "node": "Metrics - Format Sheet", "type": "main", "index": 0 }]]
+    },
+    "Metrics - Format Sheet": {
+      "main": [[{ "node": "Metrics - Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "9GZfovScdqkU77S9"
+  },
+  "versionId": "00000000-0000-0000-0000-000000000002",
+  "meta": {
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "GKP_Universal_System_001",
+  "tags": []
+}

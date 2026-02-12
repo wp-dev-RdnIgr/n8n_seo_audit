@@ -1,5 +1,5 @@
 // ============================================
-// РОУТИНГ: ?page=audit | ?page=gkp
+// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics
 // ============================================
 
 function doGet(e) {
@@ -8,6 +8,10 @@ function doGet(e) {
   var pages = {
     'audit': { file: 'form', title: 'Аналіз домену' },
     'gkp':   { file: 'gkp_form', title: 'Семантичне ядро (GKP)' }
+    'audit':       { file: 'form', title: 'Аналіз конкурентів' },
+    'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
+    'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
+    'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' }
   };
 
   var config = pages[page] || pages['audit'];
@@ -75,6 +79,22 @@ function submitAIAnalysis(spreadsheetUrl) {
 
   var payload = {
     url: spreadsheetUrl
+// БЕКЕНД: GKP Етап 1 - Генерація ідей
+// ============================================
+
+function submitGKPIdeas(formData) {
+  // Валідація
+  if (!formData.source_spreadsheet_id) {
+    return { success: false, error: 'Вставте посилання на таблицю з seed-фразами' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-ideas';
+
+  var payload = {
+    doc_name: formData.doc_name || 'GKP Ideas - ' + new Date().toISOString().slice(0, 10),
+    language: formData.language || '1056',
+    geo_target: formData.geo_target || '2804',
+    source_spreadsheet_id: formData.source_spreadsheet_id
   };
 
   var options = {
@@ -93,6 +113,10 @@ function submitAIAnalysis(spreadsheetUrl) {
       docUrl: result.docUrl,
       domain: result.domain,
       message: 'AI звіт створено для ' + result.domain
+      spreadsheetUrl: result.spreadsheet_url,
+      totalKeywords: result.total_keywords || 0,
+      totalBatches: result.total_batches_processed || 0,
+      message: 'Згенеровано ' + (result.total_keywords || 0) + ' ідей ключових слів'
     };
   } catch (error) {
     return { success: false, error: error.toString() };
@@ -101,6 +125,50 @@ function submitAIAnalysis(spreadsheetUrl) {
 
 // ============================================
 // БЕКЕНД: Семантичне ядро (GKP)
+// БЕКЕНД: GKP Етап 2 - Отримання метрик
+// ============================================
+
+function submitGKPMetrics(formData) {
+  // Валідація
+  if (!formData.source_spreadsheet_id) {
+    return { success: false, error: 'Вставте посилання на таблицю з ключовими словами' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-metrics';
+
+  var payload = {
+    doc_name: formData.doc_name || 'GKP Metrics - ' + new Date().toISOString().slice(0, 10),
+    language: formData.language || '1056',
+    geo_target: formData.geo_target || '2804',
+    source_spreadsheet_id: formData.source_spreadsheet_id
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    return {
+      success: true,
+      spreadsheetUrl: result.spreadsheet_url,
+      totalKeywords: result.total_keywords || 0,
+      keywordsWithData: result.keywords_with_data || 0,
+      keywordsNoData: result.keywords_no_data || 0,
+      message: 'Отримано метрики для ' + (result.total_keywords || 0) + ' ключових слів'
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: Семантичне ядро (GKP) - стара версія
 // ============================================
 
 function submitGKP(formData) {
@@ -109,7 +177,7 @@ function submitGKP(formData) {
     return { success: false, error: 'Введіть хоча б одне ключове слово' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-report';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-ideas';
 
   // Парсинг url_mapping з текстового поля (формат: keyword | url)
   var urlMapping = {};
@@ -145,12 +213,15 @@ function submitGKP(formData) {
     var response = UrlFetchApp.fetch(webhookUrl, options);
     var result = JSON.parse(response.getContentText());
 
+    var totalKeywords = result.total_keywords || 0;
+    var totalSeeds = formData.seed_keywords.length;
+
     return {
       success: true,
       spreadsheetUrl: result.spreadsheet_url,
-      totalKeywords: result.total_keywords,
-      totalClusters: result.total_clusters,
-      message: 'Знайдено ' + result.total_keywords + ' ключових слів у ' + result.total_clusters + ' кластерах'
+      totalKeywords: totalKeywords,
+      totalClusters: totalSeeds,
+      message: 'Знайдено ' + totalKeywords + ' ключових слів з ' + totalSeeds + ' сід-фраз'
     };
   } catch (error) {
     return { success: false, error: error.toString() };
