@@ -153,7 +153,8 @@
       "parameters": {
         "method": "POST",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}:batchUpdate",
-        "authentication": "oAuth2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ requests: $json.addSheetRequests }) }}",
@@ -185,7 +186,8 @@
       "parameters": {
         "method": "POST",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values:batchUpdate",
-        "authentication": "oAuth2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"valueInputOption\": \"USER_ENTERED\",\n  \"data\": {{ JSON.stringify($json.valueRanges) }}\n}",
@@ -207,7 +209,8 @@
       "parameters": {
         "method": "POST",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('Prepare Sheet Data').first().json.spreadsheetId }}:batchUpdate",
-        "authentication": "oAuth2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"requests\": [\n    {\n      \"repeatCell\": {\n        \"range\": {\n          \"sheetId\": 0,\n          \"startRowIndex\": 0,\n          \"endRowIndex\": 1\n        },\n        \"cell\": {\n          \"userEnteredFormat\": {\n            \"backgroundColor\": {\"red\": 0.2, \"green\": 0.6, \"blue\": 0.86},\n            \"textFormat\": {\"bold\": true, \"foregroundColor\": {\"red\": 1, \"green\": 1, \"blue\": 1}}\n          }\n        },\n        \"fields\": \"userEnteredFormat(backgroundColor,textFormat)\"\n      }\n    },\n    {\n      \"autoResizeDimensions\": {\n        \"dimensions\": {\n          \"sheetId\": 0,\n          \"dimension\": \"COLUMNS\",\n          \"startIndex\": 0,\n          \"endIndex\": 5\n        }\n      }\n    }\n  ]\n}",
