@@ -6,9 +6,7 @@ function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page : 'audit';
 
   var pages = {
-    'audit': { file: 'form', title: 'Аналіз домену' },
-    'gkp':   { file: 'gkp_form', title: 'Семантичне ядро (GKP)' }
-    'audit':       { file: 'form', title: 'Аналіз конкурентів' },
+    'audit':       { file: 'form', title: 'Аналіз домену' },
     'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
     'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' }
@@ -79,6 +77,31 @@ function submitAIAnalysis(spreadsheetUrl) {
 
   var payload = {
     url: spreadsheetUrl
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    return {
+      success: true,
+      docUrl: result.docUrl,
+      domain: result.domain,
+      message: 'AI звіт створено для ' + result.domain
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
 // БЕКЕНД: GKP Етап 1 - Генерація ідей
 // ============================================
 
@@ -110,9 +133,6 @@ function submitGKPIdeas(formData) {
 
     return {
       success: true,
-      docUrl: result.docUrl,
-      domain: result.domain,
-      message: 'AI звіт створено для ' + result.domain
       spreadsheetUrl: result.spreadsheet_url,
       totalKeywords: result.total_keywords || 0,
       totalBatches: result.total_batches_processed || 0,
@@ -124,7 +144,6 @@ function submitGKPIdeas(formData) {
 }
 
 // ============================================
-// БЕКЕНД: Семантичне ядро (GKP)
 // БЕКЕНД: GKP Етап 2 - Отримання метрик
 // ============================================
 
