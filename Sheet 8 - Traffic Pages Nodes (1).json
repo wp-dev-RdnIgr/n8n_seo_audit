@@ -37,7 +37,7 @@
             {
               "id": "date_to",
               "name": "date_to",
-              "value": "={{ $json.body.date_to || $now.format('yyyy-MM-dd') }}",
+              "value": "={{ $json.body.date_to || $now.minus(1, 'day').format('yyyy-MM-dd') }}",
               "type": "string"
             },
             {
@@ -596,7 +596,7 @@
             {
               "id": "date_to",
               "name": "date_to",
-              "value": "={{ $json.body.date_to || $now.format('yyyy-MM-dd') }}",
+              "value": "={{ $json.body.date_to || $now.minus(1, 'day').format('yyyy-MM-dd') }}",
               "type": "string"
             },
             {
