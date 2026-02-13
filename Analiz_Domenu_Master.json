@@ -175,13 +175,10 @@
         "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: 'Аналіз клієнта - ' + $('Init Results State').first().json.client_domain }) }}",
         "options": {}
       },
       "id": "ad-011",
-      "name": "Move+Rename Client",
+      "name": "Move Client File",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [2200, 200],
@@ -278,13 +275,10 @@
         "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: 'Аналіз конкурента - ' + $('Loop Competitors').first().json.competitor_domain }) }}",
         "options": {}
       },
       "id": "ad-018",
-      "name": "Move+Rename Competitor",
+      "name": "Move Competitor File",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [3740, 100],
@@ -612,10 +606,10 @@
     },
     "Call Client Audit": {
       "main": [
-        [{"node": "Move+Rename Client", "type": "main", "index": 0}]
+        [{"node": "Move Client File", "type": "main", "index": 0}]
       ]
     },
-    "Move+Rename Client": {
+    "Move Client File": {
       "main": [
         [{"node": "Record Client Result", "type": "main", "index": 0}]
       ]
@@ -649,10 +643,10 @@
     },
     "Call Competitor Audit": {
       "main": [
-        [{"node": "Move+Rename Competitor", "type": "main", "index": 0}]
+        [{"node": "Move Competitor File", "type": "main", "index": 0}]
       ]
     },
-    "Move+Rename Competitor": {
+    "Move Competitor File": {
       "main": [
         [{"node": "Loop Competitors", "type": "main", "index": 0}]
       ]
