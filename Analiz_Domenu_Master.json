@@ -1,0 +1,752 @@
+{
+  "name": "Аналіз домену",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analiz-domenu",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ad-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "analiz-domenu"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $input.first().json;\nconst body = webhookData.body || webhookData;\n\nfunction cleanDomain(d) {\n  if (!d) return '';\n  return d.replace(/^https?:\\/\\//i, '').replace(/^www\\./i, '').replace(/\\/+$/, '').trim();\n}\n\nfunction extractSheetId(url) {\n  if (!url) return '';\n  const m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\n  return m ? m[1] : '';\n}\n\nconst managerEmail = (body.manager_email || '').trim();\nif (!managerEmail) throw new Error('manager_email is required');\n\nconst clientDomain = cleanDomain(body.client_domain || '');\nconst competitors = (body.competitors || []).map(cleanDomain).filter(Boolean);\nconst dateToday = new Date().toISOString().slice(0, 10);\n\nconst se = body.semantic_expansion || null;\nconst mc = body.metrics_collection || null;\nconst ps = body.pagespeed || null;\n\nreturn {\n  manager_email: managerEmail,\n  client_domain: clientDomain,\n  competitors: competitors,\n  date_today: dateToday,\n  semantic_expansion: se ? {\n    report_name: se.report_name || 'Розширення семантичного ядра',\n    spreadsheet_id: extractSheetId(se.spreadsheet_url),\n    spreadsheet_url: se.spreadsheet_url || '',\n    language: se.language || '1001',\n    geo_target: se.geo_target || '2276'\n  } : null,\n  metrics_collection: mc ? {\n    report_name: mc.report_name || 'Отримання метрик семантичного ядра',\n    spreadsheet_id: extractSheetId(mc.spreadsheet_url),\n    spreadsheet_url: mc.spreadsheet_url || '',\n    language: mc.language || '1001',\n    geo_target: mc.geo_target || '2276'\n  } : null,\n  pagespeed: ps ? {\n    spreadsheet_id: extractSheetId(ps.spreadsheet_url),\n    spreadsheet_url: ps.spreadsheet_url || '',\n    test_mobile: ps.test_mobile !== false,\n    test_desktop: ps.test_desktop !== false\n  } : null\n};"
+      },
+      "id": "ad-002",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.googleapis.com/drive/v3/files?q=name%3D'{{ $json.manager_email }}'+and+'1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2'+in+parents+and+mimeType%3D'application%2Fvnd.google-apps.folder'+and+trashed%3Dfalse&fields=files(id,name)&pageSize=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "id": "ad-003",
+      "name": "Search Manager Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-folder",
+              "leftValue": "={{ ($json.files || []).length }}",
+              "rightValue": "0",
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-004",
+      "name": "Has Manager Folder?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Parse Input').first().json.manager_email, mimeType: 'application/vnd.google-apps.folder', parents: ['1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2'] }) }}",
+        "options": {}
+      },
+      "id": "ad-005",
+      "name": "Create Manager Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 460],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $('Parse Input').first().json;\nlet folderId = '';\ntry {\n  const found = $('Has Manager Folder?').first().json;\n  if (found.files && found.files.length > 0) {\n    folderId = found.files[0].id;\n  }\n} catch(e) {}\nif (!folderId) {\n  try {\n    folderId = $('Create Manager Folder').first().json.id;\n  } catch(e) {}\n}\nif (!folderId) throw new Error('Failed to get or create manager folder');\nreturn { ...parsed, manager_folder_id: folderId };"
+      },
+      "id": "ad-006",
+      "name": "Set Manager Folder ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: ($json.client_domain || 'Проект') + ' - ' + $json.date_today, mimeType: 'application/vnd.google-apps.folder', parents: [$json.manager_folder_id] }) }}",
+        "options": {}
+      },
+      "id": "ad-007",
+      "name": "Create Project Subfolder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $('Set Manager Folder ID').first().json;\nconst projectFolder = $input.first().json;\nreturn {\n  ...parsed,\n  project_folder_id: projectFolder.id,\n  project_folder_name: projectFolder.name || '',\n  results: {\n    client_analysis: { status: 'skipped' },\n    competitors_analysis: [],\n    semantic_expansion: { status: 'skipped' },\n    metrics_collection: { status: 'skipped' },\n    pagespeed: { status: 'skipped' }\n  }\n};"
+      },
+      "id": "ad-008",
+      "name": "Init Results State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-client",
+              "leftValue": "={{ $json.client_domain }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-009",
+      "name": "Has Client Domain?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/seo-organic-traffic-v74",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ domain: $('Init Results State').first().json.client_domain }) }}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "ad-010",
+      "name": "Call Client Audit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Аналіз клієнта - ' + $('Init Results State').first().json.client_domain }) }}",
+        "options": {}
+      },
+      "id": "ad-011",
+      "name": "Move+Rename Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('Init Results State').first().json;\nlet result = { status: 'skipped' };\ntry {\n  const resp = $('Call Client Audit').first().json;\n  if (resp.error || resp.statusCode >= 400) {\n    result = { status: 'error', error: resp.message || resp.error || 'Call failed' };\n  } else {\n    result = {\n      status: 'success',\n      spreadsheet_id: resp.spreadsheet_id || '',\n      spreadsheet_url: resp.spreadsheet_url || ''\n    };\n  }\n} catch(e) { /* skipped */ }\nconst out = JSON.parse(JSON.stringify(state));\nout.results.client_analysis = result;\nreturn [{ json: out }];"
+      },
+      "id": "ad-012",
+      "name": "Record Client Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-competitors",
+              "leftValue": "={{ ($json.competitors || []).length }}",
+              "rightValue": "0",
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-013",
+      "name": "Has Competitors?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $input.first().json;\nconst competitors = state.competitors || [];\nreturn competitors.map(function(domain, index) {\n  return {\n    json: {\n      competitor_domain: domain,\n      competitor_index: index,\n      project_folder_id: state.project_folder_id\n    }\n  };\n});"
+      },
+      "id": "ad-014",
+      "name": "Prepare Competitors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 200]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ad-015",
+      "name": "Loop Competitors",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [3080, 200]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "ad-016",
+      "name": "Wait 5s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3300, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/seo-organic-traffic-v74",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ domain: $json.competitor_domain }) }}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "ad-017",
+      "name": "Call Competitor Audit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3520, 100],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Аналіз конкурента - ' + $('Loop Competitors').first().json.competitor_domain }) }}",
+        "options": {}
+      },
+      "id": "ad-018",
+      "name": "Move+Rename Competitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3740, 100],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst competitorResults = items.map(function(item) {\n  var j = item.json;\n  var domain = '';\n  if (j.name) {\n    var m = j.name.match(/Аналіз конкурента - (.+)$/);\n    if (m) domain = m[1];\n  }\n  return {\n    domain: domain || 'unknown',\n    status: (j.error || j.statusCode >= 400) ? 'error' : 'success',\n    spreadsheet_url: j.webViewLink || ''\n  };\n});\nreturn [{ json: { competitor_results: competitorResults } }];"
+      },
+      "id": "ad-019",
+      "name": "Collect Competitor Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3300, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('Record Client Result').first().json;\nlet competitorResults = [];\ntry {\n  competitorResults = $('Collect Competitor Results').first().json.competitor_results || [];\n} catch(e) { /* skipped */ }\nconst out = JSON.parse(JSON.stringify(state));\nout.results.competitors_analysis = competitorResults;\nreturn [{ json: out }];"
+      },
+      "id": "ad-020",
+      "name": "Record Competitors Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3520, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-semantic",
+              "leftValue": "={{ $json.semantic_expansion?.spreadsheet_id || '' }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-021",
+      "name": "Has Semantic?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3740, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/gkp-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.semantic_expansion.report_name || 'Розширення семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.semantic_expansion.spreadsheet_id, language: $json.semantic_expansion.language || '1001', geo_target: $json.semantic_expansion.geo_target || '2276', customer_id: '3460470607' }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "id": "ad-022",
+      "name": "Call GKP Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3960, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=root",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Розширення семантичного ядра' }) }}",
+        "options": {}
+      },
+      "id": "ad-023",
+      "name": "Move+Rename Semantic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4180, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('Record Competitors Result').first().json;\nlet result = { status: 'skipped' };\ntry {\n  const resp = $('Call GKP Ideas').first().json;\n  if (resp.error || resp.statusCode >= 400) {\n    result = { status: 'error', error: resp.message || resp.error || 'Call failed' };\n  } else {\n    result = {\n      status: 'success',\n      spreadsheet_id: resp.spreadsheet_id || '',\n      spreadsheet_url: resp.spreadsheet_url || '',\n      total_keywords: resp.total_keywords || 0\n    };\n  }\n} catch(e) { /* skipped */ }\nconst out = JSON.parse(JSON.stringify(state));\nout.results.semantic_expansion = result;\nreturn [{ json: out }];"
+      },
+      "id": "ad-024",
+      "name": "Record Semantic Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-metrics",
+              "leftValue": "={{ $json.metrics_collection?.spreadsheet_id || '' }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-025",
+      "name": "Has Metrics?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [4620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/gkp-metrics",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.metrics_collection.report_name || 'Отримання метрик семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.metrics_collection.spreadsheet_id, language: $json.metrics_collection.language || '1001', geo_target: $json.metrics_collection.geo_target || '2276', customer_id: '3460470607' }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "id": "ad-026",
+      "name": "Call GKP Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4840, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=root",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Отримання метрик семантичного ядра' }) }}",
+        "options": {}
+      },
+      "id": "ad-027",
+      "name": "Move+Rename Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [5060, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('Record Semantic Result').first().json;\nlet result = { status: 'skipped' };\ntry {\n  const resp = $('Call GKP Metrics').first().json;\n  if (resp.error || resp.statusCode >= 400) {\n    result = { status: 'error', error: resp.message || resp.error || 'Call failed' };\n  } else {\n    result = {\n      status: 'success',\n      spreadsheet_id: resp.spreadsheet_id || '',\n      spreadsheet_url: resp.spreadsheet_url || '',\n      total_keywords: resp.total_keywords || 0,\n      keywords_with_data: resp.keywords_with_data || 0\n    };\n  }\n} catch(e) { /* skipped */ }\nconst out = JSON.parse(JSON.stringify(state));\nout.results.metrics_collection = result;\nreturn [{ json: out }];"
+      },
+      "id": "ad-028",
+      "name": "Record Metrics Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5280, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "has-pagespeed",
+              "leftValue": "={{ $json.pagespeed?.spreadsheet_id || '' }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ad-029",
+      "name": "Has PageSpeed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [5500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.rnd.webpromo.tools/webhook/pagespeed-test",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ spreadsheetId: $json.pagespeed.spreadsheet_id, testMobile: $json.pagespeed.test_mobile !== false, testDesktop: $json.pagespeed.test_desktop !== false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "id": "ad-030",
+      "name": "Call PageSpeed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [5720, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nvar spreadsheetId = '';\nvar url = resp.spreadsheet_url || '';\nvar m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\nif (m) spreadsheetId = m[1];\nreturn { ...resp, extracted_spreadsheet_id: spreadsheetId };"
+      },
+      "id": "ad-031",
+      "name": "Extract PageSpeed ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5940, 200]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.extracted_spreadsheet_id }}?addParents={{ $('Init Results State').first().json.project_folder_id }}&removeParents=root",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'PageSpeed Test' }) }}",
+        "options": {}
+      },
+      "id": "ad-032",
+      "name": "Move+Rename PageSpeed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [6160, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vhGFSji8bW1qOA1c",
+          "name": "Google Drive for n8n"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('Record Metrics Result').first().json;\nlet result = { status: 'skipped' };\ntry {\n  const resp = $('Call PageSpeed').first().json;\n  if (resp.error || resp.statusCode >= 400) {\n    result = { status: 'error', error: resp.message || resp.error || 'Call failed' };\n  } else {\n    var url = resp.spreadsheet_url || '';\n    var m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\n    result = {\n      status: 'success',\n      spreadsheet_id: m ? m[1] : '',\n      spreadsheet_url: url,\n      total_urls: resp.total_urls || 0\n    };\n  }\n} catch(e) { /* skipped */ }\nconst out = JSON.parse(JSON.stringify(state));\nout.results.pagespeed = result;\nreturn [{ json: out }];"
+      },
+      "id": "ad-033",
+      "name": "Record PageSpeed Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6380, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $input.first().json;\nreturn {\n  status: 'completed',\n  folder_url: 'https://drive.google.com/drive/folders/' + state.project_folder_id,\n  manager_email: state.manager_email,\n  project_folder: state.project_folder_name || '',\n  results: state.results\n};"
+      },
+      "id": "ad-034",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6600, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Aggregate Results').first().json }}",
+        "options": {}
+      },
+      "id": "ad-035",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [6820, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{"node": "Parse Input", "type": "main", "index": 0}]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [{"node": "Search Manager Folder", "type": "main", "index": 0}]
+      ]
+    },
+    "Search Manager Folder": {
+      "main": [
+        [{"node": "Has Manager Folder?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has Manager Folder?": {
+      "main": [
+        [{"node": "Set Manager Folder ID", "type": "main", "index": 0}],
+        [{"node": "Create Manager Folder", "type": "main", "index": 0}]
+      ]
+    },
+    "Create Manager Folder": {
+      "main": [
+        [{"node": "Set Manager Folder ID", "type": "main", "index": 0}]
+      ]
+    },
+    "Set Manager Folder ID": {
+      "main": [
+        [{"node": "Create Project Subfolder", "type": "main", "index": 0}]
+      ]
+    },
+    "Create Project Subfolder": {
+      "main": [
+        [{"node": "Init Results State", "type": "main", "index": 0}]
+      ]
+    },
+    "Init Results State": {
+      "main": [
+        [{"node": "Has Client Domain?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has Client Domain?": {
+      "main": [
+        [{"node": "Call Client Audit", "type": "main", "index": 0}],
+        [{"node": "Record Client Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Call Client Audit": {
+      "main": [
+        [{"node": "Move+Rename Client", "type": "main", "index": 0}]
+      ]
+    },
+    "Move+Rename Client": {
+      "main": [
+        [{"node": "Record Client Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Client Result": {
+      "main": [
+        [{"node": "Has Competitors?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has Competitors?": {
+      "main": [
+        [{"node": "Prepare Competitors", "type": "main", "index": 0}],
+        [{"node": "Record Competitors Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Competitors": {
+      "main": [
+        [{"node": "Loop Competitors", "type": "main", "index": 0}]
+      ]
+    },
+    "Loop Competitors": {
+      "main": [
+        [{"node": "Wait 5s", "type": "main", "index": 0}],
+        [{"node": "Collect Competitor Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Wait 5s": {
+      "main": [
+        [{"node": "Call Competitor Audit", "type": "main", "index": 0}]
+      ]
+    },
+    "Call Competitor Audit": {
+      "main": [
+        [{"node": "Move+Rename Competitor", "type": "main", "index": 0}]
+      ]
+    },
+    "Move+Rename Competitor": {
+      "main": [
+        [{"node": "Loop Competitors", "type": "main", "index": 0}]
+      ]
+    },
+    "Collect Competitor Results": {
+      "main": [
+        [{"node": "Record Competitors Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Competitors Result": {
+      "main": [
+        [{"node": "Has Semantic?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has Semantic?": {
+      "main": [
+        [{"node": "Call GKP Ideas", "type": "main", "index": 0}],
+        [{"node": "Record Semantic Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Call GKP Ideas": {
+      "main": [
+        [{"node": "Move+Rename Semantic", "type": "main", "index": 0}]
+      ]
+    },
+    "Move+Rename Semantic": {
+      "main": [
+        [{"node": "Record Semantic Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Semantic Result": {
+      "main": [
+        [{"node": "Has Metrics?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has Metrics?": {
+      "main": [
+        [{"node": "Call GKP Metrics", "type": "main", "index": 0}],
+        [{"node": "Record Metrics Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Call GKP Metrics": {
+      "main": [
+        [{"node": "Move+Rename Metrics", "type": "main", "index": 0}]
+      ]
+    },
+    "Move+Rename Metrics": {
+      "main": [
+        [{"node": "Record Metrics Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Record Metrics Result": {
+      "main": [
+        [{"node": "Has PageSpeed?", "type": "main", "index": 0}]
+      ]
+    },
+    "Has PageSpeed?": {
+      "main": [
+        [{"node": "Call PageSpeed", "type": "main", "index": 0}],
+        [{"node": "Record PageSpeed Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Call PageSpeed": {
+      "main": [
+        [{"node": "Extract PageSpeed ID", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract PageSpeed ID": {
+      "main": [
+        [{"node": "Move+Rename PageSpeed", "type": "main", "index": 0}]
+      ]
+    },
+    "Move+Rename PageSpeed": {
+      "main": [
+        [{"node": "Record PageSpeed Result", "type": "main", "index": 0}]
+      ]
+    },
+    "Record PageSpeed Result": {
+      "main": [
+        [{"node": "Aggregate Results", "type": "main", "index": 0}]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [{"node": "Respond", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-13T00:00:00.000Z",
+  "versionId": "1"
+}
