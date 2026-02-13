@@ -1,5 +1,5 @@
 // ============================================
-// РОУТИНГ: ?page=audit | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed | ?page=pdf_audit
+// РОУТИНГ: ?page=audit | ?page=master | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed | ?page=pdf_audit
 // ============================================
 
 function doGet(e) {
@@ -7,6 +7,7 @@ function doGet(e) {
 
   var pages = {
     'audit':       { file: 'form', title: 'Аналіз домену' },
+    'master':      { file: 'analiz_domenu_form', title: 'Аналіз домену — Мастер' },
     'gkp':         { file: 'gkp_form', title: 'Семантичне ядро (GKP)' },
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
     'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' },
@@ -19,6 +20,71 @@ function doGet(e) {
   return HtmlService.createHtmlOutputFromFile(config.file)
     .setTitle(config.title)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// ============================================
+// БЕКЕНД: Мастер — Аналіз домену (оркестратор)
+// ============================================
+
+function submitAnalizDomenu(formData) {
+  // Валідація
+  if (!formData.manager_email || !formData.manager_email.includes('@')) {
+    return { success: false, error: 'Невірний email менеджера' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/analiz-domenu';
+
+  var payload = {
+    manager_email: formData.manager_email.trim()
+  };
+
+  // Опціональні блоки
+  if (formData.client_domain) {
+    payload.client_domain = formData.client_domain
+      .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase().trim();
+  }
+
+  if (formData.competitors && formData.competitors.length > 0) {
+    payload.competitors = formData.competitors;
+  }
+
+  if (formData.semantic_expansion && formData.semantic_expansion.spreadsheet_url) {
+    payload.semantic_expansion = formData.semantic_expansion;
+  }
+
+  if (formData.metrics_collection && formData.metrics_collection.spreadsheet_url) {
+    payload.metrics_collection = formData.metrics_collection;
+  }
+
+  if (formData.pagespeed && formData.pagespeed.spreadsheet_url) {
+    payload.pagespeed = formData.pagespeed;
+  }
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    timeout: 600  // 10 хвилин — GKP/PageSpeed можуть бути довгими
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+
+    if (result.status === 'completed') {
+      return {
+        success: true,
+        folderUrl: result.folder_url || '',
+        details: result.results || {},
+        message: 'Аналіз завершено'
+      };
+    } else {
+      return { success: false, error: result.error || 'Невідома помилка від воркфлоу' };
+    }
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
 }
 
 // ============================================
