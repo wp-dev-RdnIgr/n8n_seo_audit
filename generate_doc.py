@@ -551,7 +551,7 @@ add_table(
     ['Сервіс', 'Тип авторизації', 'Деталі'],
     [
         ['Ahrefs', 'Bearer Token (MCP)', 'Токен у сховищі n8n credentials'],
-        ['Google Ads', 'OAuth2 + Developer Token', 'Customer: 3460470607, Login: 3993420980'],
+        ['Google Ads', 'OAuth2 + Developer Token', 'Customer: 3965207166, Login: 3993420980'],
         ['Serpstat', 'HTTP Query Auth', 'Через сховище n8n credentials'],
         ['OpenAI', 'API Key', 'Моделі: gpt-4o (звіти), gpt-4o-mini (PageSpeed)'],
         ['Google Drive/Sheets/Docs', 'OAuth2', 'Через сховище n8n credentials'],
