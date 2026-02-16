@@ -256,6 +256,36 @@
       background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
       font-size: 12px; color: #92400e; line-height: 1.5;
     }
+
+    /* Tooltips */
+    .field-hint {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: #f0f4ff;
+      border: 1px solid #e0e7ff;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #475569;
+      line-height: 1.5;
+    }
+    .field-hint-icon {
+      flex-shrink: 0;
+      font-size: 13px;
+      margin-top: 1px;
+    }
+    .section-hint {
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      background: #faf5ff;
+      border: 1px solid #ede9fe;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -274,6 +304,10 @@
           <input type="email" id="managerEmail" placeholder="manager@webpromo.com.ua" autocomplete="off" spellcheck="false">
           <span class="input-icon">📧</span>
         </div>
+        <div class="field-hint">
+          <span class="field-hint-icon">💡</span>
+          <span>Результати будуть збережені у вашу папку на Google Drive. Якщо папки ще немає — вона створиться автоматично.</span>
+        </div>
       </div>
 
       <!-- 1. Client analysis -->
@@ -287,11 +321,16 @@
           </div>
         </div>
         <div class="section-body">
+          <div class="section-hint">Збирає органічний трафік, ключові фрази, посилальний профіль та поведінкові метрики домену. Результат — Google таблиця з 6 вкладками.</div>
           <div class="form-group">
             <label>Домен клієнта</label>
             <div class="input-wrapper">
               <input type="text" id="clientDomain" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
               <span class="input-icon">🔗</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>Вводьте домен без https:// та www. Наприклад: rozetka.com.ua</span>
             </div>
           </div>
         </div>
@@ -308,6 +347,7 @@
           </div>
         </div>
         <div class="section-body">
+          <div class="section-hint">Для кожного конкурента створюється окрема таблиця з тими ж метриками, що й для клієнта. Конкуренти обробляються послідовно.</div>
           <div class="form-group">
             <label>Домени конкурентів</label>
             <div class="tags-container" id="competitorsTags" onclick="document.getElementById('competitorsInput').focus()">
@@ -329,11 +369,16 @@
           </div>
         </div>
         <div class="section-body">
+          <div class="section-hint">Google Keyword Planner генерує нові ідеї ключових слів на основі ваших seed-фраз. Результат — таблиця з усіма знайденими ключовими словами.</div>
           <div class="form-group">
             <label>Таблиця з seed-фразами</label>
             <div class="input-wrapper">
               <input type="text" id="semanticUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               <span class="input-icon">📋</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>Seed-фрази мають бути у першому стовпці першого аркуша таблиці.</span>
             </div>
           </div>
           <div class="row">
@@ -369,11 +414,16 @@
           </div>
         </div>
         <div class="section-body">
+          <div class="section-hint">Отримує об'єм пошуку, конкуренцію та CPC для списку ключових слів через Google Keyword Planner. Підходить для вже зібраного семантичного ядра.</div>
           <div class="form-group">
             <label>Таблиця з ключовими словами</label>
             <div class="input-wrapper">
               <input type="text" id="metricsUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               <span class="input-icon">📋</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>Ключові слова мають бути у першому стовпці. Можна використати результат з етапу «Розширення».</span>
             </div>
           </div>
           <div class="row">
@@ -409,11 +459,16 @@
           </div>
         </div>
         <div class="section-body">
+          <div class="section-hint">Тестує швидкість завантаження сторінок через Google PageSpeed Insights API. Результат — Core Web Vitals (LCP, FID, CLS) та оцінка продуктивності для кожної URL.</div>
           <div class="form-group">
             <label>Таблиця з URL для тестування</label>
             <div class="input-wrapper">
               <input type="text" id="pagespeedUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               <span class="input-icon">📋</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>URL-адреси сторінок мають бути у першому стовпці. Тестування батчами по 5 URL з паузами.</span>
             </div>
           </div>
           <div class="form-group">

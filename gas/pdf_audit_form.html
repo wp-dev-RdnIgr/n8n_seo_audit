@@ -16,7 +16,7 @@
       align-items: center;
       justify-content: center;
     }
-    .container { width: 100%; max-width: 560px; }
+    .container { width: 100%; max-width: 600px; }
     .card {
       background: #ffffff;
       border: 1px solid rgba(0, 0, 0, 0.06);
@@ -24,7 +24,7 @@
       padding: 36px 32px;
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
     }
-    .header { text-align: center; margin-bottom: 28px; }
+    .header { text-align: center; margin-bottom: 24px; }
     .logo {
       width: 64px; height: 64px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -46,6 +46,51 @@
       color: #64748b;
       font-size: 14px;
       line-height: 1.5;
+    }
+
+    /* Pipeline description */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 24px;
+      padding: 16px 12px;
+      background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%);
+      border: 1px solid #e0e7ff;
+      border-radius: 12px;
+    }
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .pipeline-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .pipeline-step:nth-child(1) .pipeline-icon { background: #dbeafe; }
+    .pipeline-step:nth-child(3) .pipeline-icon { background: #fce7f3; }
+    .pipeline-step:nth-child(5) .pipeline-icon { background: #dcfce7; }
+    .pipeline-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .pipeline-arrow {
+      font-size: 16px;
+      color: #94a3b8;
+      flex-shrink: 0;
+      margin: 0 4px;
+      margin-bottom: 16px;
     }
 
     .features {
@@ -148,6 +193,91 @@
       margin-top: 6px;
     }
 
+    /* AI Report toggle */
+    .ai-report-toggle {
+      margin-top: 20px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .ai-report-toggle.active {
+      border-color: #a78bfa;
+    }
+    .ai-toggle-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #f8fafc;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .ai-toggle-header:hover { background: #f1f5f9; }
+    .ai-report-toggle.active .ai-toggle-header { background: #f5f3ff; }
+
+    .toggle-switch {
+      width: 38px; height: 22px;
+      background: #cbd5e1; border-radius: 11px;
+      position: relative; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: white; border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .ai-report-toggle.active .toggle-switch { background: #8b5cf6; }
+    .ai-report-toggle.active .toggle-switch::after { transform: translateX(16px); }
+
+    .toggle-content {
+      flex: 1;
+    }
+    .toggle-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .ai-toggle-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 16px;
+    }
+    .ai-report-toggle.active .ai-toggle-body {
+      max-height: 200px;
+      padding: 14px 16px;
+    }
+    .ai-info {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+      background: #faf5ff;
+      border: 1px solid #ede9fe;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .ai-info ul {
+      margin-top: 6px;
+      padding-left: 18px;
+    }
+    .ai-info li {
+      margin-bottom: 3px;
+    }
+
     .btn {
       width: 100%;
       padding: 16px;
@@ -188,6 +318,58 @@
       font-size: 12px;
       color: #94a3b8;
       margin-top: 12px;
+    }
+
+    /* Progress steps */
+    .progress-steps {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+    .progress-steps.visible { display: block; }
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .progress-step.active { color: #667eea; font-weight: 500; }
+    .progress-step.done { color: #16a34a; }
+    .progress-step.error { color: #dc2626; }
+    .step-icon {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      background: #f1f5f9;
+      flex-shrink: 0;
+    }
+    .progress-step.active .step-icon {
+      background: #eef2ff;
+      color: #667eea;
+    }
+    .progress-step.active .step-icon::after {
+      content: '';
+      width: 10px; height: 10px;
+      border: 2px solid #667eea;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .progress-step.done .step-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .progress-step.error .step-icon {
+      background: #fee2e2;
+      color: #dc2626;
     }
 
     .result {
@@ -245,6 +427,7 @@
       display: flex;
       gap: 16px;
       margin-bottom: 14px;
+      flex-wrap: wrap;
     }
     .stat {
       background: #dcfce7;
@@ -255,6 +438,11 @@
     }
     .stat strong {
       font-weight: 600;
+    }
+    .result-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .result-link {
       display: inline-flex;
@@ -272,6 +460,14 @@
     }
     .result-link:hover {
       background: #bbf7d0;
+    }
+    .result-link.ai-link {
+      color: #6d28d9;
+      background: #ede9fe;
+      border-color: #ddd6fe;
+    }
+    .result-link.ai-link:hover {
+      background: #ddd6fe;
     }
 
     .sheets-preview {
@@ -319,22 +515,40 @@
     <div class="card">
       <div class="header">
         <div class="logo">&#128196;</div>
-        <h1>PDF Audit Parser</h1>
-        <p>Автоматичний парсинг технічного SEO-аудиту з PDF у структуровану Google таблицю</p>
+        <h1>SEO Аудит: PDF + AI Звіт</h1>
+        <p>Парсинг технічного аудиту з PDF у Google таблицю та генерація AI-звіту з рекомендаціями по домену</p>
+      </div>
+
+      <!-- Pipeline visualization -->
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="pipeline-icon">&#128196;</div>
+          <div class="pipeline-label">PDF аудит</div>
+        </div>
+        <div class="pipeline-arrow">&#10132;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">&#129302;</div>
+          <div class="pipeline-label">AI парсинг</div>
+        </div>
+        <div class="pipeline-arrow">&#10132;</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">&#128202;</div>
+          <div class="pipeline-label">Таблиця + Звіт</div>
+        </div>
       </div>
 
       <div class="features">
         <div class="feature">
           <div class="feature-icon">&#129302;</div>
-          <div class="feature-text">AI-парсинг всіх сторінок</div>
+          <div class="feature-text">AI-парсинг всіх сторінок PDF</div>
         </div>
         <div class="feature">
           <div class="feature-icon">&#128202;</div>
           <div class="feature-text">15 структурованих вкладок</div>
         </div>
         <div class="feature">
-          <div class="feature-icon">&#128274;</div>
-          <div class="feature-text">Без згадок стороннього бренду</div>
+          <div class="feature-icon">&#128221;</div>
+          <div class="feature-text">AI-звіт з рекомендаціями</div>
         </div>
       </div>
 
@@ -369,16 +583,50 @@
         </div>
       </div>
 
+      <!-- AI Report toggle -->
+      <div class="ai-report-toggle" id="aiReportToggle">
+        <div class="ai-toggle-header" onclick="toggleAiReport()">
+          <div class="toggle-switch"></div>
+          <div class="toggle-content">
+            <div class="toggle-title">&#129302; AI-звіт по домену</div>
+            <div class="toggle-desc">Згенерувати розгорнутий аналітичний звіт після парсингу</div>
+          </div>
+        </div>
+        <div class="ai-toggle-body">
+          <div class="ai-info">
+            Після парсингу PDF система автоматично створить AI-звіт у Google Doc:
+            <ul>
+              <li>Executive Summary та ключові висновки</li>
+              <li>Аналіз трафіку, посилань, ключових слів</li>
+              <li>Критичні проблеми та сильні сторони</li>
+              <li>Пріоритетні рекомендації та план дій</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <button class="btn" id="submitBtn" onclick="handleSubmit()">
         <span>&#128640; Запустити парсинг</span>
       </button>
 
-      <div class="time-note">&#9203; Орієнтовний час обробки: 1-3 хвилини залежно від розміру PDF</div>
+      <div class="time-note" id="timeNote">&#9203; Орієнтовний час: 1-3 хв (парсинг) + 2-4 хв (AI-звіт, якщо увімкнено)</div>
+
+      <!-- Progress -->
+      <div class="progress-steps" id="progressSteps">
+        <div class="progress-step" id="step1">
+          <div class="step-icon"></div>
+          <span>Парсинг PDF документа...</span>
+        </div>
+        <div class="progress-step" id="step2">
+          <div class="step-icon"></div>
+          <span>Генерація AI-звіту по домену...</span>
+        </div>
+      </div>
 
       <div class="result" id="result"></div>
 
       <div class="sheets-preview">
-        <div class="sheets-title">Структура результуючої таблиці:</div>
+        <div class="sheets-title">Структура результуючої таблиці (парсинг PDF):</div>
         <div class="sheets-grid">
           <div class="sheet-item">1. Загальна інфо</div>
           <div class="sheet-item">2. Зведення</div>
@@ -405,6 +653,22 @@
   </div>
 
   <script>
+    var aiReportEnabled = false;
+
+    function toggleAiReport() {
+      var el = document.getElementById('aiReportToggle');
+      el.classList.toggle('active');
+      aiReportEnabled = el.classList.contains('active');
+
+      // Update button text
+      var btn = document.getElementById('submitBtn');
+      if (aiReportEnabled) {
+        btn.innerHTML = '<span>&#128640; Запустити парсинг + AI-звіт</span>';
+      } else {
+        btn.innerHTML = '<span>&#128640; Запустити парсинг</span>';
+      }
+    }
+
     function handleSubmit() {
       var urlInput = document.getElementById('pdfUrl');
       var nameInput = document.getElementById('outputName');
@@ -427,30 +691,96 @@
 
       // Show loading state
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span><span>Парсинг документа...</span>';
+      submitBtn.innerHTML = '<span class="spinner"></span><span>Обробка...</span>';
       resultDiv.style.display = 'none';
 
-      // Call backend
+      // Show progress steps
+      var progressEl = document.getElementById('progressSteps');
+      var step2El = document.getElementById('step2');
+      if (aiReportEnabled) {
+        progressEl.classList.add('visible');
+        step2El.style.display = 'flex';
+      } else {
+        progressEl.classList.add('visible');
+        step2El.style.display = 'none';
+      }
+      setStepState('step1', 'active');
+      setStepState('step2', '');
+
+      // Call PDF parsing backend
       google.script.run
         .withSuccessHandler(function(response) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#128640; Запустити парсинг</span>';
-
           if (response.success) {
-            showSuccess(response);
+            setStepState('step1', 'done');
+
+            if (aiReportEnabled && response.spreadsheetUrl) {
+              // Start AI report generation
+              setStepState('step2', 'active');
+              google.script.run
+                .withSuccessHandler(function(aiResponse) {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = aiReportEnabled
+                    ? '<span>&#128640; Запустити парсинг + AI-звіт</span>'
+                    : '<span>&#128640; Запустити парсинг</span>';
+
+                  if (aiResponse.success) {
+                    setStepState('step2', 'done');
+                    showFullSuccess(response, aiResponse);
+                  } else {
+                    setStepState('step2', 'error');
+                    showPartialSuccess(response, aiResponse.error || 'Помилка генерації AI-звіту');
+                  }
+                })
+                .withFailureHandler(function(error) {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = aiReportEnabled
+                    ? '<span>&#128640; Запустити парсинг + AI-звіт</span>'
+                    : '<span>&#128640; Запустити парсинг</span>';
+                  setStepState('step2', 'error');
+                  showPartialSuccess(response, 'Помилка: ' + error.message);
+                })
+                .submitAIAnalysis(response.spreadsheetUrl);
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = aiReportEnabled
+                ? '<span>&#128640; Запустити парсинг + AI-звіт</span>'
+                : '<span>&#128640; Запустити парсинг</span>';
+              showSuccess(response);
+            }
           } else {
+            setStepState('step1', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = aiReportEnabled
+              ? '<span>&#128640; Запустити парсинг + AI-звіт</span>'
+              : '<span>&#128640; Запустити парсинг</span>';
             showError(response.error || 'Невідома помилка');
           }
         })
         .withFailureHandler(function(error) {
+          setStepState('step1', 'error');
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#128640; Запустити парсинг</span>';
+          submitBtn.innerHTML = aiReportEnabled
+            ? '<span>&#128640; Запустити парсинг + AI-звіт</span>'
+            : '<span>&#128640; Запустити парсинг</span>';
           showError('Помилка: ' + error.message);
         })
         .submitPdfAuditParse({
           pdfUrl: pdfUrl,
           outputName: outputName
         });
+    }
+
+    function setStepState(stepId, state) {
+      var el = document.getElementById(stepId);
+      el.className = 'progress-step' + (state ? ' ' + state : '');
+      var icon = el.querySelector('.step-icon');
+      if (state === 'done') {
+        icon.innerHTML = '&#10003;';
+      } else if (state === 'error') {
+        icon.innerHTML = '&#10007;';
+      } else {
+        icon.innerHTML = '';
+      }
     }
 
     function showSuccess(data) {
@@ -468,12 +798,63 @@
           '<div class="stat">&#128337; <strong>' + data.processingTime + '</strong> сек</div>' +
           '<div class="stat">&#128196; <strong>' + data.totalSheets + '</strong> вкладок</div>' +
         '</div>' +
-        '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
-          '&#128200; Відкрити таблицю з результатами' +
-        '</a>';
+        '<div class="result-links">' +
+          '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
+            '&#128200; Відкрити таблицю з результатами' +
+          '</a>' +
+        '</div>';
+    }
+
+    function showFullSuccess(parseData, aiData) {
+      var resultDiv = document.getElementById('result');
+      resultDiv.className = 'result success';
+      resultDiv.innerHTML =
+        '<div class="result-header">' +
+          '<div class="result-icon">&#10003;</div>' +
+          '<div class="result-title">Парсинг + AI-звіт завершено!</div>' +
+        '</div>' +
+        '<p class="result-text">' +
+          'PDF документ оброблено (<strong>' + parseData.totalSheets + '</strong> вкладок) та створено AI-звіт' +
+          (aiData.domain ? ' для <strong>' + aiData.domain + '</strong>' : '') + '.' +
+        '</p>' +
+        '<div class="result-stats">' +
+          '<div class="stat">&#128337; <strong>' + parseData.processingTime + '</strong> сек (парсинг)</div>' +
+          '<div class="stat">&#128196; <strong>' + parseData.totalSheets + '</strong> вкладок</div>' +
+        '</div>' +
+        '<div class="result-links">' +
+          '<a href="' + parseData.spreadsheetUrl + '" target="_blank" class="result-link">' +
+            '&#128200; Відкрити таблицю (парсинг)' +
+          '</a>' +
+          '<a href="' + aiData.docUrl + '" target="_blank" class="result-link ai-link">' +
+            '&#129302; Відкрити AI-звіт' +
+          '</a>' +
+        '</div>';
+    }
+
+    function showPartialSuccess(parseData, errorMsg) {
+      var resultDiv = document.getElementById('result');
+      resultDiv.className = 'result success';
+      resultDiv.innerHTML =
+        '<div class="result-header">' +
+          '<div class="result-icon">&#10003;</div>' +
+          '<div class="result-title">Парсинг завершено (AI-звіт не вдався)</div>' +
+        '</div>' +
+        '<p class="result-text">' +
+          'PDF оброблено (<strong>' + parseData.totalSheets + '</strong> вкладок), але AI-звіт не було згенеровано: ' + errorMsg +
+        '</p>' +
+        '<div class="result-stats">' +
+          '<div class="stat">&#128337; <strong>' + parseData.processingTime + '</strong> сек</div>' +
+          '<div class="stat">&#128196; <strong>' + parseData.totalSheets + '</strong> вкладок</div>' +
+        '</div>' +
+        '<div class="result-links">' +
+          '<a href="' + parseData.spreadsheetUrl + '" target="_blank" class="result-link">' +
+            '&#128200; Відкрити таблицю з результатами' +
+          '</a>' +
+        '</div>';
     }
 
     function showError(message) {
+      document.getElementById('progressSteps').classList.remove('visible');
       var resultDiv = document.getElementById('result');
       resultDiv.className = 'result error';
       resultDiv.innerHTML =
