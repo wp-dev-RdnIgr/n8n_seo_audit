@@ -141,7 +141,7 @@ function submitAIAnalysis(spreadsheetUrl) {
     return { success: false, error: 'Невірний формат посилання на таблицю' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/seo-audit-ai-report';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook-test/seo-audit-ai-report';
 
   var payload = {
     url: spreadsheetUrl
@@ -370,15 +370,19 @@ function submitPageSpeedTest(formData) {
 
 function submitPdfAuditParse(formData) {
   // Валідація
+  if (!formData.spreadsheetUrl || !formData.spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+    return { success: false, error: 'Невірний формат посилання на таблицю. Має бути Google Sheets URL' };
+  }
+
   if (!formData.pdfUrl || !formData.pdfUrl.includes('drive.google.com')) {
     return { success: false, error: 'Невірний формат посилання на PDF файл. Має бути Google Drive URL' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/parse-pdf-audit';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook-test/parse-pdf-audit';
 
   var payload = {
     pdfUrl: formData.pdfUrl,
-    outputName: formData.outputName || 'SEO Audit Report - ' + new Date().toISOString().slice(0, 10)
+    spreadsheetUrl: formData.spreadsheetUrl
   };
 
   var options = {
