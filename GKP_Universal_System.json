@@ -52,7 +52,7 @@
             {
               "id": "language",
               "name": "language",
-              "value": "={{ $json.body.language || '1001' }}",
+              "value": "={{ $json.body.language || '1036' }}",
               "type": "string"
             },
             {
@@ -479,7 +479,7 @@
             {
               "id": "language",
               "name": "language",
-              "value": "={{ $json.body.language || '1001' }}",
+              "value": "={{ $json.body.language || '1036' }}",
               "type": "string"
             },
             {
