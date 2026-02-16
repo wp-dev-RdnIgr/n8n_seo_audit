@@ -33,7 +33,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"keywordSeed\": {\n    \"keywords\": [\"кросівки\"]\n  },\n  \"language\": \"languageConstants/1000\",\n  \"geoTargetConstants\": [\"geoTargetConstants/2804\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\"\n}\n",
+        "jsonBody": "{\n  \"keywordSeed\": {\n    \"keywords\": [\"кросівки\"]\n  },\n  \"language\": \"languageConstants/1036\",\n  \"geoTargetConstants\": [\"geoTargetConstants/2804\"],\n  \"keywordPlanNetwork\": \"GOOGLE_SEARCH\",\n  \"pageSize\": 1000\n}\n",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
