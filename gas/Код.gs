@@ -183,7 +183,7 @@ function submitGKPIdeas(formData) {
 
   var payload = {
     doc_name: formData.doc_name || 'GKP Ideas - ' + new Date().toISOString().slice(0, 10),
-    language: formData.language || '1056',
+    language: formData.language || '1036',
     geo_target: formData.geo_target || '2804',
     source_spreadsheet_id: formData.source_spreadsheet_id
   };
@@ -225,7 +225,7 @@ function submitGKPMetrics(formData) {
 
   var payload = {
     doc_name: formData.doc_name || 'GKP Metrics - ' + new Date().toISOString().slice(0, 10),
-    language: formData.language || '1056',
+    language: formData.language || '1036',
     geo_target: formData.geo_target || '2804',
     source_spreadsheet_id: formData.source_spreadsheet_id
   };
@@ -282,7 +282,7 @@ function submitGKP(formData) {
 
   var payload = {
     doc_name: formData.doc_name || 'GKP Report - ' + new Date().toISOString().slice(0, 10),
-    language: formData.language || '1000',
+    language: formData.language || '1036',
     geo_target: formData.geo_target || '2804',
     seed_keywords: formData.seed_keywords,
     url_mapping: urlMapping,
