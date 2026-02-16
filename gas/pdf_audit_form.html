@@ -359,19 +359,6 @@
       </div>
 
       <div class="form-group">
-        <label>Посилання на таблицю (результат)</label>
-        <div class="input-wrapper">
-          <span class="input-icon">&#128202;</span>
-          <input
-            type="text"
-            id="pdfSpreadsheetUrl"
-            placeholder="https://docs.google.com/spreadsheets/d/..."
-          >
-        </div>
-        <p class="input-hint">Google Sheets таблиця, куди буде записано результат парсингу</p>
-      </div>
-
-      <div class="form-group">
         <label>Посилання на PDF документ (Google Drive)</label>
         <div class="input-wrapper">
           <span class="input-icon">&#128279;</span>
@@ -493,23 +480,11 @@
     // ============================================
 
     function handlePdfSubmit() {
-      var spreadsheetInput = document.getElementById('pdfSpreadsheetUrl');
       var pdfInput = document.getElementById('pdfUrl');
       var submitBtn = document.getElementById('pdfSubmitBtn');
       var resultDiv = document.getElementById('pdfResult');
 
-      var spreadsheetUrl = spreadsheetInput.value.trim();
       var pdfUrl = pdfInput.value.trim();
-
-      if (!spreadsheetUrl) {
-        showPdfError('Вставте посилання на таблицю');
-        return;
-      }
-
-      if (!spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
-        showPdfError('Невірний формат посилання на таблицю. Має бути Google Sheets URL');
-        return;
-      }
 
       if (!pdfUrl) {
         showPdfError('Вставте посилання на PDF документ');
@@ -549,8 +524,7 @@
           showPdfError('Помилка: ' + error.message);
         })
         .submitPdfAuditParse({
-          pdfUrl: pdfUrl,
-          spreadsheetUrl: spreadsheetUrl
+          pdfUrl: pdfUrl
         });
     }
 
