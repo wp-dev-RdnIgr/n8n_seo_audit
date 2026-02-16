@@ -370,10 +370,6 @@ function submitPageSpeedTest(formData) {
 
 function submitPdfAuditParse(formData) {
   // Валідація
-  if (!formData.spreadsheetUrl || !formData.spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
-    return { success: false, error: 'Невірний формат посилання на таблицю. Має бути Google Sheets URL' };
-  }
-
   if (!formData.pdfUrl || !formData.pdfUrl.includes('drive.google.com')) {
     return { success: false, error: 'Невірний формат посилання на PDF файл. Має бути Google Drive URL' };
   }
@@ -381,8 +377,7 @@ function submitPdfAuditParse(formData) {
   var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook-test/parse-pdf-audit';
 
   var payload = {
-    pdfUrl: formData.pdfUrl,
-    spreadsheetUrl: formData.spreadsheetUrl
+    pdfUrl: formData.pdfUrl
   };
 
   var options = {
