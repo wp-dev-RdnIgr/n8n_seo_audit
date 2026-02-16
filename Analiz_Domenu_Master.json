@@ -337,7 +337,7 @@
         "url": "https://n8n.rnd.webpromo.tools/webhook/gkp-ideas",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.semantic_expansion.report_name || 'Розширення семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.semantic_expansion.spreadsheet_id, language: $json.semantic_expansion.language || '1001', geo_target: $json.semantic_expansion.geo_target || '2276', customer_id: '3460470607' }) }}",
+        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.semantic_expansion.report_name || 'Розширення семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.semantic_expansion.spreadsheet_id, language: $json.semantic_expansion.language || '1001', geo_target: $json.semantic_expansion.geo_target || '2276', customer_id: '3965207166' }) }}",
         "options": { "timeout": 600000 }
       },
       "id": "ad-022",
@@ -408,7 +408,7 @@
         "url": "https://n8n.rnd.webpromo.tools/webhook/gkp-metrics",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.metrics_collection.report_name || 'Отримання метрик семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.metrics_collection.spreadsheet_id, language: $json.metrics_collection.language || '1001', geo_target: $json.metrics_collection.geo_target || '2276', customer_id: '3460470607' }) }}",
+        "jsonBody": "={{ JSON.stringify({ doc_name: ($json.metrics_collection.report_name || 'Отримання метрик семантичного ядра') + ' - ' + ($json.client_domain || 'audit'), source_spreadsheet_id: $json.metrics_collection.spreadsheet_id, language: $json.metrics_collection.language || '1001', geo_target: $json.metrics_collection.geo_target || '2276', customer_id: '3965207166' }) }}",
         "options": { "timeout": 600000 }
       },
       "id": "ad-026",

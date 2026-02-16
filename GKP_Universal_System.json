@@ -76,7 +76,7 @@
             {
               "id": "customer_id",
               "name": "customer_id",
-              "value": "={{ $json.body.customer_id || '3460470607' }}",
+              "value": "={{ $json.body.customer_id || '3965207166' }}",
               "type": "string"
             },
             {
@@ -503,7 +503,7 @@
             {
               "id": "customer_id",
               "name": "customer_id",
-              "value": "={{ $json.body.customer_id || '3460470607' }}",
+              "value": "={{ $json.body.customer_id || '3965207166' }}",
               "type": "string"
             },
             {
