@@ -244,17 +244,6 @@
     },
     {
       "parameters": {
-        "amount": 5,
-        "unit": "seconds"
-      },
-      "id": "ad-016",
-      "name": "Wait 5s",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [3300, 100]
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://n8n.rnd.webpromo.tools/webhook/seo-organic-traffic-v74",
         "sendBody": true,
@@ -632,13 +621,8 @@
     },
     "Loop Competitors": {
       "main": [
-        [{"node": "Wait 5s", "type": "main", "index": 0}],
+        [{"node": "Call Competitor Audit", "type": "main", "index": 0}],
         [{"node": "Collect Competitor Results", "type": "main", "index": 0}]
-      ]
-    },
-    "Wait 5s": {
-      "main": [
-        [{"node": "Call Competitor Audit", "type": "main", "index": 0}]
       ]
     },
     "Call Competitor Audit": {
