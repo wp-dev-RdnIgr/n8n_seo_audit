@@ -141,7 +141,7 @@ function submitAIAnalysis(spreadsheetUrl) {
     return { success: false, error: 'Невірний формат посилання на таблицю' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook-test/seo-audit-ai-report';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/seo-audit-ai-report';
 
   var payload = {
     url: spreadsheetUrl
@@ -374,7 +374,7 @@ function submitPdfAuditParse(formData) {
     return { success: false, error: 'Невірний формат посилання на PDF файл. Має бути Google Drive URL' };
   }
 
-  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook-test/parse-pdf-audit';
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/parse-pdf-audit';
 
   var payload = {
     pdfUrl: formData.pdfUrl
