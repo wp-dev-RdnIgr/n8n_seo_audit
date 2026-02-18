@@ -447,6 +447,16 @@
     function showAiSuccess(data) {
       var resultDiv = document.getElementById('aiResult');
       resultDiv.className = 'result success';
+      resultDiv.style.display = 'block';
+      var linkHtml = '';
+      if (data.docUrl) {
+        linkHtml =
+          '<div class="result-links">' +
+            '<a href="' + data.docUrl + '" target="_blank" class="result-link ai-link">' +
+              '&#129302; Відкрити AI-звіт' +
+            '</a>' +
+          '</div>';
+      }
       resultDiv.innerHTML =
         '<div class="result-header">' +
           '<div class="result-icon">&#10003;</div>' +
@@ -455,24 +465,22 @@
         '<p class="result-text">' +
           'AI-звіт успішно згенеровано' +
           (data.domain ? ' для домену <strong>' + data.domain + '</strong>' : '') + '.' +
-        '</p>' +
-        '<div class="result-links">' +
-          '<a href="' + data.docUrl + '" target="_blank" class="result-link ai-link">' +
-            '&#129302; Відкрити AI-звіт' +
-          '</a>' +
-        '</div>';
+        '</p>' + linkHtml;
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function showAiError(message) {
       document.getElementById('aiProgress').classList.remove('visible');
       var resultDiv = document.getElementById('aiResult');
       resultDiv.className = 'result error';
+      resultDiv.style.display = 'block';
       resultDiv.innerHTML =
         '<div class="result-header">' +
           '<div class="result-icon">&#10007;</div>' +
           '<div class="result-title">Помилка</div>' +
         '</div>' +
         '<p class="result-text">' + message + '</p>';
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // ============================================
@@ -531,6 +539,16 @@
     function showPdfSuccess(data) {
       var resultDiv = document.getElementById('pdfResult');
       resultDiv.className = 'result success';
+      resultDiv.style.display = 'block';
+      var linkHtml = '';
+      if (data.spreadsheetUrl) {
+        linkHtml =
+          '<div class="result-links">' +
+            '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
+              '&#128200; Відкрити таблицю з результатами' +
+            '</a>' +
+          '</div>';
+      }
       resultDiv.innerHTML =
         '<div class="result-header">' +
           '<div class="result-icon">&#10003;</div>' +
@@ -545,23 +563,22 @@
             (data.processingTime ? '<div class="stat">&#128337; <strong>' + data.processingTime + '</strong> сек</div>' : '') +
             (data.totalSheets ? '<div class="stat">&#128196; <strong>' + data.totalSheets + '</strong> вкладок</div>' : '') +
           '</div>' : '') +
-        '<div class="result-links">' +
-          '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
-            '&#128200; Відкрити таблицю з результатами' +
-          '</a>' +
-        '</div>';
+        linkHtml;
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function showPdfError(message) {
       document.getElementById('pdfProgress').classList.remove('visible');
       var resultDiv = document.getElementById('pdfResult');
       resultDiv.className = 'result error';
+      resultDiv.style.display = 'block';
       resultDiv.innerHTML =
         '<div class="result-header">' +
           '<div class="result-icon">&#10007;</div>' +
           '<div class="result-title">Помилка</div>' +
         '</div>' +
         '<p class="result-text">' + message + '</p>';
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // ============================================

@@ -1,5 +1,5 @@
 // ============================================
-// РОУТИНГ: ?page=audit | ?page=master | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed | ?page=pdf_audit
+// РОУТИНГ: ?page=audit | ?page=master | ?page=gkp | ?page=gkp_ideas | ?page=gkp_metrics | ?page=pagespeed | ?page=pdf_audit | ?page=wizard
 // ============================================
 
 function doGet(e) {
@@ -12,7 +12,8 @@ function doGet(e) {
     'gkp_ideas':   { file: 'gkp_ideas', title: 'GKP: Генерація ідей' },
     'gkp_metrics': { file: 'gkp_metrics', title: 'GKP: Метрики' },
     'pagespeed':   { file: 'pagespeed_form', title: 'PageSpeed Test' },
-    'pdf_audit':   { file: 'pdf_audit_form', title: 'PDF Audit Parser' }
+    'pdf_audit':   { file: 'pdf_audit_form', title: 'PDF Audit Parser' },
+    'wizard':      { file: 'wizard_form', title: 'SEO Audit — Wizard' }
   };
 
   var config = pages[page] || pages['audit'];
