@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --color-primary: #0F172A;
+      --color-primary-light: #1E293B;
+      --color-accent: #3B82F6;
+      --color-accent-hover: #2563EB;
+      --color-accent-light: #DBEAFE;
+      --color-accent-lighter: #EFF6FF;
+      --color-success: #10B981;
+      --color-success-light: #D1FAE5;
+      --color-error: #EF4444;
+      --color-error-light: #FEE2E2;
+      --color-warning: #F59E0B;
+      --color-warning-light: #FEF3C7;
+      --color-bg: #F1F5F9;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-border-hover: #CBD5E1;
+      --color-text: #0F172A;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94A3B8;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+      --transition: 0.2s ease;
+    }
+
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       LAYOUT
+       ========================================== */
+    .wizard {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .wizard-header {
+      background: var(--color-primary);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .wizard-header-icon {
+      width: 32px; height: 32px;
+      background: rgba(59,130,246,0.15);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-accent);
+      font-size: 18px;
+    }
+    .wizard-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+    .wizard-header-subtitle {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-left: auto;
+    }
+    .wizard-content {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 24px 100px;
+    }
+    .wizard-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    /* ==========================================
+       STEPPER
+       ========================================== */
+    .stepper {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 18px 24px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 15;
+    }
+    .stepper-track {
+      display: flex;
+      align-items: flex-start;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .step-ind {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .step-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: #F1F5F9;
+      color: var(--color-text-muted);
+      border: 2px solid transparent;
+      transition: all 0.25s ease;
+      position: relative;
+      z-index: 2;
+    }
+    .step-ind:hover .step-circle {
+      border-color: var(--color-border-hover);
+    }
+    .step-ind.active .step-circle {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+    .step-ind.completed .step-circle {
+      background: var(--color-success);
+      color: #fff;
+    }
+    .step-ind.has-data .step-circle {
+      background: var(--color-accent-lighter);
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+    .step-ind.skipped .step-circle {
+      background: #F8FAFC;
+      color: #CBD5E1;
+      border: 2px dashed #CBD5E1;
+    }
+    .step-lbl {
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      text-align: center;
+      white-space: nowrap;
+      transition: color var(--transition);
+    }
+    .step-ind.active .step-lbl {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+    .step-ind.completed .step-lbl { color: var(--color-success); }
+    .step-ind.has-data .step-lbl { color: var(--color-accent); }
+
+    /* Connector lines */
+    .step-line {
+      position: absolute;
+      top: 20px;
+      height: 2px;
+      background: var(--color-border);
+      z-index: 1;
+      transition: background 0.3s ease;
+    }
+    .step-line-left { right: 50%; left: 0; margin-left: -2px; margin-right: 22px; }
+    .step-line-right { left: 50%; right: 0; margin-left: 22px; margin-right: -2px; }
+    .step-ind.completed .step-line-left,
+    .step-ind.completed .step-line-right { background: var(--color-success); }
+    .step-ind.active .step-line-left { background: var(--color-accent); }
+    .step-ind:first-child .step-line-left,
+    .step-ind:last-child .step-line-right { display: none; }
+
+    /* Mobile stepper */
+    .mobile-stepper { display: none; }
+
+    /* ==========================================
+       STEP PANELS
+       ========================================== */
+    .step-panel { display: none; }
+    .step-panel.visible {
+      display: block;
+      animation: fadeSlideIn 0.28s ease forwards;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================
+       CARDS
+       ========================================== */
+    .step-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .step-card-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      background: var(--color-accent-lighter);
+      color: var(--color-accent);
+      flex-shrink: 0;
+    }
+    .step-card-icon.optional {
+      background: #F1F5F9;
+      color: var(--color-text-muted);
+    }
+    .step-card-icon.launch {
+      background: linear-gradient(135deg, var(--color-accent-light), #C7D2FE);
+      color: var(--color-accent-hover);
+    }
+    .step-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .step-card-desc {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+    .optional-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      background: #F1F5F9;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* Tool sub-cards (step 6) */
+    .tool-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .tool-card:last-child { margin-bottom: 0; }
+    .tool-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .tool-card-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: #F1F5F9;
+      color: var(--color-text-secondary);
+    }
+    .tool-card-title { font-size: 14px; font-weight: 600; }
+    .tool-card-desc { font-size: 12px; color: var(--color-text-muted); margin-top: 1px; }
+
+    /* ==========================================
+       FORM COMPONENTS
+       ========================================== */
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 7px;
+    }
+    .form-label i { font-size: 15px; color: var(--color-text-muted); }
+    .required-mark { color: var(--color-error); font-weight: 700; }
+    .input-wrap { position: relative; }
+    .input-wrap .input-ico {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      color: #94A3B8;
+      pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: #FAFBFC;
+      color: var(--color-text);
+      transition: all var(--transition);
+    }
+    .form-input:focus {
+      border-color: var(--color-accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none;
+    }
+    .form-input.error { border-color: var(--color-error); }
+    .form-input::placeholder { color: #94A3B8; }
+    .form-input.no-icon { padding-left: 14px; }
+    .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: #FAFBFC;
+      color: var(--color-text);
+      transition: all var(--transition);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    .form-select:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none;
+    }
+    .form-hint {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+    }
+    .form-hint i { font-size: 14px; }
+    .form-error {
+      font-size: 12px;
+      color: var(--color-error);
+      margin-top: 5px;
+      display: none;
+    }
+    .form-error.visible { display: block; }
+    .form-row {
+      display: flex;
+      gap: 14px;
+    }
+    .form-row .form-group { flex: 1; }
+
+    /* Info box */
+    .info-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--color-accent-lighter);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    .info-box i { font-size: 17px; color: var(--color-accent); flex-shrink: 0; margin-top: 1px; }
+
+    /* ==========================================
+       TAGS INPUT (Competitors)
+       ========================================== */
+    .tags-wrap {
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 46px;
+      background: #FAFBFC;
+      cursor: text;
+      transition: all var(--transition);
+    }
+    .tags-wrap:focus-within {
+      border-color: var(--color-accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px 5px 10px;
+      background: var(--color-accent-light);
+      color: var(--color-accent-hover);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      animation: tagPop 0.15s ease;
+    }
+    @keyframes tagPop {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .tag-remove {
+      display: flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--color-accent);
+      transition: all var(--transition);
+    }
+    .tag-remove:hover { background: rgba(59,130,246,0.15); }
+    .tags-input {
+      flex: 1;
+      min-width: 140px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      background: transparent;
+      color: var(--color-text);
+      padding: 4px 2px;
+    }
+    .tags-input::placeholder { color: #94A3B8; }
+    .tags-count {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+    }
+
+    /* ==========================================
+       OPTION CARDS (PageSpeed)
+       ========================================== */
+    .options-row { display: flex; gap: 12px; }
+    .option-card {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      user-select: none;
+    }
+    .option-card:hover { border-color: var(--color-border-hover); }
+    .option-card.selected {
+      border-color: var(--color-accent);
+      background: var(--color-accent-lighter);
+    }
+    .option-card-icon {
+      font-size: 22px;
+      color: var(--color-text-muted);
+    }
+    .option-card.selected .option-card-icon { color: var(--color-accent); }
+    .option-card-label { font-size: 14px; font-weight: 500; }
+    .option-card-check {
+      margin-left: auto;
+      font-size: 18px;
+      color: var(--color-accent);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .option-card.selected .option-card-check { opacity: 1; }
+
+    /* ==========================================
+       BUTTONS
+       ========================================== */
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .nav-btn i { font-size: 17px; }
+    .nav-btn-back {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+    .nav-btn-back:hover:not(:disabled) { background: #F1F5F9; }
+    .nav-btn-skip {
+      background: transparent;
+      color: var(--color-text-muted);
+    }
+    .nav-btn-skip:hover:not(:disabled) { color: var(--color-text-secondary); }
+    .nav-btn-next {
+      background: var(--color-accent);
+      color: #fff;
+    }
+    .nav-btn-next:hover:not(:disabled) {
+      background: var(--color-accent-hover);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+    }
+    .btn-launch {
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      margin-top: 20px;
+    }
+    .btn-launch:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-launch:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .btn-launch i { font-size: 20px; }
+    .btn-launch .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ==========================================
+       LAUNCH SUMMARY (Step 7)
+       ========================================== */
+    .summary-list { display: flex; flex-direction: column; gap: 8px; }
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .summary-item i:first-child { font-size: 18px; }
+    .summary-item.info {
+      background: #F8FAFC;
+      color: var(--color-text-secondary);
+    }
+    .summary-item.active {
+      background: var(--color-accent-lighter);
+      color: var(--color-accent-hover);
+    }
+    .summary-check {
+      margin-left: auto;
+      font-size: 16px;
+      color: var(--color-success);
+    }
+    .launch-warning {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      background: var(--color-warning-light);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: #92400E;
+      margin-top: 16px;
+    }
+    .launch-warning i { font-size: 20px; color: var(--color-warning); }
+
+    /* ==========================================
+       EXECUTION PROGRESS
+       ========================================== */
+    .exec-panel { margin-top: 24px; }
+    .exec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .exec-header h3 { font-size: 15px; font-weight: 600; }
+    .exec-timer {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+    }
+    .task-item:last-child { margin-bottom: 0; }
+    .task-status-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .task-item.pending .task-status-icon { background: #F1F5F9; color: var(--color-text-muted); }
+    .task-item.running .task-status-icon { background: var(--color-accent-light); color: var(--color-accent); }
+    .task-item.running .task-status-icon i { animation: spin 1s linear infinite; }
+    .task-item.success .task-status-icon { background: var(--color-success-light); color: var(--color-success); }
+    .task-item.error .task-status-icon { background: var(--color-error-light); color: var(--color-error); }
+    .task-label { font-size: 14px; font-weight: 500; flex: 1; }
+    .task-detail { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+    .task-time {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ==========================================
+       RESULTS
+       ========================================== */
+    .results-panel { margin-top: 24px; }
+    .results-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .results-header i { font-size: 24px; color: var(--color-success); }
+    .results-header h3 { font-size: 16px; font-weight: 700; color: var(--color-success); }
+    .result-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 10px;
+      animation: fadeSlideIn 0.3s ease forwards;
+    }
+    .result-card.success { border-color: #BBF7D0; background: #F0FDF4; }
+    .result-card.error { border-color: #FECACA; background: #FEF2F2; }
+    .result-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .result-card.success .result-card-header { color: #166534; }
+    .result-card.error .result-card-header { color: #991B1B; }
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-accent-hover);
+      background: var(--color-accent-lighter);
+      border: 1px solid var(--color-accent-light);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: all var(--transition);
+      margin-top: 4px;
+    }
+    .result-link:hover { background: var(--color-accent-light); }
+    .result-link i { font-size: 16px; }
+    .result-details { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .result-detail-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      padding: 4px 0;
+    }
+    .detail-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .result-detail-item.s .detail-dot { background: var(--color-success); }
+    .result-detail-item.e .detail-dot { background: var(--color-error); }
+    .result-detail-item.k .detail-dot { background: #CBD5E1; }
+    .result-error-text {
+      font-size: 12px;
+      color: #991B1B;
+      margin-top: 4px;
+    }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 767px) {
+      .step-lbl { display: none; }
+      .step-circle { width: 34px; height: 34px; font-size: 16px; }
+      .step-line { top: 17px; }
+      .step-line-left { margin-right: 19px; }
+      .step-line-right { margin-left: 19px; }
+      .wizard-content { padding: 20px 16px 100px; }
+      .step-card { padding: 22px 18px; }
+      .wizard-header-subtitle { display: none; }
+    }
+    @media (max-width: 520px) {
+      .stepper { display: none; }
+      .mobile-stepper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        padding: 12px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 15;
+      }
+      .mobile-bar {
+        flex: 1;
+        height: 4px;
+        background: #E2E8F0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .mobile-bar-fill {
+        height: 100%;
+        background: var(--color-accent);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+      }
+      .mobile-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        white-space: nowrap;
+      }
+      .form-row { flex-direction: column; gap: 0; }
+      .options-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wizard">
+    <!-- HEADER -->
+    <header class="wizard-header">
+      <div class="wizard-header-icon"><i class="ti ti-chart-dots-3"></i></div>
+      <div class="wizard-header-title">SEO Audit Platform</div>
+      <div class="wizard-header-subtitle">WebPromo</div>
+    </header>
+
+    <!-- STEPPER -->
+    <nav class="stepper">
+      <div class="stepper-track" id="stepperTrack">
+        <div class="step-ind active" data-step="1" onclick="goToStep(1)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-user"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">Основнi данi</div>
+        </div>
+        <div class="step-ind" data-step="2" onclick="goToStep(2)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-users"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">Конкуренти</div>
+        </div>
+        <div class="step-ind" data-step="3" onclick="goToStep(3)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-plant-2"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">Семантика</div>
+        </div>
+        <div class="step-ind" data-step="4" onclick="goToStep(4)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-chart-bar"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">Метрики</div>
+        </div>
+        <div class="step-ind" data-step="5" onclick="goToStep(5)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-gauge"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">PageSpeed</div>
+        </div>
+        <div class="step-ind" data-step="6" onclick="goToStep(6)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-sparkles"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">AI</div>
+        </div>
+        <div class="step-ind" data-step="7" onclick="goToStep(7)">
+          <div class="step-line step-line-left"></div>
+          <div class="step-circle"><i class="ti ti-rocket"></i></div>
+          <div class="step-line step-line-right"></div>
+          <div class="step-lbl">Запуск</div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MOBILE STEPPER -->
+    <div class="mobile-stepper" id="mobileStepper">
+      <div class="mobile-label" id="mobileLabel">1 / 7</div>
+      <div class="mobile-bar"><div class="mobile-bar-fill" id="mobileBarFill" style="width:14.28%"></div></div>
+    </div>
+
+    <!-- CONTENT -->
+    <main class="wizard-content">
+
+      <!-- STEP 1: Basic Info -->
+      <section class="step-panel visible" data-step="1">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon"><i class="ti ti-user"></i></div>
+            <div>
+              <div class="step-card-title">Основнi данi</div>
+              <div class="step-card-desc">Email менеджера та домен клiєнта</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
+            <div class="input-wrap">
+              <i class="ti ti-mail input-ico"></i>
+              <input type="email" id="wEmail" class="form-input" placeholder="manager@company.com">
+            </div>
+            <div class="form-hint"><i class="ti ti-info-circle"></i> Результати будуть збережені у папку на Google Drive</div>
+            <div class="form-error" id="wEmailError">Введіть коректний email</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-world"></i> Домен клiєнта</label>
+            <div class="input-wrap">
+              <i class="ti ti-link input-ico"></i>
+              <input type="text" id="wDomain" class="form-input" placeholder="example.com.ua">
+            </div>
+            <div class="form-hint"><i class="ti ti-info-circle"></i> Без https:// та www.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2: Competitors -->
+      <section class="step-panel" data-step="2">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon optional"><i class="ti ti-users"></i></div>
+            <div>
+              <div class="step-card-title">Аналiз конкурентiв</div>
+              <div class="step-card-desc">Додайте домени конкурентiв для порiвняльного аналiзу</div>
+            </div>
+            <span class="optional-badge">Необов'язково</span>
+          </div>
+          <div class="info-box">
+            <i class="ti ti-info-circle"></i>
+            <span>Для кожного конкурента створюється окрема таблиця з аналiзом органiчного трафiку та сторiнок.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-world"></i> Домени конкурентiв</label>
+            <div class="tags-wrap" id="compTagsWrap" onclick="document.getElementById('compInput').focus()">
+              <input type="text" class="tags-input" id="compInput" placeholder="Введiть домен та натиснiть Enter">
+            </div>
+            <div class="form-hint"><i class="ti ti-info-circle"></i> Enter -- додати, Backspace -- видалити. Можна вставити список (Ctrl+V).</div>
+            <div class="tags-count" id="compCount"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: Semantic -->
+      <section class="step-panel" data-step="3">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon optional"><i class="ti ti-plant-2"></i></div>
+            <div>
+              <div class="step-card-title">Розширення семантичного ядра</div>
+              <div class="step-card-desc">GKP: генерацiя iдей ключових слiв з seed-фраз</div>
+            </div>
+            <span class="optional-badge">Необов'язково</span>
+          </div>
+          <div class="info-box">
+            <i class="ti ti-bulb"></i>
+            <span>Google Keyword Planner згенерує новi iдеї на основi seed-фраз з таблицi. Seed-фрази мають бути у першому стовпцi.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-table"></i> Таблиця з seed-фразами</label>
+            <div class="input-wrap">
+              <i class="ti ti-link input-ico"></i>
+              <input type="text" id="wSemanticUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Мова</label>
+              <select id="wSemanticLang" class="form-select">
+                <option value="1036" selected>Українська</option>
+                <option value="1000">English</option>
+                <option value="1030">Polski</option>
+                <option value="1031">Русский</option>
+                <option value="1001">Deutsch</option>
+                <option value="1002">Français</option>
+                <option value="1003">Español</option>
+                <option value="1004">Italiano</option>
+                <option value="1014">Português</option>
+                <option value="1010">Nederlands</option>
+                <option value="1021">Čeština</option>
+                <option value="1032">Română</option>
+                <option value="1024">Magyar</option>
+                <option value="1015">Svenska</option>
+                <option value="1037">Türkçe</option>
+                <option value="1009">Dansk</option>
+                <option value="1013">Norsk</option>
+                <option value="1011">Suomi</option>
+                <option value="1033">Slovenčina</option>
+                <option value="1020">Български</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Регiон</label>
+              <select id="wSemanticGeo" class="form-select">
+                <option value="2804" selected>Україна</option>
+                <option value="2840">США</option>
+                <option value="2826">Великобританiя</option>
+                <option value="2616">Польща</option>
+                <option value="2276">Нiмеччина</option>
+                <option value="2250">Францiя</option>
+                <option value="2724">Iспанiя</option>
+                <option value="2380">Iталiя</option>
+                <option value="2528">Нiдерланди</option>
+                <option value="2124">Канада</option>
+                <option value="2036">Австралiя</option>
+                <option value="2203">Чехiя</option>
+                <option value="2642">Румунiя</option>
+                <option value="2040">Австрiя</option>
+                <option value="2756">Швейцарiя</option>
+                <option value="2792">Туреччина</option>
+                <option value="2752">Швецiя</option>
+                <option value="2620">Португалiя</option>
+                <option value="2056">Бельгiя</option>
+                <option value="2348">Угорщина</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 4: Metrics -->
+      <section class="step-panel" data-step="4">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon optional"><i class="ti ti-chart-bar"></i></div>
+            <div>
+              <div class="step-card-title">Отримання метрик</div>
+              <div class="step-card-desc">GKP: об'єм пошуку, конкуренцiя, CPC для ключових слiв</div>
+            </div>
+            <span class="optional-badge">Необов'язково</span>
+          </div>
+          <div class="info-box">
+            <i class="ti ti-bulb"></i>
+            <span>Отримає об'єм пошуку та iншi метрики для списку ключових слiв. Можна використати результат з етапу "Семантика".</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-table"></i> Таблиця з ключовими словами</label>
+            <div class="input-wrap">
+              <i class="ti ti-link input-ico"></i>
+              <input type="text" id="wMetricsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Мова</label>
+              <select id="wMetricsLang" class="form-select">
+                <option value="1036" selected>Українська</option>
+                <option value="1000">English</option>
+                <option value="1030">Polski</option>
+                <option value="1031">Русский</option>
+                <option value="1001">Deutsch</option>
+                <option value="1002">Français</option>
+                <option value="1003">Español</option>
+                <option value="1004">Italiano</option>
+                <option value="1014">Português</option>
+                <option value="1010">Nederlands</option>
+                <option value="1021">Čeština</option>
+                <option value="1032">Română</option>
+                <option value="1024">Magyar</option>
+                <option value="1015">Svenska</option>
+                <option value="1037">Türkçe</option>
+                <option value="1009">Dansk</option>
+                <option value="1013">Norsk</option>
+                <option value="1011">Suomi</option>
+                <option value="1033">Slovenčina</option>
+                <option value="1020">Български</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Регiон</label>
+              <select id="wMetricsGeo" class="form-select">
+                <option value="2804" selected>Україна</option>
+                <option value="2840">США</option>
+                <option value="2826">Великобританiя</option>
+                <option value="2616">Польща</option>
+                <option value="2276">Нiмеччина</option>
+                <option value="2250">Францiя</option>
+                <option value="2724">Iспанiя</option>
+                <option value="2380">Iталiя</option>
+                <option value="2528">Нiдерланди</option>
+                <option value="2124">Канада</option>
+                <option value="2036">Австралiя</option>
+                <option value="2203">Чехiя</option>
+                <option value="2642">Румунiя</option>
+                <option value="2040">Австрiя</option>
+                <option value="2756">Швейцарiя</option>
+                <option value="2792">Туреччина</option>
+                <option value="2752">Швецiя</option>
+                <option value="2620">Португалiя</option>
+                <option value="2056">Бельгiя</option>
+                <option value="2348">Угорщина</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 5: PageSpeed -->
+      <section class="step-panel" data-step="5">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon optional"><i class="ti ti-gauge"></i></div>
+            <div>
+              <div class="step-card-title">PageSpeed Test</div>
+              <div class="step-card-desc">Core Web Vitals через Google PageSpeed Insights</div>
+            </div>
+            <span class="optional-badge">Необов'язково</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ti ti-table"></i> Таблиця з URL для тестування</label>
+            <div class="input-wrap">
+              <i class="ti ti-link input-ico"></i>
+              <input type="text" id="wPsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+            <div class="form-hint"><i class="ti ti-info-circle"></i> URL мають бути у стовпцi A першого аркуша</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Тип тесту</label>
+            <div class="options-row">
+              <div class="option-card selected" id="wOptMobile" onclick="togglePsOpt('mobile')">
+                <i class="ti ti-device-mobile option-card-icon"></i>
+                <span class="option-card-label">Mobile</span>
+                <i class="ti ti-check option-card-check"></i>
+              </div>
+              <div class="option-card selected" id="wOptDesktop" onclick="togglePsOpt('desktop')">
+                <i class="ti ti-device-desktop option-card-icon"></i>
+                <span class="option-card-label">Desktop</span>
+                <i class="ti ti-check option-card-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 6: AI Tools -->
+      <section class="step-panel" data-step="6">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon optional"><i class="ti ti-sparkles"></i></div>
+            <div>
+              <div class="step-card-title">AI Iнструменти</div>
+              <div class="step-card-desc">AI-аналiз та парсинг документiв</div>
+            </div>
+            <span class="optional-badge">Необов'язково</span>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-card-header">
+              <div class="tool-card-icon"><i class="ti ti-brain"></i></div>
+              <div>
+                <div class="tool-card-title">AI-звiт з рекомендацiями</div>
+                <div class="tool-card-desc">Згенерувати AI-звiт на основi готової таблицi аналiзу домену</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиця з аналiзом</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="wAiUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-card-header">
+              <div class="tool-card-icon"><i class="ti ti-file-type-pdf"></i></div>
+              <div>
+                <div class="tool-card-title">Парсинг PDF-аудиту в таблицю</div>
+                <div class="tool-card-desc">Перетворити PDF аудит у структуровану Google таблицю</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-file-type-pdf"></i> PDF на Google Drive</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="wPdfUrl" class="form-input" placeholder="https://drive.google.com/file/d/...">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 7: Launch -->
+      <section class="step-panel" data-step="7">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-icon launch"><i class="ti ti-rocket"></i></div>
+            <div>
+              <div class="step-card-title">Запуск аналiзу</div>
+              <div class="step-card-desc">Перевiрте обранi параметри та запустiть</div>
+            </div>
+          </div>
+          <div class="summary-list" id="summaryList"></div>
+          <div class="launch-warning" id="launchWarning" style="display:none">
+            <i class="ti ti-alert-triangle"></i>
+            <span>Не обрано жодного завдання. Поверніться та заповніть хоча б один крок.</span>
+          </div>
+          <button class="btn-launch" id="launchBtn" onclick="startExecution()">
+            <i class="ti ti-rocket"></i> Запустити
+          </button>
+          <div class="exec-panel" id="execPanel" style="display:none">
+            <div class="exec-header">
+              <h3>Виконання</h3>
+              <span class="exec-timer" id="execTimer">0:00</span>
+            </div>
+            <div id="taskList"></div>
+          </div>
+          <div class="results-panel" id="resultsPanel" style="display:none">
+            <div class="results-header">
+              <i class="ti ti-circle-check"></i>
+              <h3>Аналiз завершено</h3>
+            </div>
+            <div id="resultsList"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- NAVIGATION -->
+    <footer class="wizard-nav" id="wizNav">
+      <button class="nav-btn nav-btn-back" id="btnBack" onclick="prevStep()">
+        <i class="ti ti-arrow-left"></i> Назад
+      </button>
+      <button class="nav-btn nav-btn-skip" id="btnSkip" onclick="skipStep()">
+        Пропустити <i class="ti ti-chevron-right"></i>
+      </button>
+      <button class="nav-btn nav-btn-next" id="btnNext" onclick="nextStep()">
+        Далi <i class="ti ti-arrow-right"></i>
+      </button>
+    </footer>
+  </div>
+
+  <script>
+    // ==========================================
+    // STATE
+    // ==========================================
+    var currentStep = 1;
+    var competitors = [];
+    var psMobile = true;
+    var psDesktop = true;
+    var executionTimer = null;
+    var executionStart = null;
+    var tasks = [];
+
+    // ==========================================
+    // NAVIGATION
+    // ==========================================
+    function goToStep(n) {
+      if (n < 1 || n > 7 || n === currentStep) return;
+      saveStepData(currentStep);
+      var oldPanel = document.querySelector('.step-panel.visible');
+      if (oldPanel) oldPanel.classList.remove('visible');
+      currentStep = n;
+      var newPanel = document.querySelector('.step-panel[data-step="' + n + '"]');
+      if (newPanel) newPanel.classList.add('visible');
+      updateStepper();
+      updateNav();
+      if (n === 7) buildSummary();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextStep() {
+      if (currentStep === 1) {
+        var email = document.getElementById('wEmail').value.trim();
+        if (!email || !email.includes('@')) {
+          document.getElementById('wEmail').classList.add('error');
+          document.getElementById('wEmailError').classList.add('visible');
+          document.getElementById('wEmail').focus();
+          return;
+        }
+        document.getElementById('wEmail').classList.remove('error');
+        document.getElementById('wEmailError').classList.remove('visible');
+      }
+      if (currentStep < 7) goToStep(currentStep + 1);
+    }
+
+    function prevStep() {
+      if (currentStep > 1) goToStep(currentStep - 1);
+    }
+
+    function skipStep() {
+      if (currentStep >= 2 && currentStep <= 6) goToStep(currentStep + 1);
+    }
+
+    function updateStepper() {
+      var indicators = document.querySelectorAll('.step-ind');
+      for (var i = 0; i < indicators.length; i++) {
+        var si = indicators[i];
+        var stepNum = parseInt(si.getAttribute('data-step'));
+        si.className = 'step-ind';
+        if (stepNum === currentStep) {
+          si.classList.add('active');
+        } else if (stepHasData(stepNum)) {
+          si.classList.add('has-data');
+        }
+      }
+      // Mobile
+      var pct = Math.round((currentStep / 7) * 100);
+      var mf = document.getElementById('mobileBarFill');
+      var ml = document.getElementById('mobileLabel');
+      if (mf) mf.style.width = pct + '%';
+      if (ml) ml.textContent = currentStep + ' / 7';
+    }
+
+    function updateNav() {
+      var btnBack = document.getElementById('btnBack');
+      var btnSkip = document.getElementById('btnSkip');
+      var btnNext = document.getElementById('btnNext');
+      var nav = document.getElementById('wizNav');
+      btnBack.style.display = currentStep > 1 ? '' : 'none';
+      btnSkip.style.display = (currentStep >= 2 && currentStep <= 6) ? '' : 'none';
+      btnNext.style.display = currentStep < 7 ? '' : 'none';
+      nav.style.display = currentStep === 7 ? 'none' : '';
+    }
+
+    // ==========================================
+    // STEP DATA
+    // ==========================================
+    function saveStepData(step) {
+      // Data is read directly from DOM when needed; nothing to persist separately.
+    }
+
+    function stepHasData(n) {
+      switch (n) {
+        case 1: return !!(document.getElementById('wEmail').value.trim());
+        case 2: return competitors.length > 0;
+        case 3: return !!(document.getElementById('wSemanticUrl').value.trim());
+        case 4: return !!(document.getElementById('wMetricsUrl').value.trim());
+        case 5: return !!(document.getElementById('wPsUrl').value.trim());
+        case 6: return !!(document.getElementById('wAiUrl').value.trim() || document.getElementById('wPdfUrl').value.trim());
+        default: return false;
+      }
+    }
+
+    function cleanDomain(d) {
+      if (!d) return '';
+      return d.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').trim().toLowerCase();
+    }
+
+    // ==========================================
+    // COMPETITORS TAG SYSTEM
+    // ==========================================
+    function renderCompetitors() {
+      var wrap = document.getElementById('compTagsWrap');
+      var input = document.getElementById('compInput');
+      var existingTags = wrap.querySelectorAll('.tag');
+      for (var i = existingTags.length - 1; i >= 0; i--) wrap.removeChild(existingTags[i]);
+      for (var j = 0; j < competitors.length; j++) {
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = '<span>' + competitors[j] + '</span><span class="tag-remove" data-idx="' + j + '"><i class="ti ti-x"></i></span>';
+        wrap.insertBefore(tag, input);
+      }
+      var countEl = document.getElementById('compCount');
+      countEl.textContent = competitors.length > 0 ? (competitors.length + ' конкурент' + (competitors.length > 1 ? 'ів' : '')) : '';
+    }
+
+    function addCompetitor(val) {
+      var d = cleanDomain(val);
+      if (!d || !d.includes('.')) return;
+      for (var i = 0; i < competitors.length; i++) {
+        if (competitors[i] === d) return;
+      }
+      competitors.push(d);
+      renderCompetitors();
+    }
+
+    document.getElementById('compInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCompetitor(this.value);
+        this.value = '';
+      }
+      if (e.key === 'Backspace' && !this.value && competitors.length > 0) {
+        competitors.pop();
+        renderCompetitors();
+      }
+    });
+
+    document.getElementById('compInput').addEventListener('paste', function(e) {
+      var self = this;
+      setTimeout(function() {
+        var text = self.value;
+        var parts = text.split(/[\n,;]+/);
+        for (var i = 0; i < parts.length; i++) addCompetitor(parts[i]);
+        self.value = '';
+      }, 50);
+    });
+
+    document.getElementById('compTagsWrap').addEventListener('click', function(e) {
+      var rm = e.target.closest('.tag-remove');
+      if (rm) {
+        var idx = parseInt(rm.getAttribute('data-idx'));
+        competitors.splice(idx, 1);
+        renderCompetitors();
+      }
+    });
+
+    // ==========================================
+    // PAGESPEED TOGGLES
+    // ==========================================
+    function togglePsOpt(type) {
+      if (type === 'mobile') {
+        psMobile = !psMobile;
+        document.getElementById('wOptMobile').classList.toggle('selected', psMobile);
+      } else {
+        psDesktop = !psDesktop;
+        document.getElementById('wOptDesktop').classList.toggle('selected', psDesktop);
+      }
+    }
+
+    // ==========================================
+    // STEP 7: SUMMARY
+    // ==========================================
+    function buildSummary() {
+      var items = [];
+      var email = document.getElementById('wEmail').value.trim();
+      var domain = cleanDomain(document.getElementById('wDomain').value.trim());
+      var semUrl = document.getElementById('wSemanticUrl').value.trim();
+      var metUrl = document.getElementById('wMetricsUrl').value.trim();
+      var psUrl = document.getElementById('wPsUrl').value.trim();
+      var aiUrl = document.getElementById('wAiUrl').value.trim();
+      var pdfUrl = document.getElementById('wPdfUrl').value.trim();
+
+      if (email) items.push({ icon: 'ti-mail', text: email, cls: 'info' });
+      if (domain) items.push({ icon: 'ti-world', text: 'Клiєнт: ' + domain, cls: 'active' });
+      if (competitors.length > 0) items.push({ icon: 'ti-users', text: 'Конкуренти: ' + competitors.length + ' доменiв', cls: 'active' });
+      if (semUrl) items.push({ icon: 'ti-plant-2', text: 'Розширення семантичного ядра', cls: 'active' });
+      if (metUrl) items.push({ icon: 'ti-chart-bar', text: 'Отримання метрик', cls: 'active' });
+      if (psUrl) {
+        var psLabel = 'PageSpeed';
+        if (psMobile && psDesktop) psLabel += ' (Mobile + Desktop)';
+        else if (psMobile) psLabel += ' (Mobile)';
+        else if (psDesktop) psLabel += ' (Desktop)';
+        items.push({ icon: 'ti-gauge', text: psLabel, cls: 'active' });
+      }
+      if (aiUrl) items.push({ icon: 'ti-sparkles', text: 'AI-звiт з рекомендацiями', cls: 'active' });
+      if (pdfUrl) items.push({ icon: 'ti-file-type-pdf', text: 'Парсинг PDF-аудиту', cls: 'active' });
+
+      var html = '';
+      for (var i = 0; i < items.length; i++) {
+        html += '<div class="summary-item ' + items[i].cls + '"><i class="ti ' + items[i].icon + '"></i><span>' + items[i].text + '</span>';
+        if (items[i].cls === 'active') html += '<i class="ti ti-check summary-check"></i>';
+        html += '</div>';
+      }
+      document.getElementById('summaryList').innerHTML = html;
+
+      var hasTasks = items.some(function(it) { return it.cls === 'active'; });
+      document.getElementById('launchWarning').style.display = hasTasks ? 'none' : 'block';
+      document.getElementById('launchBtn').disabled = !hasTasks || !email;
+      document.getElementById('launchBtn').style.display = '';
+      document.getElementById('execPanel').style.display = 'none';
+      document.getElementById('resultsPanel').style.display = 'none';
+    }
+
+    // ==========================================
+    // STEP 7: EXECUTION
+    // ==========================================
+    function startExecution() {
+      var email = document.getElementById('wEmail').value.trim();
+      if (!email || !email.includes('@')) return;
+
+      tasks = [];
+      var domain = cleanDomain(document.getElementById('wDomain').value.trim());
+      var semUrl = document.getElementById('wSemanticUrl').value.trim();
+      var metUrl = document.getElementById('wMetricsUrl').value.trim();
+      var psUrl = document.getElementById('wPsUrl').value.trim();
+      var aiUrl = document.getElementById('wAiUrl').value.trim();
+      var pdfUrl = document.getElementById('wPdfUrl').value.trim();
+
+      var hasMaster = domain || competitors.length > 0 || semUrl || metUrl || psUrl;
+
+      if (hasMaster) {
+        var formData = { manager_email: email };
+        if (domain) formData.client_domain = domain;
+        if (competitors.length > 0) formData.competitors = competitors.slice();
+        if (semUrl) {
+          formData.semantic_expansion = {
+            report_name: 'Розширення семантичного ядра',
+            spreadsheet_url: semUrl,
+            language: document.getElementById('wSemanticLang').value,
+            geo_target: document.getElementById('wSemanticGeo').value
+          };
+        }
+        if (metUrl) {
+          formData.metrics_collection = {
+            report_name: 'Отримання метрик семантичного ядра',
+            spreadsheet_url: metUrl,
+            language: document.getElementById('wMetricsLang').value,
+            geo_target: document.getElementById('wMetricsGeo').value
+          };
+        }
+        if (psUrl) {
+          formData.pagespeed = {
+            spreadsheet_url: psUrl,
+            test_mobile: psMobile,
+            test_desktop: psDesktop
+          };
+        }
+        tasks.push({
+          id: 'master',
+          label: 'SEO Аудит',
+          detail: buildMasterDetail(formData),
+          icon: 'ti-chart-dots-3',
+          status: 'pending',
+          result: null,
+          formData: formData
+        });
+      }
+
+      if (aiUrl) {
+        tasks.push({
+          id: 'ai',
+          label: 'AI-звiт',
+          detail: 'Генерацiя AI-звiту з рекомендацiями',
+          icon: 'ti-brain',
+          status: 'pending',
+          result: null,
+          url: aiUrl
+        });
+      }
+
+      if (pdfUrl) {
+        tasks.push({
+          id: 'pdf',
+          label: 'PDF Парсер',
+          detail: 'Парсинг PDF-аудиту в таблицю',
+          icon: 'ti-file-type-pdf',
+          status: 'pending',
+          result: null,
+          url: pdfUrl
+        });
+      }
+
+      if (tasks.length === 0) return;
+
+      // UI: hide launch button, show execution panel
+      document.getElementById('launchBtn').style.display = 'none';
+      document.getElementById('execPanel').style.display = 'block';
+      document.getElementById('resultsPanel').style.display = 'none';
+      executionStart = Date.now();
+      updateTimer();
+      executionTimer = setInterval(updateTimer, 1000);
+
+      renderTasks();
+
+      // Execute all in parallel
+      for (var i = 0; i < tasks.length; i++) {
+        tasks[i].status = 'running';
+        renderTasks();
+        executeTask(tasks[i]);
+      }
+    }
+
+    function buildMasterDetail(fd) {
+      var parts = [];
+      if (fd.client_domain) parts.push('клiєнт');
+      if (fd.competitors) parts.push(fd.competitors.length + ' конкурент.');
+      if (fd.semantic_expansion) parts.push('семантика');
+      if (fd.metrics_collection) parts.push('метрики');
+      if (fd.pagespeed) parts.push('PageSpeed');
+      return parts.join(' + ') || 'аудит';
+    }
+
+    function executeTask(task) {
+      if (task.id === 'master') {
+        google.script.run
+          .withSuccessHandler(function(r) { taskDone(task.id, r); })
+          .withFailureHandler(function(e) { taskDone(task.id, { success: false, error: e.message || e.toString() }); })
+          .submitAnalizDomenu(task.formData);
+      } else if (task.id === 'ai') {
+        google.script.run
+          .withSuccessHandler(function(r) { taskDone(task.id, r); })
+          .withFailureHandler(function(e) { taskDone(task.id, { success: false, error: e.message || e.toString() }); })
+          .submitAIAnalysis(task.url);
+      } else if (task.id === 'pdf') {
+        google.script.run
+          .withSuccessHandler(function(r) { taskDone(task.id, r); })
+          .withFailureHandler(function(e) { taskDone(task.id, { success: false, error: e.message || e.toString() }); })
+          .submitPdfAuditParse({ pdfUrl: task.url });
+      }
+    }
+
+    function taskDone(taskId, result) {
+      for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].id === taskId) {
+          tasks[i].status = result && result.success ? 'success' : 'error';
+          tasks[i].result = result;
+          break;
+        }
+      }
+      renderTasks();
+      checkAllDone();
+    }
+
+    function checkAllDone() {
+      for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].status === 'pending' || tasks[i].status === 'running') return;
+      }
+      clearInterval(executionTimer);
+      showResults();
+    }
+
+    function updateTimer() {
+      if (!executionStart) return;
+      var sec = Math.floor((Date.now() - executionStart) / 1000);
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      document.getElementById('execTimer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function renderTasks() {
+      var html = '';
+      for (var i = 0; i < tasks.length; i++) {
+        var t = tasks[i];
+        var statusIcon = '';
+        if (t.status === 'pending') statusIcon = '<i class="ti ti-clock"></i>';
+        else if (t.status === 'running') statusIcon = '<i class="ti ti-loader-2"></i>';
+        else if (t.status === 'success') statusIcon = '<i class="ti ti-check"></i>';
+        else statusIcon = '<i class="ti ti-x"></i>';
+
+        html += '<div class="task-item ' + t.status + '">' +
+          '<div class="task-status-icon">' + statusIcon + '</div>' +
+          '<div><div class="task-label">' + t.label + '</div>' +
+          '<div class="task-detail">' + t.detail + '</div></div>' +
+          '</div>';
+      }
+      document.getElementById('taskList').innerHTML = html;
+    }
+
+    function showResults() {
+      document.getElementById('resultsPanel').style.display = 'block';
+      var html = '';
+      for (var i = 0; i < tasks.length; i++) {
+        var t = tasks[i];
+        if (t.status === 'success') {
+          html += '<div class="result-card success">';
+          html += '<div class="result-card-header"><i class="ti ti-circle-check"></i> ' + t.label + ' -- завершено</div>';
+
+          if (t.id === 'master' && t.result) {
+            if (t.result.folderUrl) {
+              html += '<a href="' + t.result.folderUrl + '" target="_blank" class="result-link"><i class="ti ti-folder"></i> Відкрити папку з результатами <i class="ti ti-external-link"></i></a>';
+            }
+            if (t.result.details) {
+              html += '<div class="result-details">';
+              var d = t.result.details;
+              html += renderDetailItem('Аналiз клiєнта', d.client_analysis);
+              if (d.competitors_analysis) {
+                for (var c = 0; c < d.competitors_analysis.length; c++) {
+                  html += renderDetailItem('Конкурент: ' + (d.competitors_analysis[c].domain || ''), d.competitors_analysis[c]);
+                }
+              }
+              html += renderDetailItem('Семантика', d.semantic_expansion);
+              html += renderDetailItem('Метрики', d.metrics_collection);
+              html += renderDetailItem('PageSpeed', d.pagespeed);
+              html += '</div>';
+            }
+          } else if (t.id === 'ai' && t.result) {
+            if (t.result.docUrl) {
+              html += '<a href="' + t.result.docUrl + '" target="_blank" class="result-link"><i class="ti ti-file-text"></i> Відкрити AI-звiт' + (t.result.domain ? ' (' + t.result.domain + ')' : '') + ' <i class="ti ti-external-link"></i></a>';
+            }
+          } else if (t.id === 'pdf' && t.result) {
+            if (t.result.spreadsheetUrl) {
+              html += '<a href="' + t.result.spreadsheetUrl + '" target="_blank" class="result-link"><i class="ti ti-table"></i> Відкрити таблицю з результатами <i class="ti ti-external-link"></i></a>';
+            }
+          }
+          html += '</div>';
+        } else if (t.status === 'error') {
+          html += '<div class="result-card error">';
+          html += '<div class="result-card-header"><i class="ti ti-alert-circle"></i> ' + t.label + ' -- помилка</div>';
+          if (t.result && t.result.error) {
+            html += '<div class="result-error-text">' + t.result.error + '</div>';
+          }
+          html += '</div>';
+        }
+      }
+      document.getElementById('resultsList').innerHTML = html;
+      document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderDetailItem(label, data) {
+      if (!data) return '';
+      var cls = 'k';
+      if (data.status === 'success') cls = 's';
+      else if (data.status === 'error') cls = 'e';
+      return '<div class="result-detail-item ' + cls + '"><span class="detail-dot"></span>' + label + '</div>';
+    }
+
+    // ==========================================
+    // EMAIL VALIDATION CLEAR
+    // ==========================================
+    document.getElementById('wEmail').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('wEmailError').classList.remove('visible');
+    });
+
+    // ==========================================
+    // INIT
+    // ==========================================
+    updateStepper();
+    updateNav();
+  </script>
+</body>
+</html>
