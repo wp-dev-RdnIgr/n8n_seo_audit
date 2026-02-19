@@ -41,6 +41,65 @@
     .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 6px; letter-spacing: -0.3px; }
     .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
 
+    /* Phase label */
+    .phase-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1.5px solid #f1f5f9;
+    }
+    .phase-badge {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 16px; font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .phase-title { font-size: 16px; font-weight: 700; color: #1e293b; }
+    .phase-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    /* Phase divider */
+    .phase-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      padding: 0 8px;
+    }
+    .phase-divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+    .phase-divider-arrow {
+      width: 32px; height: 32px;
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: #6366f1;
+      flex-shrink: 0;
+    }
+    .phase-divider-text { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+
+    /* Phase 2 hint */
+    .phase2-hint {
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #4338ca;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      animation: slideIn 0.25s ease;
+    }
+    .phase2-hint.visible { display: flex; }
+
     /* Form */
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
@@ -73,6 +132,7 @@
       overflow: hidden;
       transition: border-color 0.2s;
     }
+    .section-block:first-of-type { margin-top: 0; }
     .section-block.active { border-color: #a5b4fc; }
 
     .section-header {
@@ -114,7 +174,7 @@
       padding: 0 16px;
     }
     .section-block.active .section-body {
-      max-height: 500px;
+      max-height: 800px;
       padding: 16px;
     }
 
@@ -196,6 +256,27 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Per-section submit button (Phase 2) */
+    .btn-section {
+      width: 100%; padding: 12px 20px; margin-top: 16px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      color: white;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border: none; border-radius: 10px; cursor: pointer;
+      transition: all 0.2s ease; position: relative; overflow: hidden;
+    }
+    .btn-section:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
+    .btn-section:active { transform: translateY(0); }
+    .btn-section:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-section span { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-section-loading span { visibility: hidden; }
+    .btn-section-loading::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 18px; height: 18px; margin: -9px 0 0 -9px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+
     /* Result */
     .result {
       margin-top: 20px; padding: 16px 18px; border-radius: 10px;
@@ -227,12 +308,73 @@
     }
     .result a:hover { background: #bbf7d0; }
 
-    /* Summary list inside result */
-    .result-summary { margin-top: 12px; }
-    .result-summary-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 0; font-size: 13px; color: #475569;
+    /* Per-section result panel */
+    .section-result {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      animation: slideIn 0.25s ease;
     }
+    .section-result.success { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .section-result.error { background: #fef2f2; border: 1px solid #fecaca; }
+    .section-result.loading { background: #eef2ff; border: 1px solid #c7d2fe; }
+    .section-result-header {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600;
+    }
+    .section-result.success .section-result-header { color: #15803d; }
+    .section-result.error .section-result-header { color: #dc2626; }
+    .section-result.loading .section-result-header { color: #4338ca; }
+    .section-result-icon { font-size: 14px; }
+    .section-result-link-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .section-result-link {
+      flex: 1;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 12px;
+      font-size: 12px; font-weight: 500;
+      color: #15803d; background: #dcfce7;
+      border: 1px solid #bbf7d0; border-radius: 7px;
+      text-decoration: none; transition: all 0.2s;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .section-result-link:hover { background: #bbf7d0; }
+    .section-result-link.ai-link {
+      color: #6d28d9; background: #ede9fe; border-color: #ddd6fe;
+    }
+    .section-result-link.ai-link:hover { background: #ddd6fe; }
+
+    /* Copy button */
+    .copy-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 7px; cursor: pointer;
+      font-size: 14px; transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: #dcfce7; }
+    .copy-btn.copied { background: #dcfce7; border-color: #22c55e; }
+
+    /* Competitor sub-results */
+    .competitor-result-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; font-size: 12px; color: #475569;
+    }
+    .competitor-result-item a {
+      color: #15803d; text-decoration: none; font-weight: 500;
+      margin: 0; padding: 0; background: none; border: none;
+      display: inline;
+    }
+    .competitor-result-item a:hover { text-decoration: underline; }
+    .competitor-result-item .copy-btn {
+      width: 24px; height: 24px; font-size: 11px;
+      display: inline-flex;
+    }
+
+    /* Status dots */
     .status-dot {
       width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
     }
@@ -242,7 +384,7 @@
 
     /* Footer */
     .footer {
-      margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6;
+      margin-top: 20px; padding: 16px 0 0;
       display: flex; align-items: center; justify-content: space-between;
     }
     .footer-time { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
@@ -290,14 +432,18 @@
 </head>
 <body>
   <div class="container">
-    <div class="card">
+
+    <!-- ======================================== -->
+    <!-- PHASE 1: Data Collection                 -->
+    <!-- ======================================== -->
+    <div class="card" id="phase1Card">
       <div class="header">
         <div class="logo">🚀</div>
-        <h1>Аналіз домену — Мастер</h1>
-        <p>Оркестратор SEO-аудиту: аналіз клієнта, конкурентів, семантика, метрики, PageSpeed</p>
+        <h1>SEO-аудит — Мастер</h1>
+        <p>Оркестратор: збір даних, аналіз, семантика, метрики, PageSpeed, AI-звіти</p>
       </div>
 
-      <!-- Email (required) -->
+      <!-- Email (required, shared) -->
       <div class="form-group">
         <label>Email менеджера *</label>
         <div class="input-wrapper">
@@ -307,6 +453,15 @@
         <div class="field-hint">
           <span class="field-hint-icon">💡</span>
           <span>Результати будуть збережені у вашу папку на Google Drive. Якщо папки ще немає — вона створиться автоматично.</span>
+        </div>
+      </div>
+
+      <!-- Phase 1 label -->
+      <div class="phase-label">
+        <div class="phase-badge">1</div>
+        <div>
+          <div class="phase-title">Збір даних</div>
+          <div class="phase-desc">Аналіз клієнта, конкурентів, розширення семантичного ядра</div>
         </div>
       </div>
 
@@ -333,6 +488,7 @@
               <span>Вводьте домен без https:// та www. Наприклад: rozetka.com.ua</span>
             </div>
           </div>
+          <div class="section-result" id="clientResult" style="display:none;"></div>
         </div>
       </div>
 
@@ -355,6 +511,7 @@
             </div>
             <div class="tags-hint">Enter — додати, Backspace — видалити останній. Можна вставити список через Ctrl+V</div>
           </div>
+          <div class="section-result" id="competitorsResult" style="display:none;"></div>
         </div>
       </div>
 
@@ -433,7 +590,48 @@
               </select>
             </div>
           </div>
+          <div class="section-result" id="semanticResult" style="display:none;"></div>
         </div>
+      </div>
+
+      <div class="warning-box" id="phase1Warning" style="display: none;">
+        Увімкніть хоча б один блок Етапу 1
+      </div>
+
+      <button class="btn" id="phase1Btn" onclick="handlePhase1Submit()">
+        <span>🚀 Запустити Етап 1</span>
+      </button>
+
+      <div class="result" id="phase1Result"></div>
+    </div>
+
+    <!-- ======================================== -->
+    <!-- PHASE DIVIDER                            -->
+    <!-- ======================================== -->
+    <div class="phase-divider">
+      <div class="phase-divider-line"></div>
+      <div class="phase-divider-arrow">↓</div>
+      <div class="phase-divider-text">Результати Етапу 1 → Етап 2</div>
+      <div class="phase-divider-line"></div>
+    </div>
+
+    <!-- ======================================== -->
+    <!-- PHASE 2: Analysis & Processing           -->
+    <!-- ======================================== -->
+    <div class="card" id="phase2Card">
+
+      <!-- Phase 2 label -->
+      <div class="phase-label">
+        <div class="phase-badge">2</div>
+        <div>
+          <div class="phase-title">Аналіз та обробка</div>
+          <div class="phase-desc">Метрики, PageSpeed, AI-аналіз, PDF-парсинг — використовують результати Етапу 1</div>
+        </div>
+      </div>
+
+      <div class="phase2-hint" id="phase2Hint">
+        <span class="field-hint-icon">🔗</span>
+        <span>Посилання на таблиці з Етапу 1 доступні вище. Натисніть 📋 щоб скопіювати та вставити сюди.</span>
       </div>
 
       <!-- 4. Metrics -->
@@ -456,7 +654,7 @@
             </div>
             <div class="field-hint">
               <span class="field-hint-icon">💡</span>
-              <span>Ключові слова мають бути у першому стовпці. Можна використати результат з етапу «Розширення».</span>
+              <span>Ключові слова мають бути у першому стовпці. Можна використати результат з Етапу 1 «Розширення семантики».</span>
             </div>
           </div>
           <div class="row">
@@ -511,6 +709,10 @@
               </select>
             </div>
           </div>
+          <button class="btn-section" id="metricsBtn" onclick="handleMetricsSubmit()">
+            <span>📊 Отримати метрики</span>
+          </button>
+          <div class="section-result" id="metricsResult" style="display:none;"></div>
         </div>
       </div>
 
@@ -552,41 +754,93 @@
               </div>
             </div>
           </div>
+          <button class="btn-section" id="pagespeedBtn" onclick="handlePageSpeedSubmit()">
+            <span>⚡ Запустити PageSpeed</span>
+          </button>
+          <div class="section-result" id="pagespeedResult" style="display:none;"></div>
         </div>
       </div>
 
-      <div class="warning-box" id="nothingWarning" style="display: none;">
-        Увімкніть хоча б один блок аналізу
+      <!-- 6. AI Analysis (NEW) -->
+      <div class="section-block" id="aiSection">
+        <div class="section-header" onclick="toggleSection('aiSection')">
+          <div class="section-toggle"></div>
+          <span class="section-icon">🤖</span>
+          <div>
+            <div class="section-title">AI аналіз домену</div>
+            <div class="section-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="section-hint">Згенерує AI-звіт (Google Doc) з рекомендаціями на основі готової таблиці аналізу домену. Використовуйте результат «Аналіз клієнта» з Етапу 1 або будь-яку іншу таблицю.</div>
+          <div class="form-group">
+            <label>Таблиця з аналізом домену</label>
+            <div class="input-wrapper">
+              <input type="text" id="aiSpreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+              <span class="input-icon">📋</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>Вставте посилання на таблицю аналізу клієнта з Етапу 1 (кнопка 📋) або будь-яку іншу таблицю аналізу.</span>
+            </div>
+          </div>
+          <button class="btn-section" id="aiBtn" onclick="handleAiSubmit()">
+            <span>🤖 Запустити AI аналіз</span>
+          </button>
+          <div class="section-result" id="aiResult" style="display:none;"></div>
+        </div>
       </div>
 
-      <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>🚀 Запустити аналіз</span>
-      </button>
-
-      <div class="result" id="result">
-        <div class="result-header">
-          <div class="result-icon" id="resultIcon"></div>
-          <h3 id="resultTitle"></h3>
+      <!-- 7. PDF Parsing (NEW) -->
+      <div class="section-block" id="pdfSection">
+        <div class="section-header" onclick="toggleSection('pdfSection')">
+          <div class="section-toggle"></div>
+          <span class="section-icon">📄</span>
+          <div>
+            <div class="section-title">Парсинг PDF-аудиту</div>
+            <div class="section-desc">PDF у структуровану Google таблицю</div>
+          </div>
         </div>
-        <p id="resultMessage"></p>
-      </div>
-
-      <div class="footer">
-        <div class="footer-time">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Час залежить від обраних блоків
-        </div>
-        <div class="footer-brand">
-          <span>WebPromo</span>
+        <div class="section-body">
+          <div class="section-hint">Перетворює PDF-аудит з Google Drive у структуровану Google таблицю з окремими вкладками для кожного розділу аудиту.</div>
+          <div class="form-group">
+            <label>Посилання на PDF (Google Drive)</label>
+            <div class="input-wrapper">
+              <input type="text" id="pdfUrl" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
+              <span class="input-icon">📎</span>
+            </div>
+            <div class="field-hint">
+              <span class="field-hint-icon">💡</span>
+              <span>PDF файл має бути на Google Drive та доступний для перегляду.</span>
+            </div>
+          </div>
+          <button class="btn-section" id="pdfBtn" onclick="handlePdfSubmit()">
+            <span>📄 Запустити парсинг PDF</span>
+          </button>
+          <div class="section-result" id="pdfResult" style="display:none;"></div>
         </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-time">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Час залежить від обраних блоків
+      </div>
+      <div class="footer-brand">
+        <span>WebPromo</span>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // === Section toggles ===
+    // ======================================
+    // Section toggles
+    // ======================================
     function toggleSection(sectionId) {
       var el = document.getElementById(sectionId);
       el.classList.toggle('active');
@@ -599,16 +853,20 @@
 
     function updateWarning() {
       var anyActive = isSectionActive('clientSection') || isSectionActive('competitorsSection') ||
-        isSectionActive('semanticSection') || isSectionActive('metricsSection') || isSectionActive('pagespeedSection');
-      document.getElementById('nothingWarning').style.display = anyActive ? 'none' : 'block';
+        isSectionActive('semanticSection');
+      document.getElementById('phase1Warning').style.display = anyActive ? 'none' : 'block';
     }
 
-    // === Option cards ===
+    // ======================================
+    // Option cards (PageSpeed)
+    // ======================================
     function toggleOption(id) {
       document.getElementById(id).classList.toggle('selected');
     }
 
-    // === Competitors tags ===
+    // ======================================
+    // Competitors tags
+    // ======================================
     var competitors = [];
 
     function addCompetitor(val) {
@@ -626,10 +884,8 @@
     function renderCompetitors() {
       var container = document.getElementById('competitorsTags');
       var input = document.getElementById('competitorsInput');
-      // Remove existing tags
       var tags = container.querySelectorAll('.tag');
       for (var i = 0; i < tags.length; i++) tags[i].remove();
-      // Add tags before input
       for (var i = 0; i < competitors.length; i++) {
         var tag = document.createElement('span');
         tag.className = 'tag';
@@ -663,49 +919,184 @@
       }
     });
 
-    // === Submit ===
-    function handleSubmit() {
+    // ======================================
+    // Utility: extract spreadsheet ID from URL
+    // ======================================
+    function extractSpreadsheetId(url) {
+      var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      return match ? match[1] : null;
+    }
+
+    // ======================================
+    // Utility: copy to clipboard
+    // ======================================
+    function copyToClipboard(url, btnEl) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          showCopied(btnEl);
+        }).catch(function() {
+          fallbackCopy(url, btnEl);
+        });
+      } else {
+        fallbackCopy(url, btnEl);
+      }
+    }
+
+    function fallbackCopy(url, btnEl) {
+      var ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+      showCopied(btnEl);
+    }
+
+    function showCopied(btnEl) {
+      var orig = btnEl.textContent;
+      btnEl.classList.add('copied');
+      btnEl.textContent = '✓';
+      setTimeout(function() {
+        btnEl.classList.remove('copied');
+        btnEl.textContent = orig;
+      }, 2000);
+    }
+
+    // ======================================
+    // Utility: section result renderers
+    // ======================================
+    function showSectionResult(elementId, status, label, url, linkClass) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      el.style.display = 'block';
+
+      if (status === 'success' && url) {
+        el.className = 'section-result success';
+        var cls = linkClass ? 'section-result-link ' + linkClass : 'section-result-link';
+        el.innerHTML =
+          '<div class="section-result-header">' +
+            '<span class="section-result-icon">✓</span>' +
+            '<span>' + label + '</span>' +
+          '</div>' +
+          '<div class="section-result-link-row">' +
+            '<a href="' + url + '" target="_blank" class="' + cls + '">' +
+              '📊 Відкрити →' +
+            '</a>' +
+            '<button class="copy-btn" onclick="copyToClipboard(\'' + url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати посилання">📋</button>' +
+          '</div>';
+      } else if (status === 'success') {
+        el.className = 'section-result success';
+        el.innerHTML =
+          '<div class="section-result-header">' +
+            '<span class="section-result-icon">✓</span>' +
+            '<span>' + label + ' — завершено</span>' +
+          '</div>';
+      } else {
+        el.className = 'section-result error';
+        el.innerHTML =
+          '<div class="section-result-header">' +
+            '<span class="section-result-icon">✕</span>' +
+            '<span>' + label + ' — помилка</span>' +
+          '</div>';
+      }
+    }
+
+    function showSectionError(elementId, message) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      el.style.display = 'block';
+      el.className = 'section-result error';
+      el.innerHTML =
+        '<div class="section-result-header">' +
+          '<span class="section-result-icon">✕</span>' +
+          '<span>' + message + '</span>' +
+        '</div>';
+    }
+
+    function showSectionLoading(elementId, message) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      el.style.display = 'block';
+      el.className = 'section-result loading';
+      el.innerHTML =
+        '<div class="section-result-header">' +
+          '<span class="section-result-icon">⏳</span>' +
+          '<span>' + message + '</span>' +
+        '</div>';
+    }
+
+    function showCompetitorsResult(competitorsData) {
+      var el = document.getElementById('competitorsResult');
+      if (!el) return;
+      el.style.display = 'block';
+
+      var allSuccess = true;
+      for (var i = 0; i < competitorsData.length; i++) {
+        if (competitorsData[i].status !== 'success') allSuccess = false;
+      }
+
+      el.className = 'section-result ' + (allSuccess ? 'success' : 'error');
+      var html = '<div class="section-result-header">' +
+        '<span class="section-result-icon">' + (allSuccess ? '✓' : '⚠') + '</span>' +
+        '<span>Конкуренти: ' + competitorsData.length + ' доменів</span></div>';
+
+      for (var i = 0; i < competitorsData.length; i++) {
+        var c = competitorsData[i];
+        html += '<div class="competitor-result-item">';
+        html += '<span class="status-dot ' + c.status + '"></span>';
+        html += '<span>' + c.domain + '</span>';
+        if (c.status === 'success' && c.spreadsheet_url) {
+          html += ' — <a href="' + c.spreadsheet_url + '" target="_blank">таблиця</a>';
+          html += ' <button class="copy-btn" onclick="copyToClipboard(\'' + c.spreadsheet_url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати">📋</button>';
+        }
+        html += '</div>';
+      }
+
+      el.innerHTML = html;
+    }
+
+    function clearPhase1Results() {
+      var ids = ['clientResult', 'competitorsResult', 'semanticResult', 'phase1Result'];
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (el) { el.style.display = 'none'; el.className = (ids[i] === 'phase1Result') ? 'result' : 'section-result'; el.innerHTML = ''; }
+      }
+    }
+
+    // ======================================
+    // PHASE 1: Submit (orchestrator)
+    // ======================================
+    var phase1Results = {};
+
+    function handlePhase1Submit() {
       var email = document.getElementById('managerEmail').value.trim();
-      if (!email) { showError('Введіть email менеджера'); return; }
-      if (!email.includes('@')) { showError('Невірний формат email'); return; }
+      if (!email) { showPhase1Error('Введіть email менеджера'); return; }
+      if (!email.includes('@')) { showPhase1Error('Невірний формат email'); return; }
 
       var anyActive = isSectionActive('clientSection') || isSectionActive('competitorsSection') ||
-        isSectionActive('semanticSection') || isSectionActive('metricsSection') || isSectionActive('pagespeedSection');
-      if (!anyActive) { showError('Увімкніть хоча б один блок аналізу'); return; }
+        isSectionActive('semanticSection');
+      if (!anyActive) { showPhase1Error('Увімкніть хоча б один блок Етапу 1'); return; }
 
-      // Validate active sections
       var clientDomain = '';
       if (isSectionActive('clientSection')) {
         clientDomain = document.getElementById('clientDomain').value.trim();
-        if (!clientDomain) { showError('Введіть домен клієнта або вимкніть блок'); return; }
+        if (!clientDomain) { showPhase1Error('Введіть домен клієнта або вимкніть блок'); return; }
       }
 
       if (isSectionActive('competitorsSection') && competitors.length === 0) {
-        showError('Додайте хоча б одного конкурента або вимкніть блок'); return;
+        showPhase1Error('Додайте хоча б одного конкурента або вимкніть блок'); return;
       }
 
       if (isSectionActive('semanticSection')) {
         var sUrl = document.getElementById('semanticUrl').value.trim();
         if (!sUrl || !sUrl.includes('docs.google.com/spreadsheets')) {
-          showError('Невірне посилання на таблицю для семантики'); return;
+          showPhase1Error('Невірне посилання на таблицю для семантики'); return;
         }
       }
 
-      if (isSectionActive('metricsSection')) {
-        var mUrl = document.getElementById('metricsUrl').value.trim();
-        if (!mUrl || !mUrl.includes('docs.google.com/spreadsheets')) {
-          showError('Невірне посилання на таблицю для метрик'); return;
-        }
-      }
-
-      if (isSectionActive('pagespeedSection')) {
-        var pUrl = document.getElementById('pagespeedUrl').value.trim();
-        if (!pUrl || !pUrl.includes('docs.google.com/spreadsheets')) {
-          showError('Невірне посилання на таблицю для PageSpeed'); return;
-        }
-      }
-
-      // Build form data
+      // Build formData (Phase 1 only)
       var formData = { manager_email: email };
 
       if (isSectionActive('clientSection')) {
@@ -725,90 +1116,245 @@
         };
       }
 
-      if (isSectionActive('metricsSection')) {
-        formData.metrics_collection = {
-          report_name: 'Отримання метрик семантичного ядра',
-          spreadsheet_url: document.getElementById('metricsUrl').value.trim(),
-          language: document.getElementById('metricsLang').value,
-          geo_target: document.getElementById('metricsGeo').value
-        };
-      }
-
-      if (isSectionActive('pagespeedSection')) {
-        formData.pagespeed = {
-          spreadsheet_url: document.getElementById('pagespeedUrl').value.trim(),
-          test_mobile: document.getElementById('optMobile').classList.contains('selected'),
-          test_desktop: document.getElementById('optDesktop').classList.contains('selected')
-        };
-      }
-
-      // Send
-      var submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.classList.add('btn-loading');
-      document.getElementById('result').className = 'result';
+      // UI: loading
+      var btn = document.getElementById('phase1Btn');
+      btn.disabled = true;
+      btn.classList.add('btn-loading');
+      clearPhase1Results();
 
       google.script.run
         .withSuccessHandler(function(response) {
-          submitBtn.disabled = false;
-          submitBtn.classList.remove('btn-loading');
+          btn.disabled = false;
+          btn.classList.remove('btn-loading');
           if (response.success) {
-            showSuccess(response);
+            showPhase1Success(response);
           } else {
-            showError(response.error || 'Невідома помилка');
+            showPhase1Error(response.error || 'Невідома помилка');
           }
         })
         .withFailureHandler(function(error) {
-          submitBtn.disabled = false;
-          submitBtn.classList.remove('btn-loading');
-          showError(error.toString());
+          btn.disabled = false;
+          btn.classList.remove('btn-loading');
+          showPhase1Error(error.toString());
         })
         .submitAnalizDomenu(formData);
     }
 
-    function showSuccess(data) {
-      var r = document.getElementById('result');
-      var ri = document.getElementById('resultIcon');
-      var rt = document.getElementById('resultTitle');
-      var rm = document.getElementById('resultMessage');
+    function showPhase1Success(data) {
+      var d = data.details || {};
+
+      // Overall result
+      var r = document.getElementById('phase1Result');
       r.className = 'result success';
-      ri.textContent = '✓';
-      rt.textContent = 'Аналіз завершено';
-
-      var html = 'Папка проекту створена. Результати зібрані.';
-      html += '<a href="' + data.folderUrl + '" target="_blank">Відкрити папку →</a>';
-
-      if (data.details) {
-        html += '<div class="result-summary">';
-        var d = data.details;
-        if (d.client_analysis) html += summaryItem(d.client_analysis.status, 'Аналіз клієнта');
-        if (d.competitors_analysis && d.competitors_analysis.length > 0) {
-          for (var i = 0; i < d.competitors_analysis.length; i++) {
-            html += summaryItem(d.competitors_analysis[i].status, 'Конкурент: ' + d.competitors_analysis[i].domain);
-          }
-        }
-        if (d.semantic_expansion) html += summaryItem(d.semantic_expansion.status, 'Семантичне ядро');
-        if (d.metrics_collection) html += summaryItem(d.metrics_collection.status, 'Метрики');
-        if (d.pagespeed) html += summaryItem(d.pagespeed.status, 'PageSpeed');
-        html += '</div>';
+      var folderHtml = '<div class="result-header">' +
+        '<div class="result-icon" style="background:#dcfce7;color:#16a34a;">✓</div>' +
+        '<h3 style="color:#15803d;">Етап 1 завершено</h3>' +
+        '</div>' +
+        '<p>Папка проекту створена. Результати зібрані.</p>';
+      if (data.folderUrl) {
+        folderHtml += '<a href="' + data.folderUrl + '" target="_blank">📂 Відкрити папку проекту →</a>';
       }
-      rm.innerHTML = html;
+      r.innerHTML = folderHtml;
+
+      // Per-section results
+      if (d.client_analysis) {
+        showSectionResult('clientResult', d.client_analysis.status, 'Аналіз клієнта',
+          d.client_analysis.spreadsheet_url);
+        if (d.client_analysis.spreadsheet_url) {
+          phase1Results.client = d.client_analysis.spreadsheet_url;
+        }
+      }
+
+      if (d.competitors_analysis && d.competitors_analysis.length > 0) {
+        showCompetitorsResult(d.competitors_analysis);
+      }
+
+      if (d.semantic_expansion) {
+        var semExtra = d.semantic_expansion.total_keywords
+          ? ' (' + d.semantic_expansion.total_keywords + ' ключових слів)'
+          : '';
+        showSectionResult('semanticResult', d.semantic_expansion.status,
+          'Семантичне ядро' + semExtra, d.semantic_expansion.spreadsheet_url);
+        if (d.semantic_expansion.spreadsheet_url) {
+          phase1Results.semantic = d.semantic_expansion.spreadsheet_url;
+        }
+      }
+
+      // Show Phase 2 hint
+      document.getElementById('phase2Hint').classList.add('visible');
     }
 
-    function summaryItem(status, label) {
-      return '<div class="result-summary-item"><span class="status-dot ' + status + '"></span>' + label + '</div>';
-    }
-
-    function showError(message) {
-      var r = document.getElementById('result');
+    function showPhase1Error(message) {
+      var r = document.getElementById('phase1Result');
       r.className = 'result error';
-      document.getElementById('resultIcon').textContent = '✕';
-      document.getElementById('resultTitle').textContent = 'Помилка';
-      document.getElementById('resultMessage').textContent = message;
+      r.innerHTML =
+        '<div class="result-header">' +
+          '<div class="result-icon" style="background:#fee2e2;color:#dc2626;">✕</div>' +
+          '<h3 style="color:#dc2626;">Помилка</h3>' +
+        '</div>' +
+        '<p>' + message + '</p>';
     }
 
+    // ======================================
+    // PHASE 2: Metrics (individual)
+    // ======================================
+    function handleMetricsSubmit() {
+      var mUrl = document.getElementById('metricsUrl').value.trim();
+      if (!mUrl || !mUrl.includes('docs.google.com/spreadsheets')) {
+        showSectionError('metricsResult', 'Невірне посилання на таблицю з ключовими словами');
+        return;
+      }
+
+      var spreadsheetId = extractSpreadsheetId(mUrl);
+      if (!spreadsheetId) {
+        showSectionError('metricsResult', 'Не вдалося отримати ID таблиці');
+        return;
+      }
+
+      var btn = document.getElementById('metricsBtn');
+      btn.disabled = true;
+      btn.classList.add('btn-section-loading');
+      showSectionLoading('metricsResult', 'Отримання метрик...');
+
+      var formData = {
+        source_spreadsheet_id: spreadsheetId,
+        doc_name: 'GKP Metrics - ' + new Date().toISOString().slice(0, 10),
+        language: document.getElementById('metricsLang').value,
+        geo_target: document.getElementById('metricsGeo').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          if (response.success) {
+            var extra = response.totalKeywords ? ' (' + response.totalKeywords + ' ключових слів)' : '';
+            showSectionResult('metricsResult', 'success', 'Метрики отримано' + extra, response.spreadsheetUrl);
+          } else {
+            showSectionError('metricsResult', response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          showSectionError('metricsResult', error.toString());
+        })
+        .submitGKPMetrics(formData);
+    }
+
+    // ======================================
+    // PHASE 2: PageSpeed (individual)
+    // ======================================
+    function handlePageSpeedSubmit() {
+      var pUrl = document.getElementById('pagespeedUrl').value.trim();
+      if (!pUrl || !pUrl.includes('docs.google.com/spreadsheets')) {
+        showSectionError('pagespeedResult', 'Невірне посилання на таблицю з URL');
+        return;
+      }
+
+      var btn = document.getElementById('pagespeedBtn');
+      btn.disabled = true;
+      btn.classList.add('btn-section-loading');
+      showSectionLoading('pagespeedResult', 'Тестування PageSpeed...');
+
+      var formData = {
+        spreadsheetUrl: pUrl,
+        testMobile: document.getElementById('optMobile').classList.contains('selected'),
+        testDesktop: document.getElementById('optDesktop').classList.contains('selected')
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          if (response.success) {
+            var extra = response.totalUrls ? ' (' + response.totalUrls + ' URL)' : '';
+            showSectionResult('pagespeedResult', 'success', 'PageSpeed завершено' + extra, response.spreadsheetUrl);
+          } else {
+            showSectionError('pagespeedResult', response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          showSectionError('pagespeedResult', error.toString());
+        })
+        .submitPageSpeedTest(formData);
+    }
+
+    // ======================================
+    // PHASE 2: AI Analysis (individual)
+    // ======================================
+    function handleAiSubmit() {
+      var url = document.getElementById('aiSpreadsheetUrl').value.trim();
+      if (!url || !url.includes('docs.google.com/spreadsheets')) {
+        showSectionError('aiResult', 'Невірне посилання на таблицю. Має бути Google Sheets URL.');
+        return;
+      }
+
+      var btn = document.getElementById('aiBtn');
+      btn.disabled = true;
+      btn.classList.add('btn-section-loading');
+      showSectionLoading('aiResult', 'Генерація AI-звіту...');
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          if (response.success) {
+            var label = 'AI-звіт створено' + (response.domain ? ' (' + response.domain + ')' : '');
+            showSectionResult('aiResult', 'success', label, response.docUrl, 'ai-link');
+          } else {
+            showSectionError('aiResult', response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          showSectionError('aiResult', error.toString());
+        })
+        .submitAIAnalysis(url);
+    }
+
+    // ======================================
+    // PHASE 2: PDF Parsing (individual)
+    // ======================================
+    function handlePdfSubmit() {
+      var url = document.getElementById('pdfUrl').value.trim();
+      if (!url || !url.includes('drive.google.com')) {
+        showSectionError('pdfResult', 'Невірне посилання на PDF. Має бути Google Drive URL.');
+        return;
+      }
+
+      var btn = document.getElementById('pdfBtn');
+      btn.disabled = true;
+      btn.classList.add('btn-section-loading');
+      showSectionLoading('pdfResult', 'Парсинг PDF...');
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          if (response.success) {
+            var extra = response.totalSheets ? ' (' + response.totalSheets + ' вкладок)' : '';
+            showSectionResult('pdfResult', 'success', 'PDF оброблено' + extra, response.spreadsheetUrl);
+          } else {
+            showSectionError('pdfResult', response.error || 'Невідома помилка');
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.classList.remove('btn-section-loading');
+          showSectionError('pdfResult', error.toString());
+        })
+        .submitPdfAuditParse({ pdfUrl: url });
+    }
+
+    // ======================================
+    // Init
+    // ======================================
     document.getElementById('managerEmail').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handleSubmit();
+      if (e.key === 'Enter') handlePhase1Submit();
     });
 
     document.getElementById('managerEmail').focus();
