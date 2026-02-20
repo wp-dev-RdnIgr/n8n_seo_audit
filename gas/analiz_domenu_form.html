@@ -759,10 +759,6 @@
                 </select>
               </div>
             </div>
-            <button class="btn-launch" id="btnMetrics" onclick="launchMetrics()">
-              <i class="ti ti-chart-bar"></i> <span>Отримати метрики</span>
-            </button>
-            <div class="result-card hidden" id="metricsResult"></div>
           </div>
         </section>
 
@@ -807,10 +803,6 @@
                 </div>
               </div>
             </div>
-            <button class="btn-launch" id="btnPageSpeed" onclick="launchPageSpeed()">
-              <i class="ti ti-gauge"></i> <span>Запустити PageSpeed</span>
-            </button>
-            <div class="result-card hidden" id="pagespeedResult"></div>
           </div>
         </section>
 
@@ -838,6 +830,8 @@
             <div class="result-card hidden" id="clientResult"></div>
             <div class="result-card hidden" id="competitorsResult"></div>
             <div class="result-card hidden" id="semanticResult"></div>
+            <div class="result-card hidden" id="metricsResult"></div>
+            <div class="result-card hidden" id="pagespeedResult"></div>
           </div>
         </section>
 
@@ -931,10 +925,10 @@
 // =========================================
 var currentStep = 1;
 var totalSteps = 8;
-// Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск, 7=AI, 8=PDF
+// Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск (усе через оркестратор), 7=AI, 8=PDF
 var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
 var phase1Done = false;
-var stepData = { email:'', domain:'', competitors:[], semantic:null, phase1Results:null };
+var stepData = { email:'', domain:'', competitors:[], semantic:null, metrics:null, pagespeed:null, phase1Results:null };
 
 // Steps that require data entry or explicit action to be marked completed
 // Step 1: required (email+domain), step 6: requires phase1 launch
@@ -1065,6 +1059,30 @@ function saveStepData(n) {
       stepData.semantic = null;
     }
   }
+  if (n === 4) {
+    var url = document.getElementById('fMetUrl').value.trim();
+    if (url && url.includes('docs.google.com/spreadsheets')) {
+      stepData.metrics = {
+        url: url,
+        lang: document.getElementById('fMetLang').value,
+        geo: document.getElementById('fMetGeo').value
+      };
+    } else {
+      stepData.metrics = null;
+    }
+  }
+  if (n === 5) {
+    var url = document.getElementById('fPsUrl').value.trim();
+    if (url && url.includes('docs.google.com/spreadsheets')) {
+      stepData.pagespeed = {
+        url: url,
+        testMobile: document.getElementById('optMobile').classList.contains('selected'),
+        testDesktop: document.getElementById('optDesktop').classList.contains('selected')
+      };
+    } else {
+      stepData.pagespeed = null;
+    }
+  }
 }
 
 function validateStep(n) {
@@ -1160,7 +1178,7 @@ function updateNav() {
 // STEP 6: SUMMARY + LAUNCH
 // =========================================
 function buildSummary() {
-  saveStepData(3); // ensure semantic saved
+  saveStepData(3); saveStepData(4); saveStepData(5);
   var el = document.getElementById('summaryList');
   var html = '';
 
@@ -1183,6 +1201,27 @@ function buildSummary() {
     html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: пропущено</div>';
   } else {
     html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: не заповнено</div>';
+  }
+
+  // Metrics
+  if (stepData.metrics) {
+    html += '<div class="summary-item active"><i class="ti ti-chart-bar"></i> Метрики ключових слів: <strong>таблиця додана</strong></div>';
+  } else if (stepStatus[3] === 'skipped') {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Метрики ключових слів: пропущено</div>';
+  } else {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Метрики ключових слів: не заповнено</div>';
+  }
+
+  // PageSpeed
+  if (stepData.pagespeed) {
+    var psTypes = [];
+    if (stepData.pagespeed.testMobile) psTypes.push('Mobile');
+    if (stepData.pagespeed.testDesktop) psTypes.push('Desktop');
+    html += '<div class="summary-item active"><i class="ti ti-gauge"></i> PageSpeed: <strong>' + (psTypes.join(' + ') || 'таблиця додана') + '</strong></div>';
+  } else if (stepStatus[4] === 'skipped') {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> PageSpeed: пропущено</div>';
+  } else {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> PageSpeed: не заповнено</div>';
   }
 
   el.innerHTML = html;
@@ -1210,11 +1249,26 @@ function launchPhase1() {
       geo_target: stepData.semantic.geo
     };
   }
+  if (stepData.metrics) {
+    formData.metrics_collection = {
+      report_name: 'Метрики ключових слів',
+      spreadsheet_url: stepData.metrics.url,
+      language: stepData.metrics.lang,
+      geo_target: stepData.metrics.geo
+    };
+  }
+  if (stepData.pagespeed) {
+    formData.pagespeed = {
+      spreadsheet_url: stepData.pagespeed.url,
+      test_mobile: stepData.pagespeed.testMobile,
+      test_desktop: stepData.pagespeed.testDesktop
+    };
+  }
 
   var btn = document.getElementById('btnLaunch1');
   btn.disabled = true;
   btn.classList.add('btn-loading');
-  hideResults(['phase1Result','clientResult','competitorsResult','semanticResult']);
+  hideResults(['phase1Result','clientResult','competitorsResult','semanticResult','metricsResult','pagespeedResult']);
 
   google.script.run
     .withSuccessHandler(function(r) {
@@ -1271,73 +1325,23 @@ function onPhase1Success(data) {
     showResultSuccess('semanticResult', 'Семантичне ядро' + extra, d.semantic_expansion.spreadsheet_url);
     if (d.semantic_expansion.spreadsheet_url) stepData.phase1Results.semantic = d.semantic_expansion.spreadsheet_url;
   }
+
+  // Metrics
+  if (d.metrics_collection) {
+    var mExtra = d.metrics_collection.total_keywords ? ' (' + d.metrics_collection.total_keywords + ' ключових слів)' : '';
+    showResultSuccess('metricsResult', 'Метрики ключових слів' + mExtra, d.metrics_collection.spreadsheet_url);
+  }
+
+  // PageSpeed
+  if (d.pagespeed) {
+    var psExtra = d.pagespeed.total_urls ? ' (' + d.pagespeed.total_urls + ' URL)' : '';
+    showResultSuccess('pagespeedResult', 'PageSpeed' + psExtra, d.pagespeed.spreadsheet_url);
+  }
 }
 
 // =========================================
-// PHASE 2 LAUNCHES (Steps 4, 5, 7, 8)
+// PHASE 2 LAUNCHES (Steps 7, 8)
 // =========================================
-function launchMetrics() {
-  var url = document.getElementById('fMetUrl').value.trim();
-  if (!url || !url.includes('docs.google.com/spreadsheets')) {
-    showResultError('metricsResult', 'Вкажіть коректне посилання на Google таблицю'); return;
-  }
-  var sid = extractSpreadsheetId(url);
-  if (!sid) { showResultError('metricsResult', 'Не вдалося отримати ID таблиці'); return; }
-
-  var btn = document.getElementById('btnMetrics');
-  btn.disabled = true; btn.classList.add('btn-loading');
-  showResultLoading('metricsResult', 'Отримання метрик...');
-
-  google.script.run
-    .withSuccessHandler(function(r) {
-      btn.disabled = false; btn.classList.remove('btn-loading');
-      if (r.success) {
-        var ex = r.totalKeywords ? ' (' + r.totalKeywords + ' ключових слів)' : '';
-        showResultSuccess('metricsResult', 'Метрики отримано' + ex, r.spreadsheetUrl);
-      } else { showResultError('metricsResult', r.error || 'Помилка'); }
-    })
-    .withFailureHandler(function(e) {
-      btn.disabled = false; btn.classList.remove('btn-loading');
-      showResultError('metricsResult', e.toString());
-    })
-    .submitGKPMetrics({
-      source_spreadsheet_id: sid,
-      doc_name: 'GKP Metrics - ' + new Date().toISOString().slice(0,10),
-      language: document.getElementById('fMetLang').value,
-      geo_target: document.getElementById('fMetGeo').value,
-      manager_email: stepData.email
-    });
-}
-
-function launchPageSpeed() {
-  var url = document.getElementById('fPsUrl').value.trim();
-  if (!url || !url.includes('docs.google.com/spreadsheets')) {
-    showResultError('pagespeedResult', 'Вкажіть коректне посилання на Google таблицю'); return;
-  }
-  var btn = document.getElementById('btnPageSpeed');
-  btn.disabled = true; btn.classList.add('btn-loading');
-  showResultLoading('pagespeedResult', 'Тестування PageSpeed...');
-
-  google.script.run
-    .withSuccessHandler(function(r) {
-      btn.disabled = false; btn.classList.remove('btn-loading');
-      if (r.success) {
-        var ex = r.totalUrls ? ' (' + r.totalUrls + ' URL)' : '';
-        showResultSuccess('pagespeedResult', 'PageSpeed завершено' + ex, r.spreadsheetUrl);
-      } else { showResultError('pagespeedResult', r.error || 'Помилка'); }
-    })
-    .withFailureHandler(function(e) {
-      btn.disabled = false; btn.classList.remove('btn-loading');
-      showResultError('pagespeedResult', e.toString());
-    })
-    .submitPageSpeedTest({
-      spreadsheetUrl: url,
-      testMobile: document.getElementById('optMobile').classList.contains('selected'),
-      testDesktop: document.getElementById('optDesktop').classList.contains('selected'),
-      manager_email: stepData.email
-    });
-}
-
 function launchAI() {
   var url = document.getElementById('fAiUrl').value.trim();
   if (!url || !url.includes('docs.google.com/spreadsheets')) {
@@ -1524,8 +1528,8 @@ function showCompetitorsResult(data) {
 document.getElementById('fEmail').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fDomain').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fSemUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
-document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchMetrics(); });
-document.getElementById('fPsUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPageSpeed(); });
+document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
+document.getElementById('fPsUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fAiUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchAI(); });
 document.getElementById('fPdfUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPDF(); });
 
