@@ -11,7 +11,10 @@
       "name": "Sticky Note - Ideas",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-1820, 20]
+      "position": [
+        -1820,
+        20
+      ]
     },
     {
       "parameters": {
@@ -23,7 +26,10 @@
       "name": "Sticky Note - Metrics",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [1200, 20]
+      "position": [
+        1200,
+        20
+      ]
     },
     {
       "parameters": {
@@ -36,7 +42,10 @@
       "name": "Ideas - Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-1800, 300],
+      "position": [
+        -1800,
+        300
+      ],
       "webhookId": "gkp-ideas"
     },
     {
@@ -93,12 +102,18 @@
       "name": "Ideas - Set Variables",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-1560, 300]
+      "position": [
+        -1560,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
           "conditions": [
             {
               "id": "hasSourceSheet",
@@ -117,7 +132,10 @@
       "name": "Ideas - Has Source Sheet?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [-1320, 300]
+      "position": [
+        -1320,
+        300
+      ]
     },
     {
       "parameters": {
@@ -131,7 +149,10 @@
       "name": "Ideas - Read Source Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [-1080, 200],
+      "position": [
+        -1080,
+        200
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -147,7 +168,10 @@
       "name": "Ideas - Parse Sheet Seeds",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-840, 200]
+      "position": [
+        -840,
+        200
+      ]
     },
     {
       "parameters": {
@@ -157,7 +181,10 @@
       "name": "Ideas - Use Body Seeds",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-1080, 400]
+      "position": [
+        -1080,
+        400
+      ]
     },
     {
       "parameters": {
@@ -169,7 +196,10 @@
       "name": "Ideas - Create Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-360, 300],
+      "position": [
+        -360,
+        300
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -179,13 +209,16 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\n// Get seeds from the previous node (either Parse Sheet Seeds or Use Body Seeds)\nlet allSeeds = [];\ntry {\n  allSeeds = $('Ideas - Parse Sheet Seeds').first().json.seeds || [];\n} catch(e) {\n  allSeeds = $('Ideas - Use Body Seeds').first().json.seeds || [];\n}\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
+        "jsCode": "// Split seeds into batches of 10 (API limit for generateKeywordIdeas)\n// Get seeds from the previous node (either Parse Sheet Seeds or Use Body Seeds)\nlet allSeeds = [];\ntry {\n  allSeeds = $('Ideas - Parse Sheet Seeds').first().json.seeds || [];\n} catch(e) {\n  allSeeds = $('Ideas - Use Body Seeds').first().json.seeds || [];\n}\n\n// Validate: fail early if no seeds found\nif (allSeeds.length === 0) {\n  throw new Error('Seed-фрази не знайдені. Перевірте, що у вихідній таблиці є дані у колонці A (починаючи з 1-го рядка).');\n}\n\nconst BATCH_SIZE = 10;\nconst batches = [];\n\nfor (let i = 0; i < allSeeds.length; i += BATCH_SIZE) {\n  batches.push(allSeeds.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    seedBatches: batches,\n    totalSeedBatches: batches.length,\n    currentSeedBatch: 0,\n    allResults: [],\n    batchesProcessed: 0,\n    currentSeeds: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId,\n    pageToken: null\n  }\n}];"
       },
       "id": "ideas-004",
       "name": "Ideas - Split Batches",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-120, 300]
+      "position": [
+        -120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -196,8 +229,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
-            { "name": "login-customer-id", "value": "3993420980" }
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
           ]
         },
         "sendBody": true,
@@ -209,7 +248,10 @@
       "name": "Ideas - API Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [120, 300],
+      "position": [
+        120,
+        300
+      ],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -220,18 +262,24 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\nconst MAX_RESULTS = 3000;\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Ideas - Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Ideas - Has More Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Ideas - Split Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nlet hasNextPage = nextPageToken !== null;\n\n// Stop pagination if we reached MAX_RESULTS\nif (allResults.length >= MAX_RESULTS) {\n  hasNextPage = false;\n}\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  batchesProcessed++;\n  currentSeedBatch++;\n  // Also stop seed batches if MAX_RESULTS reached\n  hasMoreSeedBatches = allResults.length < MAX_RESULTS && currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
+        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\nconst MAX_RESULTS = 3000;\n\n// Detect API errors (continueOnFail swallows HTTP errors silently)\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const errMsg = apiResponse.message || apiResponse.error || JSON.stringify(apiResponse).slice(0, 300);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Ideas - Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Ideas - Has More Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Ideas - Split Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nlet hasNextPage = nextPageToken !== null;\n\n// Stop pagination if we reached MAX_RESULTS\nif (allResults.length >= MAX_RESULTS) {\n  hasNextPage = false;\n}\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  batchesProcessed++;\n  currentSeedBatch++;\n  // Also stop seed batches if MAX_RESULTS reached\n  hasMoreSeedBatches = allResults.length < MAX_RESULTS && currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
       },
       "id": "ideas-006",
       "name": "Ideas - Merge Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [360, 300]
+      "position": [
+        360,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
           "conditions": [
             {
               "id": "hasNextPage",
@@ -251,7 +299,10 @@
       "name": "Ideas - Has Next Page?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [600, 300]
+      "position": [
+        600,
+        300
+      ]
     },
     {
       "parameters": {
@@ -262,7 +313,10 @@
       "name": "Ideas - Wait Page",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [840, 200]
+      "position": [
+        840,
+        200
+      ]
     },
     {
       "parameters": {
@@ -273,8 +327,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
-            { "name": "login-customer-id", "value": "3993420980" }
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
           ]
         },
         "sendBody": true,
@@ -286,7 +346,10 @@
       "name": "Ideas - Next Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [840, 100],
+      "position": [
+        840,
+        100
+      ],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -298,7 +361,10 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
           "conditions": [
             {
               "id": "hasMoreBatches",
@@ -318,7 +384,10 @@
       "name": "Ideas - Has More Batches?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [600, 500]
+      "position": [
+        600,
+        500
+      ]
     },
     {
       "parameters": {
@@ -329,7 +398,10 @@
       "name": "Ideas - Wait Batch",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [840, 400]
+      "position": [
+        840,
+        400
+      ]
     },
     {
       "parameters": {
@@ -339,7 +411,10 @@
       "name": "Ideas - Prepare Next Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [840, 500]
+      "position": [
+        840,
+        500
+      ]
     },
     {
       "parameters": {
@@ -350,8 +425,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
-            { "name": "login-customer-id", "value": "3993420980" }
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
           ]
         },
         "sendBody": true,
@@ -363,7 +444,10 @@
       "name": "Ideas - Next Seed Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [840, 600],
+      "position": [
+        840,
+        600
+      ],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -380,7 +464,10 @@
       "name": "Ideas - Format Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [600, 700]
+      "position": [
+        600,
+        700
+      ]
     },
     {
       "parameters": {
@@ -397,7 +484,10 @@
       "name": "Ideas - Write Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [840, 700],
+      "position": [
+        840,
+        700
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -414,7 +504,10 @@
       "name": "Ideas - Wait Write",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [840, 800]
+      "position": [
+        840,
+        800
+      ]
     },
     {
       "parameters": {
@@ -431,7 +524,10 @@
       "name": "Ideas - Format Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [840, 900],
+      "position": [
+        840,
+        900
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -442,16 +538,18 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Ideas - Format Data').first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $('Ideas - Format Data').first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $('Ideas - Format Data').first().json.totalKeywords }},\n  \"total_batches_processed\": {{ $('Ideas - Format Data').first().json.batchesProcessed }},\n  \"processing_time_seconds\": {{ $('Ideas - Format Data').first().json.processingTime }}\n}",
+        "responseBody": "={\n  \"status\": {{ $(\"Ideas - Format Data\").first().json.totalKeywords > 0 ? '\"success\"' : '\"error\"' }},\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $(\"Ideas - Format Data\").first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $(\"Ideas - Format Data\").first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $(\"Ideas - Format Data\").first().json.totalKeywords }},\n  \"total_batches_processed\": {{ $(\"Ideas - Format Data\").first().json.batchesProcessed }},\n  \"processing_time_seconds\": {{ $(\"Ideas - Format Data\").first().json.processingTime }},\n  \"error\": {{ $(\"Ideas - Format Data\").first().json.totalKeywords === 0 ? '\"Google Ads API повернув 0 ключових слів для заданих seed-фраз\"' : \"null\" }}\n}",
         "options": {}
       },
       "id": "ideas-018",
       "name": "Ideas - Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [840, 1000]
+      "position": [
+        840,
+        1000
+      ]
     },
-
     {
       "parameters": {
         "httpMethod": "POST",
@@ -463,7 +561,10 @@
       "name": "Metrics - Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [1240, 300],
+      "position": [
+        1240,
+        300
+      ],
       "webhookId": "gkp-metrics"
     },
     {
@@ -520,12 +621,18 @@
       "name": "Metrics - Set Variables",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1480, 300]
+      "position": [
+        1480,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
           "conditions": [
             {
               "id": "hasSourceSheet",
@@ -544,7 +651,10 @@
       "name": "Metrics - Has Source Sheet?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1720, 300]
+      "position": [
+        1720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -558,7 +668,10 @@
       "name": "Metrics - Read Source Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1960, 200],
+      "position": [
+        1960,
+        200
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -574,7 +687,10 @@
       "name": "Metrics - Parse Sheet",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2200, 200]
+      "position": [
+        2200,
+        200
+      ]
     },
     {
       "parameters": {
@@ -584,7 +700,10 @@
       "name": "Metrics - Use Body Keywords",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1960, 400]
+      "position": [
+        1960,
+        400
+      ]
     },
     {
       "parameters": {
@@ -596,7 +715,10 @@
       "name": "Metrics - Create Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [2680, 300],
+      "position": [
+        2680,
+        300
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -606,13 +728,16 @@
     },
     {
       "parameters": {
-        "jsCode": "// Split keywords into batches of 10,000 (API limit for Historical Metrics)\n// Get keywords from the previous node (either Parse Sheet or Use Body Keywords)\nlet allKeywords = [];\ntry {\n  allKeywords = $('Metrics - Parse Sheet').first().json.keywords || [];\n} catch(e) {\n  allKeywords = $('Metrics - Use Body Keywords').first().json.keywords || [];\n}\nconst BATCH_SIZE = 10000;\nconst batches = [];\n\nfor (let i = 0; i < allKeywords.length; i += BATCH_SIZE) {\n  batches.push(allKeywords.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: allKeywords.length,\n    currentBatch: 0,\n    allResults: [],\n    keywordsWithData: 0,\n    keywordsNoData: 0,\n    currentKeywords: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId\n  }\n}];"
+        "jsCode": "// Split keywords into batches of 10,000 (API limit for Historical Metrics)\n// Get keywords from the previous node (either Parse Sheet or Use Body Keywords)\nlet allKeywords = [];\ntry {\n  allKeywords = $('Metrics - Parse Sheet').first().json.keywords || [];\n} catch(e) {\n  allKeywords = $('Metrics - Use Body Keywords').first().json.keywords || [];\n}\n// Validate: fail early if no keywords found\nif (allKeywords.length === 0) {\n  throw new Error('Ключові слова не знайдені. Перевірте, що у вихідній таблиці є дані у колонці A (починаючи з 1-го рядка).');\n}\n\nconst BATCH_SIZE = 10000;\nconst batches = [];\n\nfor (let i = 0; i < allKeywords.length; i += BATCH_SIZE) {\n  batches.push(allKeywords.slice(i, i + BATCH_SIZE));\n}\n\nconst spreadsheetId = $input.first().json.spreadsheetId || $input.first().json.id;\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: allKeywords.length,\n    currentBatch: 0,\n    allResults: [],\n    keywordsWithData: 0,\n    keywordsNoData: 0,\n    currentKeywords: batches.length > 0 ? batches[0] : [],\n    spreadsheetId: spreadsheetId\n  }\n}];"
       },
       "id": "metrics-009",
       "name": "Metrics - Split Batches",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2920, 300]
+      "position": [
+        2920,
+        300
+      ]
     },
     {
       "parameters": {
@@ -623,8 +748,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
-            { "name": "login-customer-id", "value": "3993420980" }
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
           ]
         },
         "sendBody": true,
@@ -636,7 +767,10 @@
       "name": "Metrics - API Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3160, 300],
+      "position": [
+        3160,
+        300
+      ],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -647,18 +781,24 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\nconst batchState = $('Metrics - Split Batches').first().json;\n\n// Determine state source\nlet state;\ntry {\n  state = $('Metrics - Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\n// Count keywords with/without data\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
+        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\n\n// Detect API errors\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const errMsg = apiResponse.message || apiResponse.error || JSON.stringify(apiResponse).slice(0, 300);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\nconst batchState = $('Metrics - Split Batches').first().json;\n\n// Determine state source\nlet state;\ntry {\n  state = $('Metrics - Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\n// Count keywords with/without data\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
       },
       "id": "metrics-011",
       "name": "Metrics - Merge Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3400, 300]
+      "position": [
+        3400,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
           "conditions": [
             {
               "id": "hasMore",
@@ -678,7 +818,10 @@
       "name": "Metrics - Check More Batches?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [3640, 300]
+      "position": [
+        3640,
+        300
+      ]
     },
     {
       "parameters": {
@@ -689,7 +832,10 @@
       "name": "Metrics - Wait Batch",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [3880, 200]
+      "position": [
+        3880,
+        200
+      ]
     },
     {
       "parameters": {
@@ -700,8 +846,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "developer-token", "value": "9KarAB-iwnq1oTfRx4T55w" },
-            { "name": "login-customer-id", "value": "3993420980" }
+            {
+              "name": "developer-token",
+              "value": "9KarAB-iwnq1oTfRx4T55w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "3993420980"
+            }
           ]
         },
         "sendBody": true,
@@ -713,7 +865,10 @@
       "name": "Metrics - Next Batch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [4120, 200],
+      "position": [
+        4120,
+        200
+      ],
       "credentials": {
         "googleAdsOAuth2Api": {
           "id": "QJ9r7jX6BiPCIZvF",
@@ -730,7 +885,10 @@
       "name": "Metrics - Merge Next",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4360, 200]
+      "position": [
+        4360,
+        200
+      ]
     },
     {
       "parameters": {
@@ -740,7 +898,10 @@
       "name": "Metrics - Format Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3640, 500]
+      "position": [
+        3640,
+        500
+      ]
     },
     {
       "parameters": {
@@ -757,7 +918,10 @@
       "name": "Metrics - Write Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3880, 500],
+      "position": [
+        3880,
+        500
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -774,7 +938,10 @@
       "name": "Metrics - Wait Write",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [4120, 500]
+      "position": [
+        4120,
+        500
+      ]
     },
     {
       "parameters": {
@@ -791,7 +958,10 @@
       "name": "Metrics - Format Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [4360, 500],
+      "position": [
+        4360,
+        500
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "hMp9ISVYVcdpImYl",
@@ -802,150 +972,484 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $('Metrics - Format Data').first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $('Metrics - Format Data').first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $('Metrics - Format Data').first().json.totalKeywords }},\n  \"keywords_with_data\": {{ $('Metrics - Format Data').first().json.keywordsWithData }},\n  \"keywords_no_data\": {{ $('Metrics - Format Data').first().json.keywordsNoData }},\n  \"processing_time_seconds\": {{ $('Metrics - Format Data').first().json.processingTime }}\n}",
+        "responseBody": "={\n  \"status\": {{ $(\"Metrics - Format Data\").first().json.totalKeywords > 0 ? '\"success\"' : '\"error\"' }},\n  \"spreadsheet_url\": \"https://docs.google.com/spreadsheets/d/{{ $(\"Metrics - Format Data\").first().json.spreadsheetId }}\",\n  \"spreadsheet_id\": \"{{ $(\"Metrics - Format Data\").first().json.spreadsheetId }}\",\n  \"total_keywords\": {{ $(\"Metrics - Format Data\").first().json.totalKeywords }},\n  \"keywords_with_data\": {{ $(\"Metrics - Format Data\").first().json.keywordsWithData }},\n  \"keywords_no_data\": {{ $(\"Metrics - Format Data\").first().json.keywordsNoData }},\n  \"processing_time_seconds\": {{ $(\"Metrics - Format Data\").first().json.processingTime }},\n  \"error\": {{ $(\"Metrics - Format Data\").first().json.totalKeywords === 0 ? '\"Google Ads API повернув 0 ключових слів\"' : \"null\" }}\n}",
         "options": {}
       },
       "id": "metrics-020",
       "name": "Metrics - Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [4600, 500]
+      "position": [
+        4600,
+        500
+      ]
     }
   ],
   "pinData": {},
   "connections": {
     "Ideas - Webhook": {
-      "main": [[{ "node": "Ideas - Set Variables", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Set Variables": {
-      "main": [[{ "node": "Ideas - Has Source Sheet?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Has Source Sheet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Has Source Sheet?": {
       "main": [
-        [{ "node": "Ideas - Read Source Sheet", "type": "main", "index": 0 }],
-        [{ "node": "Ideas - Use Body Seeds", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Ideas - Read Source Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ideas - Use Body Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Ideas - Read Source Sheet": {
-      "main": [[{ "node": "Ideas - Parse Sheet Seeds", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Parse Sheet Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Parse Sheet Seeds": {
-      "main": [[{ "node": "Ideas - Create Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Create Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Use Body Seeds": {
-      "main": [[{ "node": "Ideas - Create Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Create Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Create Sheet": {
-      "main": [[{ "node": "Ideas - Split Batches", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Split Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Split Batches": {
-      "main": [[{ "node": "Ideas - API Request", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - API Request": {
-      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Merge Results": {
-      "main": [[{ "node": "Ideas - Has Next Page?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Has Next Page?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Has Next Page?": {
       "main": [
-        [{ "node": "Ideas - Wait Page", "type": "main", "index": 0 }],
-        [{ "node": "Ideas - Has More Batches?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Ideas - Wait Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ideas - Has More Batches?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Ideas - Wait Page": {
-      "main": [[{ "node": "Ideas - Next Page", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Next Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Next Page": {
-      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Has More Batches?": {
       "main": [
-        [{ "node": "Ideas - Wait Batch", "type": "main", "index": 0 }],
-        [{ "node": "Ideas - Format Data", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Ideas - Wait Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ideas - Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Ideas - Wait Batch": {
-      "main": [[{ "node": "Ideas - Prepare Next Batch", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Prepare Next Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Prepare Next Batch": {
-      "main": [[{ "node": "Ideas - Next Seed Batch", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Next Seed Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Next Seed Batch": {
-      "main": [[{ "node": "Ideas - Merge Results", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Format Data": {
-      "main": [[{ "node": "Ideas - Write Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Write Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Write Sheet": {
-      "main": [[{ "node": "Ideas - Wait Write", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Wait Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Wait Write": {
-      "main": [[{ "node": "Ideas - Format Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Format Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ideas - Format Sheet": {
-      "main": [[{ "node": "Ideas - Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ideas - Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-
     "Metrics - Webhook": {
-      "main": [[{ "node": "Metrics - Set Variables", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Set Variables": {
-      "main": [[{ "node": "Metrics - Has Source Sheet?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Has Source Sheet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Has Source Sheet?": {
       "main": [
-        [{ "node": "Metrics - Read Source Sheet", "type": "main", "index": 0 }],
-        [{ "node": "Metrics - Use Body Keywords", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Metrics - Read Source Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Metrics - Use Body Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Metrics - Read Source Sheet": {
-      "main": [[{ "node": "Metrics - Parse Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Parse Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Parse Sheet": {
-      "main": [[{ "node": "Metrics - Create Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Create Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Use Body Keywords": {
-      "main": [[{ "node": "Metrics - Create Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Create Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Create Sheet": {
-      "main": [[{ "node": "Metrics - Split Batches", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Split Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Split Batches": {
-      "main": [[{ "node": "Metrics - API Request", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - API Request": {
-      "main": [[{ "node": "Metrics - Merge Results", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Merge Results": {
-      "main": [[{ "node": "Metrics - Check More Batches?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Check More Batches?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Check More Batches?": {
       "main": [
-        [{ "node": "Metrics - Wait Batch", "type": "main", "index": 0 }],
-        [{ "node": "Metrics - Format Data", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Metrics - Wait Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Metrics - Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Metrics - Wait Batch": {
-      "main": [[{ "node": "Metrics - Next Batch", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Next Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Next Batch": {
-      "main": [[{ "node": "Metrics - Merge Next", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Merge Next",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Merge Next": {
-      "main": [[{ "node": "Metrics - Check More Batches?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Check More Batches?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Format Data": {
-      "main": [[{ "node": "Metrics - Write Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Write Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Write Sheet": {
-      "main": [[{ "node": "Metrics - Wait Write", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Wait Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Wait Write": {
-      "main": [[{ "node": "Metrics - Format Sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Format Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Metrics - Format Sheet": {
-      "main": [[{ "node": "Metrics - Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Metrics - Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
