@@ -223,7 +223,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -262,7 +262,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\nconst MAX_RESULTS = 3000;\n\n// Detect API errors (continueOnFail swallows HTTP errors silently)\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const errMsg = apiResponse.message || apiResponse.error || JSON.stringify(apiResponse).slice(0, 300);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Ideas - Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Ideas - Has More Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Ideas - Split Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nlet hasNextPage = nextPageToken !== null;\n\n// Stop pagination if we reached MAX_RESULTS\nif (allResults.length >= MAX_RESULTS) {\n  hasNextPage = false;\n}\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  batchesProcessed++;\n  currentSeedBatch++;\n  // Also stop seed batches if MAX_RESULTS reached\n  hasMoreSeedBatches = allResults.length < MAX_RESULTS && currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
+        "jsCode": "// Merge API response and handle pagination/batching\nconst apiResponse = $input.first().json;\nconst MAX_RESULTS = 3000;\n\n// Detect API errors (continueOnFail swallows HTTP errors silently)\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const err = apiResponse.error || {};\n      const errMsg = (typeof err === 'string' ? err : err.message || err.description || JSON.stringify(err)).slice(0, 500);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\n// Get previous state\nlet state;\ntry {\n  const fromPagination = $('Ideas - Has Next Page?').first();\n  if (fromPagination) state = fromPagination.json;\n} catch(e) {}\ntry {\n  const fromBatch = $('Ideas - Has More Batches?').first();\n  if (fromBatch && !state) state = fromBatch.json;\n} catch(e) {}\nif (!state) state = $('Ideas - Split Batches').first().json;\n\n// Merge results (add source seed info)\nconst newResults = (apiResponse.results || []).map(r => {\n  return {\n    ...r,\n    sourceSeed: state.currentSeeds.join(', ')\n  };\n});\nconst allResults = [...(state.allResults || []), ...newResults];\n\n// Check for pagination within current batch\nconst nextPageToken = apiResponse.nextPageToken || null;\nlet hasNextPage = nextPageToken !== null;\n\n// Stop pagination if we reached MAX_RESULTS\nif (allResults.length >= MAX_RESULTS) {\n  hasNextPage = false;\n}\n\n// If no more pages, move to next seed batch\nlet currentSeedBatch = state.currentSeedBatch || 0;\nlet batchesProcessed = state.batchesProcessed || 0;\nlet currentSeeds = state.currentSeeds;\nlet hasMoreSeedBatches = false;\n\nif (!hasNextPage) {\n  batchesProcessed++;\n  currentSeedBatch++;\n  // Also stop seed batches if MAX_RESULTS reached\n  hasMoreSeedBatches = allResults.length < MAX_RESULTS && currentSeedBatch < state.seedBatches.length;\n  if (hasMoreSeedBatches) {\n    currentSeeds = state.seedBatches[currentSeedBatch];\n  }\n}\n\nreturn [{\n  json: {\n    seedBatches: state.seedBatches,\n    totalSeedBatches: state.totalSeedBatches,\n    currentSeedBatch: currentSeedBatch,\n    allResults: allResults,\n    batchesProcessed: batchesProcessed,\n    currentSeeds: currentSeeds,\n    spreadsheetId: state.spreadsheetId,\n    pageToken: nextPageToken,\n    hasNextPage: hasNextPage,\n    hasMoreSeedBatches: hasMoreSeedBatches,\n    totalFetched: allResults.length\n  }\n}];"
       },
       "id": "ideas-006",
       "name": "Ideas - Merge Results",
@@ -321,7 +321,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -419,7 +419,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -742,7 +742,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -781,7 +781,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\n\n// Detect API errors\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const errMsg = apiResponse.message || apiResponse.error || JSON.stringify(apiResponse).slice(0, 300);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\nconst batchState = $('Metrics - Split Batches').first().json;\n\n// Determine state source\nlet state;\ntry {\n  state = $('Metrics - Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\n// Count keywords with/without data\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
+        "jsCode": "// Merge batch results and check if more batches needed\nconst apiResponse = $input.first().json;\n\n// Detect API errors\nif (apiResponse.error || apiResponse.statusCode >= 400) {\n  const err = apiResponse.error || {};\n      const errMsg = (typeof err === 'string' ? err : err.message || err.description || JSON.stringify(err)).slice(0, 500);\n  throw new Error('Google Ads API помилка: ' + errMsg);\n}\n\nconst batchState = $('Metrics - Split Batches').first().json;\n\n// Determine state source\nlet state;\ntry {\n  state = $('Metrics - Check More Batches?').first().json;\n} catch(e) {\n  state = batchState;\n}\n\nconst newResults = apiResponse.results || [];\nconst allResults = [...(state.allResults || []), ...newResults];\nconst nextBatch = (state.currentBatch || 0) + 1;\nconst batches = state.batches;\nconst hasMore = nextBatch < batches.length;\n\n// Count keywords with/without data\nlet withData = state.keywordsWithData || 0;\nlet noData = state.keywordsNoData || 0;\nfor (const r of newResults) {\n  if (r.keywordMetrics && r.keywordMetrics.avgMonthlySearches) {\n    withData++;\n  } else {\n    noData++;\n  }\n}\n\nreturn [{\n  json: {\n    batches: batches,\n    totalBatches: batches.length,\n    totalKeywords: state.totalKeywords,\n    currentBatch: nextBatch,\n    allResults: allResults,\n    keywordsWithData: withData,\n    keywordsNoData: noData,\n    currentKeywords: hasMore ? batches[nextBatch] : [],\n    hasMore: hasMore,\n    spreadsheetId: state.spreadsheetId\n  }\n}];"
       },
       "id": "metrics-011",
       "name": "Metrics - Merge Results",
@@ -840,7 +840,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
