@@ -268,6 +268,8 @@
       line-height: 1.55; margin-bottom: 20px;
     }
     .info-box i { font-size: 17px; color: var(--color-accent); flex-shrink: 0; margin-top: 1px; }
+    .info-box a { color: var(--color-accent-hover); text-decoration: none; font-weight: 500; }
+    .info-box a:hover { text-decoration: underline; }
 
     /* === TAGS === */
     .tags-wrap {
@@ -362,15 +364,15 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* === STEP NAV === */
+    /* === STEP NAV (inside content, flows with form) === */
     .step-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 40px;
+      padding: 20px 0 0;
+      margin-top: 24px;
       border-top: 1px solid var(--color-border);
-      background: var(--color-surface);
-      flex-shrink: 0;
+      max-width: 640px;
     }
     .step-nav-right { display: flex; align-items: center; gap: 10px; }
     .nav-btn {
@@ -395,7 +397,7 @@
       box-shadow: 0 2px 8px rgba(59,130,246,0.3);
     }
 
-    /* === SUMMARY (Step 4) === */
+    /* === SUMMARY (Step 6) === */
     .summary-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
     .summary-item {
       display: flex; align-items: center; gap: 10px;
@@ -479,7 +481,6 @@
       .master-sidebar { display: none; }
       .mobile-progress { display: flex; }
       .step-scroll { padding: 20px 16px; }
-      .step-nav { padding: 12px 16px; }
       .step-card { padding: 24px 20px; }
     }
     @media (max-width: 520px) {
@@ -503,36 +504,36 @@
     <!-- SIDEBAR -->
     <aside class="master-sidebar" id="sidebar">
       <div class="sb-group-label">Етап 1 — Збір даних</div>
-      <div class="sb-step active" data-step="1" onclick="goToStep(1)">
+      <div class="sb-step active" data-step="1" onclick="sidebarClick(1)">
         <div class="sb-circle">1</div>
         <div class="sb-label">Основні дані</div>
       </div>
-      <div class="sb-step" data-step="2" onclick="goToStep(2)">
+      <div class="sb-step" data-step="2" onclick="sidebarClick(2)">
         <div class="sb-circle">2</div>
         <div class="sb-label">Конкуренти</div>
       </div>
-      <div class="sb-step" data-step="3" onclick="goToStep(3)">
+      <div class="sb-step" data-step="3" onclick="sidebarClick(3)">
         <div class="sb-circle">3</div>
-        <div class="sb-label">Семантика</div>
+        <div class="sb-label">Розширення семантики</div>
       </div>
-      <div class="sb-step" data-step="4" onclick="goToStep(4)">
+      <div class="sb-step" data-step="4" onclick="sidebarClick(4)">
         <div class="sb-circle">4</div>
+        <div class="sb-label">Метрики ключових слів</div>
+      </div>
+      <div class="sb-step" data-step="5" onclick="sidebarClick(5)">
+        <div class="sb-circle">5</div>
+        <div class="sb-label">PageSpeed</div>
+      </div>
+      <div class="sb-step" data-step="6" onclick="sidebarClick(6)">
+        <div class="sb-circle">6</div>
         <div class="sb-label">Запуск аналізу</div>
       </div>
       <div class="sb-group-label">Етап 2 — Обробка</div>
-      <div class="sb-step" data-step="5" onclick="goToStep(5)">
-        <div class="sb-circle">5</div>
-        <div class="sb-label">Метрики</div>
-      </div>
-      <div class="sb-step" data-step="6" onclick="goToStep(6)">
-        <div class="sb-circle">6</div>
-        <div class="sb-label">PageSpeed</div>
-      </div>
-      <div class="sb-step" data-step="7" onclick="goToStep(7)">
+      <div class="sb-step" data-step="7" onclick="sidebarClick(7)">
         <div class="sb-circle">7</div>
         <div class="sb-label">AI аналіз</div>
       </div>
-      <div class="sb-step" data-step="8" onclick="goToStep(8)">
+      <div class="sb-step" data-step="8" onclick="sidebarClick(8)">
         <div class="sb-circle">8</div>
         <div class="sb-label">PDF парсинг</div>
       </div>
@@ -560,7 +561,7 @@
             </div>
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на Google Drive. Вкажіть домен клієнта у будь-якому форматі — ми автоматично приведемо його до потрібного вигляду.</span>
+              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на <a href="https://drive.google.com/drive/folders/" target="_blank">Google Drive</a>.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
@@ -594,7 +595,7 @@
             </div>
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Для кожного конкурента буде створена окрема таблиця з аналізом органічного трафіку, ключових фраз та посилального профілю. Конкуренти обробляються послідовно.</span>
+              <span>Для кожного конкурента буде створена окрема таблиця з аналізом органічного трафіку, ключових фраз та посилального профілю.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-world"></i> Домени конкурентів</label>
@@ -607,19 +608,19 @@
           </div>
         </section>
 
-        <!-- STEP 3: Семантика -->
+        <!-- STEP 3: Розширення семантики (GKP Ideas) -->
         <section class="step-panel" data-step="3">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-plant-2"></i></div>
               <div>
                 <div class="step-card-title">Розширення семантичного ядра</div>
-                <div class="step-card-desc">Генерація ідей ключових слів з seed-фраз</div>
+                <div class="step-card-desc">Генерація нових ідей ключових слів з seed-фраз</div>
               </div>
             </div>
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Google Keyword Planner згенерує нові ідеї на основі seed-фраз з таблиці. Seed-фрази мають бути у першому стовпці першого аркуша.</span>
+              <span><strong>Чим відрізняється від «Метрики»?</strong> Цей крок <strong>генерує нові ключові слова</strong> — Google Keyword Planner підбирає ідеї на основі ваших seed-фраз. Крок «Метрики» отримує пошуковий об'єм та CPC для вже готового списку ключових слів.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з seed-фразами</label>
@@ -627,6 +628,7 @@
                 <i class="ti ti-link input-ico"></i>
                 <input type="text" id="fSemUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Seed-фрази мають бути у першому стовпці першого аркуша</div>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -674,46 +676,19 @@
           </div>
         </section>
 
-        <!-- STEP 4: Запуск аналізу -->
+        <!-- STEP 4: Метрики ключових слів (GKP Metrics) -->
         <section class="step-panel" data-step="4">
-          <div class="step-card">
-            <div class="step-card-header">
-              <div class="step-card-icon" style="background:linear-gradient(135deg,var(--color-accent-light),#C7D2FE);color:var(--color-accent-hover);">
-                <i class="ti ti-rocket"></i>
-              </div>
-              <div>
-                <div class="step-card-title">Запуск збору даних</div>
-                <div class="step-card-desc">Перевірте дані та запустіть аналіз</div>
-              </div>
-            </div>
-            <div class="info-box">
-              <i class="ti ti-info-circle"></i>
-              <span>Перевірте обрані параметри та натисніть «Запустити». Час виконання залежить від кількості конкурентів (1-2 хв на домен).</span>
-            </div>
-            <div class="summary-list" id="summaryList"></div>
-            <button class="btn-launch" id="btnLaunch1" onclick="launchPhase1()">
-              <i class="ti ti-rocket"></i> <span>Запустити аналіз</span>
-            </button>
-            <div class="result-card hidden" id="phase1Result"></div>
-            <div class="result-card hidden" id="clientResult"></div>
-            <div class="result-card hidden" id="competitorsResult"></div>
-            <div class="result-card hidden" id="semanticResult"></div>
-          </div>
-        </section>
-
-        <!-- STEP 5: Метрики -->
-        <section class="step-panel" data-step="5">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-chart-bar"></i></div>
               <div>
-                <div class="step-card-title">Отримання метрик</div>
-                <div class="step-card-desc">Об'єм пошуку, конкуренція, CPC для ключових слів</div>
+                <div class="step-card-title">Метрики ключових слів</div>
+                <div class="step-card-desc">Об'єм пошуку, конкуренція, CPC для готового списку ключових слів</div>
               </div>
             </div>
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Вкажіть таблицю з ключовими словами — Google Keyword Planner отримає об'єм пошуку та CPC. Можна використати результат з етапу «Семантика».</span>
+              <span><strong>Чим відрізняється від «Розширення семантики»?</strong> Цей крок <strong>не генерує нові слова</strong>, а отримує метрики (об'єм пошуку, CPC, конкуренція) для вже існуючого списку ключових слів через Google Keyword Planner.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з ключовими словами</label>
@@ -740,7 +715,7 @@
                   <option value="1032">Română</option>
                   <option value="1024">Magyar</option>
                   <option value="1015">Svenska</option>
-                  <option value="1037">Türkçe</option>
+                  <option value="1037">Турецька</option>
                 </select>
               </div>
               <div class="form-group">
@@ -772,8 +747,8 @@
           </div>
         </section>
 
-        <!-- STEP 6: PageSpeed -->
-        <section class="step-panel" data-step="6">
+        <!-- STEP 5: PageSpeed -->
+        <section class="step-panel" data-step="5">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-gauge"></i></div>
@@ -815,6 +790,33 @@
           </div>
         </section>
 
+        <!-- STEP 6: Запуск аналізу -->
+        <section class="step-panel" data-step="6">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon" style="background:linear-gradient(135deg,var(--color-accent-light),#C7D2FE);color:var(--color-accent-hover);">
+                <i class="ti ti-rocket"></i>
+              </div>
+              <div>
+                <div class="step-card-title">Запуск збору даних</div>
+                <div class="step-card-desc">Перевірте дані та запустіть аналіз домену</div>
+              </div>
+            </div>
+            <div class="info-box">
+              <i class="ti ti-info-circle"></i>
+              <span>Перевірте обрані параметри та натисніть «Запустити». Час виконання залежить від кількості конкурентів (1-2 хв на домен).</span>
+            </div>
+            <div class="summary-list" id="summaryList"></div>
+            <button class="btn-launch" id="btnLaunch1" onclick="launchPhase1()">
+              <i class="ti ti-rocket"></i> <span>Запустити аналіз</span>
+            </button>
+            <div class="result-card hidden" id="phase1Result"></div>
+            <div class="result-card hidden" id="clientResult"></div>
+            <div class="result-card hidden" id="competitorsResult"></div>
+            <div class="result-card hidden" id="semanticResult"></div>
+          </div>
+        </section>
+
         <!-- STEP 7: AI аналіз -->
         <section class="step-panel" data-step="7">
           <div class="step-card">
@@ -827,7 +829,7 @@
             </div>
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Вкажіть таблицю аналізу домену — AI згенерує звіт (Google Doc) з SEO-рекомендаціями. Використовуйте результат «Аналіз клієнта» з Етапу 1.</span>
+              <span>Вкажіть таблицю аналізу домену — AI згенерує звіт (Google Doc) з SEO-рекомендаціями. Використовуйте результат «Аналіз клієнта» з кроку 6.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з аналізом домену</label>
@@ -871,21 +873,21 @@
           </div>
         </section>
 
-      </div>
-
-      <!-- NAVIGATION -->
-      <div class="step-nav" id="stepNav">
-        <button class="nav-btn nav-btn-back" id="navBack" onclick="prevStep()">
-          <i class="ti ti-arrow-left"></i> Назад
-        </button>
-        <div class="step-nav-right">
-          <button class="nav-btn nav-btn-skip" id="navSkip" onclick="skipStep()">
-            Пропустити крок
+        <!-- NAVIGATION (flows with content, not fixed at bottom) -->
+        <div class="step-nav" id="stepNav">
+          <button class="nav-btn nav-btn-back" id="navBack" onclick="prevStep()">
+            <i class="ti ti-arrow-left"></i> Назад
           </button>
-          <button class="nav-btn nav-btn-next" id="navNext" onclick="nextStep()">
-            Далі <i class="ti ti-arrow-right"></i>
-          </button>
+          <div class="step-nav-right">
+            <button class="nav-btn nav-btn-skip" id="navSkip" onclick="skipStep()">
+              Пропустити крок
+            </button>
+            <button class="nav-btn nav-btn-next" id="navNext" onclick="nextStep()">
+              Далі <i class="ti ti-arrow-right"></i>
+            </button>
+          </div>
         </div>
+
       </div>
     </main>
   </div>
@@ -897,67 +899,65 @@
 // =========================================
 var currentStep = 1;
 var totalSteps = 8;
+// Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск, 7=AI, 8=PDF
 var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
 var phase1Done = false;
 var stepData = { email:'', domain:'', competitors:[], semantic:null, phase1Results:null };
 
+// Steps that require data entry or explicit action to be marked completed
+// Step 1: required (email+domain), step 6: requires phase1 launch
+// Steps 2,3,4,5,7,8: optional (can be skipped)
+var REQUIRED_STEPS = [1, 6];
+
 // =========================================
 // NAVIGATION
 // =========================================
-function goToStep(n) {
-  if (n < 1 || n > totalSteps) return;
-  // Can go back to completed/skipped, or forward to current+1
-  if (n > currentStep + 1 && stepStatus[n-1] === 'upcoming') return;
-  // For step 5+, must complete step 4 first
-  if (n >= 5 && !phase1Done) return;
 
-  // Save current step data
+// Sidebar click — navigate without auto-completing
+function sidebarClick(n) {
+  if (n < 1 || n > totalSteps) return;
+  // Can only click on: current, completed, skipped, or the next upcoming step
+  var targetStatus = stepStatus[n - 1];
+  if (targetStatus === 'upcoming' && n > currentStep + 1) return;
+  // For step 7+, must complete step 6 first
+  if (n >= 7 && !phase1Done) return;
+
   saveStepData(currentStep);
 
-  // Update previous step status
-  if (stepStatus[currentStep - 1] === 'active') {
-    stepStatus[currentStep - 1] = 'completed';
+  // Don't change status of current step when navigating via sidebar
+  // (keeps it as 'active' — will become 'upcoming' only if we move current away)
+  if (currentStep !== n) {
+    // Restore previous step to its rightful status (not auto-complete)
+    if (stepStatus[currentStep - 1] === 'active') {
+      // If step had been completed or skipped before, keep that. Otherwise revert to upcoming.
+      stepStatus[currentStep - 1] = 'upcoming';
+    }
+    currentStep = n;
+    stepStatus[n - 1] = 'active';
   }
-
-  currentStep = n;
-  stepStatus[n - 1] = 'active';
 
   showStep(n);
   updateSidebar();
   updateNav();
-
-  // Pre-fill step 4 summary
-  if (n === 4) buildSummary();
-  // Pre-fill from Phase 1 results
-  if (n === 5 && stepData.phase1Results && stepData.phase1Results.semantic) {
-    var el = document.getElementById('fMetUrl');
-    if (!el.value) el.value = stepData.phase1Results.semantic;
-  }
-  if (n === 7 && stepData.phase1Results && stepData.phase1Results.client) {
-    var el = document.getElementById('fAiUrl');
-    if (!el.value) el.value = stepData.phase1Results.client;
-  }
+  if (n === 6) buildSummary();
+  prefillFromPhase1(n);
 }
 
 function nextStep() {
   if (currentStep === totalSteps) return;
   if (!validateStep(currentStep)) return;
   saveStepData(currentStep);
+
+  // Mark current step as completed (validated via nextStep)
   stepStatus[currentStep - 1] = 'completed';
   currentStep++;
   stepStatus[currentStep - 1] = 'active';
+
   showStep(currentStep);
   updateSidebar();
   updateNav();
-  if (currentStep === 4) buildSummary();
-  if (currentStep === 5 && stepData.phase1Results && stepData.phase1Results.semantic) {
-    var el = document.getElementById('fMetUrl');
-    if (!el.value) el.value = stepData.phase1Results.semantic;
-  }
-  if (currentStep === 7 && stepData.phase1Results && stepData.phase1Results.client) {
-    var el = document.getElementById('fAiUrl');
-    if (!el.value) el.value = stepData.phase1Results.client;
-  }
+  if (currentStep === 6) buildSummary();
+  prefillFromPhase1(currentStep);
 }
 
 function prevStep() {
@@ -974,7 +974,8 @@ function prevStep() {
 }
 
 function skipStep() {
-  if (currentStep === 1 || currentStep === 4) return;
+  // Can't skip required steps (1 and 6)
+  if (REQUIRED_STEPS.indexOf(currentStep) !== -1) return;
   stepStatus[currentStep - 1] = 'skipped';
   currentStep++;
   if (currentStep > totalSteps) { currentStep = totalSteps; return; }
@@ -982,7 +983,19 @@ function skipStep() {
   showStep(currentStep);
   updateSidebar();
   updateNav();
-  if (currentStep === 4) buildSummary();
+  if (currentStep === 6) buildSummary();
+}
+
+function prefillFromPhase1(n) {
+  if (!stepData.phase1Results) return;
+  if (n === 4 && stepData.phase1Results.semantic) {
+    var el = document.getElementById('fMetUrl');
+    if (!el.value) el.value = stepData.phase1Results.semantic;
+  }
+  if (n === 7 && stepData.phase1Results.client) {
+    var el = document.getElementById('fAiUrl');
+    if (!el.value) el.value = stepData.phase1Results.client;
+  }
 }
 
 function normalizeDomain(val) {
@@ -1045,7 +1058,7 @@ function validateStep(n) {
     }
     return ok;
   }
-  if (n === 4) {
+  if (n === 6) {
     return phase1Done;
   }
   return true;
@@ -1093,11 +1106,11 @@ function updateNav() {
   // Back
   back.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
 
-  // Skip — show for optional steps (2,3,5,6,7,8), hide for 1 and 4
-  skip.style.display = (currentStep === 1 || currentStep === 4) ? 'none' : '';
+  // Skip — hide for required steps (1 and 6)
+  skip.style.display = (REQUIRED_STEPS.indexOf(currentStep) !== -1) ? 'none' : '';
 
   // Next
-  if (currentStep === 4) {
+  if (currentStep === 6) {
     next.innerHTML = phase1Done
       ? 'Далі <i class="ti ti-arrow-right"></i>'
       : 'Очікується запуск';
@@ -1112,7 +1125,7 @@ function updateNav() {
 }
 
 // =========================================
-// STEP 4: SUMMARY + LAUNCH
+// STEP 6: SUMMARY + LAUNCH
 // =========================================
 function buildSummary() {
   saveStepData(3); // ensure semantic saved
@@ -1133,11 +1146,11 @@ function buildSummary() {
 
   // Semantic
   if (stepData.semantic) {
-    html += '<div class="summary-item active"><i class="ti ti-plant-2"></i> Семантика: <strong>таблиця додана</strong></div>';
+    html += '<div class="summary-item active"><i class="ti ti-plant-2"></i> Розширення семантики: <strong>таблиця додана</strong></div>';
   } else if (stepStatus[2] === 'skipped') {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Семантика: пропущено</div>';
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: пропущено</div>';
   } else {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Семантика: не заповнено</div>';
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: не заповнено</div>';
   }
 
   el.innerHTML = html;
@@ -1229,7 +1242,7 @@ function onPhase1Success(data) {
 }
 
 // =========================================
-// PHASE 2 LAUNCHES
+// PHASE 2 LAUNCHES (Steps 4, 5, 7, 8)
 // =========================================
 function launchMetrics() {
   var url = document.getElementById('fMetUrl').value.trim();
