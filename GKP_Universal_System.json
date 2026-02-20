@@ -223,7 +223,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -321,7 +321,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -419,7 +419,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
+        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Ideas - Set Variables').item.json.customer_id }}:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -742,7 +742,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
@@ -840,7 +840,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://googleads.googleapis.com/v19/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
+        "url": "=https://googleads.googleapis.com/v18/customers/{{ $('Metrics - Set Variables').item.json.customer_id }}:generateKeywordHistoricalMetrics",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
