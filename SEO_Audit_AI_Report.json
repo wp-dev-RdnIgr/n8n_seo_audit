@@ -33,6 +33,12 @@
               "name": "date_today",
               "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
               "type": "string"
+            },
+            {
+              "id": "manager_email",
+              "name": "manager_email",
+              "value": "={{ $json.body.manager_email || '' }}",
+              "type": "string"
             }
           ]
         },
@@ -72,7 +78,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const spreadsheetId = $('Set Variables').first().json.spreadsheetId;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst fileInfo = $json;\n\n// Extract domain from spreadsheet name (format: \"SEO Audit - domain.com - date\" or similar)\nconst name = fileInfo.name || '';\nlet domain = '';\n\n// Try to extract domain from name\nconst domainMatch = name.match(/[-–—]\\s*([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})\\s*[-–—]/)\n  || name.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})/);\nif (domainMatch) {\n  domain = domainMatch[1];\n}\n\n// Get parent folder ID\nconst folderId = fileInfo.parents?.[0] || '';\n\nreturn [{\n  json: {\n    spreadsheetId,\n    domain,\n    folderId,\n    dateToday,\n    spreadsheetName: name\n  }\n}];"
+        "jsCode": "const spreadsheetId = $('Set Variables').first().json.spreadsheetId;\nconst dateToday = $('Set Variables').first().json.date_today;\nconst managerEmail = $('Set Variables').first().json.manager_email || '';\nconst fileInfo = $json;\n\n// Extract domain from spreadsheet name\nconst name = fileInfo.name || '';\nlet domain = '';\nconst domainMatch = name.match(/[-–—]\\s*([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})\\s*[-–—]/)\n  || name.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z]{2,})/);\nif (domainMatch) {\n  domain = domainMatch[1];\n}\n\n// Get parent folder ID (fallback if no manager_email)\nconst folderId = fileInfo.parents?.[0] || '';\n\nreturn [{\n  json: {\n    spreadsheetId,\n    domain,\n    folderId,\n    dateToday,\n    spreadsheetName: name,\n    managerEmail\n  }\n}];"
       },
       "id": "node-extract-info",
       "name": "Extract Domain & Folder",

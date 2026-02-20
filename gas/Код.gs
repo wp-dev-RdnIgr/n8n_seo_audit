@@ -134,10 +134,48 @@ function submitAudit(domain) {
 }
 
 // ============================================
+// УТИЛІТИ: Папка менеджера на Google Drive
+// ============================================
+
+var ROOT_SEO_FOLDER_ID = '1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2';
+
+function findOrCreateManagerFolder(email) {
+  var rootFolder = DriveApp.getFolderById(ROOT_SEO_FOLDER_ID);
+  var folders = rootFolder.getFoldersByName(email);
+  if (folders.hasNext()) {
+    return folders.next().getId();
+  }
+  var newFolder = rootFolder.createFolder(email);
+  return newFolder.getId();
+}
+
+function moveFileToFolder(fileId, targetFolderId) {
+  var file = DriveApp.getFileById(fileId);
+  var targetFolder = DriveApp.getFolderById(targetFolderId);
+  targetFolder.addFile(file);
+  var parents = file.getParents();
+  while (parents.hasNext()) {
+    var parent = parents.next();
+    if (parent.getId() !== targetFolderId) {
+      parent.removeFile(file);
+    }
+  }
+}
+
+function extractFileIdFromUrl(url) {
+  var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+// ============================================
 // БЕКЕНД: AI Аналіз таблиці
 // ============================================
 
-function submitAIAnalysis(spreadsheetUrl) {
+function submitAIAnalysis(formData) {
+  // Support both old format (string URL) and new format (object with url + manager_email)
+  var spreadsheetUrl = typeof formData === 'string' ? formData : (formData.url || '');
+  var managerEmail = typeof formData === 'string' ? '' : (formData.manager_email || '');
+
   if (!spreadsheetUrl || !spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
     return { success: false, error: 'Невірний формат посилання на таблицю' };
   }
@@ -147,6 +185,10 @@ function submitAIAnalysis(spreadsheetUrl) {
   var payload = {
     url: spreadsheetUrl
   };
+
+  if (managerEmail) {
+    payload.manager_email = managerEmail;
+  }
 
   var options = {
     method: 'POST',
@@ -158,6 +200,19 @@ function submitAIAnalysis(spreadsheetUrl) {
   try {
     var response = UrlFetchApp.fetch(webhookUrl, options);
     var result = JSON.parse(response.getContentText());
+
+    // Move doc to manager folder if email provided
+    if (managerEmail && result.docUrl) {
+      try {
+        var docId = extractFileIdFromUrl(result.docUrl);
+        if (docId) {
+          var folderId = findOrCreateManagerFolder(managerEmail);
+          moveFileToFolder(docId, folderId);
+        }
+      } catch (moveErr) {
+        // Non-critical: doc created but not moved
+      }
+    }
 
     return {
       success: true,
@@ -381,6 +436,10 @@ function submitPdfAuditParse(formData) {
     pdfUrl: formData.pdfUrl
   };
 
+  if (formData.manager_email) {
+    payload.manager_email = formData.manager_email;
+  }
+
   var options = {
     method: 'POST',
     contentType: 'application/json',
@@ -392,6 +451,19 @@ function submitPdfAuditParse(formData) {
   try {
     var response = UrlFetchApp.fetch(webhookUrl, options);
     var result = JSON.parse(response.getContentText());
+
+    // Move spreadsheet to manager folder if email provided
+    if (formData.manager_email && result.spreadsheetUrl) {
+      try {
+        var sheetId = extractFileIdFromUrl(result.spreadsheetUrl);
+        if (sheetId) {
+          var folderId = findOrCreateManagerFolder(formData.manager_email);
+          moveFileToFolder(sheetId, folderId);
+        }
+      } catch (moveErr) {
+        // Non-critical: sheet created but not moved
+      }
+    }
 
     return {
       success: true,

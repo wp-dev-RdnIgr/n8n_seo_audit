@@ -476,6 +476,15 @@
     .detail-dot.success { background: var(--color-success); }
     .detail-dot.error { background: var(--color-error); }
 
+    /* === REQUIREMENTS LIST === */
+    .req-list {
+      margin: 0; padding: 0 0 0 18px;
+      font-size: 12px; color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+    .req-list li { margin-bottom: 2px; }
+    .req-list li::marker { color: var(--color-accent); }
+
     /* === RESPONSIVE === */
     @media (max-width: 767px) {
       .master-sidebar { display: none; }
@@ -561,7 +570,7 @@
             </div>
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на <a href="https://drive.google.com/drive/folders/" target="_blank">Google Drive</a>.</span>
+              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на <a href="https://drive.google.com/drive/u/0/folders/1A3Ak929G1c4XmZpPtI2FP4glrFE2-Bx2" target="_blank">Google Drive</a>.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
@@ -629,6 +638,11 @@
                 <input type="text" id="fSemUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
               <div class="form-hint"><i class="ti ti-info-circle"></i> Seed-фрази мають бути у першому стовпці першого аркуша</div>
+              <ul class="req-list">
+                <li>Посилання на Google Таблицю (Google Sheets)</li>
+                <li>Таблиця має бути з відкритим доступом (хоча б «Усі, хто має посилання»)</li>
+                <li>Seed-фрази — у колонці A, по одній на рядок</li>
+              </ul>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -696,6 +710,11 @@
                 <i class="ti ti-link input-ico"></i>
                 <input type="text" id="fMetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
+              <ul class="req-list">
+                <li>Посилання на Google Таблицю (Google Sheets)</li>
+                <li>Таблиця має бути з відкритим доступом (хоча б «Усі, хто має посилання»)</li>
+                <li>Ключові слова — у колонці A, по одному на рядок</li>
+              </ul>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -767,6 +786,11 @@
                 <i class="ti ti-link input-ico"></i>
                 <input type="text" id="fPsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
+              <ul class="req-list">
+                <li>Посилання на Google Таблицю (Google Sheets)</li>
+                <li>Таблиця має бути з відкритим доступом</li>
+                <li>URL-адреси (з https://) — у колонці A, починаючи з 1-го рядка</li>
+              </ul>
             </div>
             <div class="form-group">
               <label class="form-label">Тип тесту</label>
@@ -837,6 +861,10 @@
                 <i class="ti ti-link input-ico"></i>
                 <input type="text" id="fAiUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
+              <ul class="req-list">
+                <li>Посилання на Google Таблицю з результатом аналізу домену</li>
+                <li>Таблиця має бути з відкритим доступом</li>
+              </ul>
             </div>
             <button class="btn-launch" id="btnAI" onclick="launchAI()">
               <i class="ti ti-brain"></i> <span>Запустити AI аналіз</span>
@@ -865,6 +893,10 @@
                 <i class="ti ti-link input-ico"></i>
                 <input type="text" id="fPdfUrl" class="form-input" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
               </div>
+              <ul class="req-list">
+                <li>Посилання на PDF файл у Google Drive</li>
+                <li>Файл має бути з відкритим доступом (хоча б «Усі, хто має посилання»)</li>
+              </ul>
             </div>
             <button class="btn-launch" id="btnPDF" onclick="launchPDF()">
               <i class="ti ti-file-type-pdf"></i> <span>Запустити парсинг PDF</span>
@@ -1327,7 +1359,7 @@ function launchAI() {
       btn.disabled = false; btn.classList.remove('btn-loading');
       showResultError('aiResult', e.toString());
     })
-    .submitAIAnalysis(url);
+    .submitAIAnalysis({ url: url, manager_email: stepData.email });
 }
 
 function launchPDF() {
