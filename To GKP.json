@@ -15,7 +15,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://googleads.googleapis.com/v18/customers/3965207166:generateKeywordIdeas",
+        "url": "https://googleads.googleapis.com/v22/customers/3965207166:generateKeywordIdeas",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleAdsOAuth2Api",
         "sendHeaders": true,
