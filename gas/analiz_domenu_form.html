@@ -2,859 +2,1125 @@
 <html>
 <head>
   <base target="_top">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --color-primary: #0F172A;
+      --color-primary-light: #1E293B;
+      --color-accent: #3B82F6;
+      --color-accent-hover: #2563EB;
+      --color-accent-light: #DBEAFE;
+      --color-accent-lighter: #EFF6FF;
+      --color-success: #10B981;
+      --color-success-light: #D1FAE5;
+      --color-error: #EF4444;
+      --color-error-light: #FEE2E2;
+      --color-warning: #F59E0B;
+      --color-warning-light: #FEF3C7;
+      --color-bg: #F1F5F9;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-border-hover: #CBD5E1;
+      --color-text: #0F172A;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94A3B8;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+      --transition: 0.2s ease;
+    }
 
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: var(--color-bg);
+      color: var(--color-text);
       min-height: 100vh;
-      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       LAYOUT
+       ========================================== */
+    .wizard {
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      flex-direction: column;
+      min-height: 100vh;
     }
-
-    .container { width: 100%; max-width: 560px; margin-top: 16px; }
-
-    .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-    }
-
-    .header { text-align: center; margin-bottom: 28px; }
-    .logo {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 18px;
-      font-size: 24px;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-    }
-    .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 6px; letter-spacing: -0.3px; }
-    .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
-
-    /* Phase label */
-    .phase-label {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1.5px solid #f1f5f9;
-    }
-    .phase-badge {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: white;
-      font-size: 16px; font-weight: 700;
-      flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-    }
-    .phase-title { font-size: 16px; font-weight: 700; color: #1e293b; }
-    .phase-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
-
-    /* Phase divider */
-    .phase-divider {
+    .wizard-header {
+      background: var(--color-primary);
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin: 24px 0;
-      padding: 0 8px;
     }
-    .phase-divider-line { flex: 1; height: 1px; background: #e2e8f0; }
-    .phase-divider-arrow {
+    .wizard-header-icon {
       width: 32px; height: 32px;
-      background: #eef2ff;
-      border: 1.5px solid #c7d2fe;
-      border-radius: 50%;
+      background: rgba(59,130,246,0.15);
+      border-radius: var(--radius-sm);
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; color: #6366f1;
+      color: var(--color-accent);
+      font-size: 18px;
+    }
+    .wizard-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+    .wizard-header-subtitle {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-left: auto;
+    }
+    .wizard-content {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+    }
+
+    /* ==========================================
+       CARDS
+       ========================================== */
+    .step-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .step-card-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      background: var(--color-accent-lighter);
+      color: var(--color-accent);
       flex-shrink: 0;
     }
-    .phase-divider-text { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+    .step-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .step-card-desc {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
 
-    /* Phase 2 hint */
-    .phase2-hint {
-      display: none;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 10px 14px;
-      background: #eef2ff;
-      border: 1px solid #c7d2fe;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #4338ca;
-      line-height: 1.5;
+    /* Tool sub-cards */
+    .tool-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
       margin-bottom: 16px;
-      animation: slideIn 0.25s ease;
+      transition: all var(--transition);
     }
-    .phase2-hint.visible { display: flex; }
-
-    /* Form */
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
-
-    .input-wrapper { position: relative; }
-    .input-icon {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      font-size: 16px; opacity: 0.4; pointer-events: none; transition: opacity 0.2s;
+    .tool-card:last-child { margin-bottom: 0; }
+    .tool-card.disabled {
+      opacity: 0.55;
+      background: #FAFBFC;
     }
-
-    input[type="text"], input[type="email"], select {
-      width: 100%;
-      padding: 12px 12px 12px 42px;
-      font-size: 14px; font-family: inherit; color: #1e293b;
-      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      outline: none; transition: all 0.2s ease;
-    }
-    select { padding-left: 12px; cursor: pointer; }
-
-    input::placeholder { color: #94a3b8; }
-    input:hover, select:hover { border-color: #cbd5e1; background: #f1f5f9; }
-    input:focus, select:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
-    input:focus + .input-icon { opacity: 0.7; }
-
-    /* Section blocks */
-    .section-block {
-      margin-top: 20px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-    .section-block:first-of-type { margin-top: 0; }
-    .section-block.active { border-color: #a5b4fc; }
-
-    .section-header {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px;
-      background: #f8fafc;
+    .tool-card.disabled .tool-card-body { display: none; }
+    .tool-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       cursor: pointer;
       user-select: none;
-      transition: background 0.15s;
     }
-    .section-header:hover { background: #f1f5f9; }
-    .section-block.active .section-header { background: #eef2ff; }
+    .tool-card-header-has-body { margin-bottom: 16px; }
+    .tool-card.disabled .tool-card-header { margin-bottom: 0; }
+    .tool-card-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: #F1F5F9;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
+    .tool-card:not(.disabled) .tool-card-icon {
+      background: var(--color-accent-lighter);
+      color: var(--color-accent);
+    }
+    .tool-card-title { font-size: 14px; font-weight: 600; }
+    .tool-card-desc { font-size: 12px; color: var(--color-text-muted); margin-top: 1px; }
+    .tool-card-body { }
 
-    .section-toggle {
-      width: 38px; height: 22px;
-      background: #cbd5e1; border-radius: 11px;
-      position: relative; flex-shrink: 0;
-      transition: background 0.2s;
+    /* Toggle switch */
+    .tool-toggle {
+      position: relative;
+      width: 40px; height: 22px;
+      background: #CBD5E1;
+      border-radius: 11px;
       cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+      margin-left: auto;
     }
-    .section-toggle::after {
+    .tool-toggle::after {
       content: '';
-      position: absolute; top: 3px; left: 3px;
+      position: absolute;
+      top: 3px; left: 3px;
       width: 16px; height: 16px;
-      background: white; border-radius: 50%;
-      transition: transform 0.2s;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
-    .section-block.active .section-toggle { background: #6366f1; }
-    .section-block.active .section-toggle::after { transform: translateX(16px); }
-
-    .section-icon { font-size: 18px; }
-    .section-title { flex: 1; font-size: 14px; font-weight: 600; color: #374151; }
-    .section-desc { font-size: 11px; color: #94a3b8; font-weight: 400; }
-
-    .section-body {
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0 16px;
+    .tool-toggle.on {
+      background: var(--color-accent);
     }
-    .section-block.active .section-body {
-      max-height: 800px;
-      padding: 16px;
+    .tool-toggle.on::after {
+      transform: translateX(18px);
     }
 
-    .row { display: flex; gap: 12px; }
-    .row .form-group { flex: 1; }
+    /* ==========================================
+       FORM COMPONENTS
+       ========================================== */
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 7px;
+    }
+    .form-label i { font-size: 15px; color: var(--color-text-muted); }
+    .required-mark { color: var(--color-error); font-weight: 700; }
+    .input-wrap { position: relative; }
+    .input-wrap .input-ico {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+      color: #94A3B8;
+      pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: #FAFBFC;
+      color: var(--color-text);
+      transition: all var(--transition);
+    }
+    .form-input:focus {
+      border-color: var(--color-accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none;
+    }
+    .form-input::placeholder { color: #94A3B8; }
+    .form-input.no-icon { padding-left: 14px; }
+    .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: #FAFBFC;
+      color: var(--color-text);
+      transition: all var(--transition);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    .form-select:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none;
+    }
+    .form-hint {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+    }
+    .form-hint i { font-size: 14px; }
+    .form-row {
+      display: flex;
+      gap: 14px;
+    }
+    .form-row .form-group { flex: 1; }
 
-    /* Tags input for competitors */
-    .tags-container {
-      display: flex; flex-wrap: wrap; gap: 6px;
+    /* Info box */
+    .info-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--color-accent-lighter);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    .info-box i { font-size: 17px; color: var(--color-accent); flex-shrink: 0; margin-top: 1px; }
+    .info-box.hidden { display: none; }
+
+    /* ==========================================
+       TAGS INPUT
+       ========================================== */
+    .tags-wrap {
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
       padding: 8px 10px;
-      min-height: 44px;
-      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      cursor: text; transition: all 0.2s;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 46px;
+      background: #FAFBFC;
+      cursor: text;
+      transition: all var(--transition);
     }
-    .tags-container:focus-within {
-      border-color: #6366f1; background: #fff;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    .tags-wrap:focus-within {
+      border-color: var(--color-accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
     }
-
     .tag {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px;
-      background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px;
-      font-size: 13px; color: #4338ca;
-      animation: tagIn 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px 5px 10px;
+      background: var(--color-accent-light);
+      color: var(--color-accent-hover);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      animation: tagPop 0.15s ease;
     }
-    @keyframes tagIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-
+    @keyframes tagPop {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
     .tag-remove {
-      cursor: pointer; font-size: 14px; color: #818cf8;
-      width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
-      border-radius: 4px; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--color-accent);
+      transition: all var(--transition);
     }
-    .tag-remove:hover { color: #dc2626; background: #fee2e2; }
-
+    .tag-remove:hover { background: rgba(59,130,246,0.15); }
     .tags-input {
-      flex: 1; min-width: 80px; border: none; outline: none;
-      font-size: 13px; font-family: inherit; background: transparent;
-      padding: 4px 0;
+      flex: 1;
+      min-width: 140px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      background: transparent;
+      color: var(--color-text);
+      padding: 4px 2px;
+    }
+    .tags-input::placeholder { color: #94A3B8; }
+    .tags-count {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
     }
 
-    .tags-hint {
-      font-size: 11px; color: #94a3b8; margin-top: 4px;
-    }
-
-    /* Options cards */
-    .options-row { display: flex; gap: 8px; }
+    /* ==========================================
+       OPTION CARDS
+       ========================================== */
+    .options-row { display: flex; gap: 12px; }
     .option-card {
-      flex: 1; display: flex; align-items: center; gap: 8px;
-      padding: 10px 12px;
-      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px;
-      cursor: pointer; user-select: none; transition: all 0.15s;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      user-select: none;
     }
-    .option-card:hover { border-color: #cbd5e1; }
-    .option-card.selected { background: #eef2ff; border-color: #a5b4fc; }
-    .option-icon { font-size: 16px; }
-    .option-label { font-size: 13px; font-weight: 500; color: #374151; }
-    .option-check { font-size: 14px; margin-left: auto; }
-
-    /* Button */
-    .btn {
-      width: 100%; padding: 14px 24px; margin-top: 24px;
-      font-size: 14px; font-weight: 600; font-family: inherit;
-      color: white; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      border: none; border-radius: 10px; cursor: pointer;
-      transition: all 0.2s ease; position: relative; overflow: hidden; letter-spacing: 0.2px;
+    .option-card:hover { border-color: var(--color-border-hover); }
+    .option-card.selected {
+      border-color: var(--color-accent);
+      background: var(--color-accent-lighter);
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35); }
-    .btn:active { transform: translateY(0); }
-    .btn span { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+    .option-card-icon {
+      font-size: 22px;
+      color: var(--color-text-muted);
+    }
+    .option-card.selected .option-card-icon { color: var(--color-accent); }
+    .option-card-label { font-size: 14px; font-weight: 500; }
+    .option-card-check {
+      margin-left: auto;
+      font-size: 18px;
+      color: var(--color-accent);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .option-card.selected .option-card-check { opacity: 1; }
 
-    .btn-loading span { visibility: hidden; }
+    /* ==========================================
+       BUTTONS
+       ========================================== */
+    .btn-launch {
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-launch:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-launch:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .btn-launch i { font-size: 20px; }
+
+    .btn-section {
+      width: 100%;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      margin-top: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-section:hover:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-section:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .btn-section i { font-size: 18px; }
+
+    /* Loading state for buttons */
+    .btn-loading > * { visibility: hidden; }
     .btn-loading::after {
-      content: ''; position: absolute; top: 50%; left: 50%;
-      width: 20px; height: 20px; margin: -10px 0 0 -10px;
-      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-      border-radius: 50%; animation: spin 0.7s linear infinite;
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Per-section submit button (Phase 2) */
-    .btn-section {
-      width: 100%; padding: 12px 20px; margin-top: 16px;
-      font-size: 13px; font-weight: 600; font-family: inherit;
-      color: white;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      border: none; border-radius: 10px; cursor: pointer;
-      transition: all 0.2s ease; position: relative; overflow: hidden;
+    /* ==========================================
+       PHASE DIVIDER
+       ========================================== */
+    .phase-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 24px 0;
+      padding: 0 8px;
     }
-    .btn-section:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
-    .btn-section:active { transform: translateY(0); }
-    .btn-section:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-section span { display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .btn-section-loading span { visibility: hidden; }
-    .btn-section-loading::after {
-      content: ''; position: absolute; top: 50%; left: 50%;
-      width: 18px; height: 18px; margin: -9px 0 0 -9px;
-      border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
-      border-radius: 50%; animation: spin 0.7s linear infinite;
+    .phase-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
     }
-
-    /* Result */
-    .result {
-      margin-top: 20px; padding: 16px 18px; border-radius: 10px;
-      display: none; animation: slideIn 0.25s ease;
-    }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-    .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
-
-    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .result-icon {
-      width: 28px; height: 28px; border-radius: 7px;
+    .phase-divider-icon {
+      width: 36px; height: 36px;
+      background: var(--color-accent-lighter);
+      border: 1.5px solid var(--color-accent-light);
+      border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700;
+      font-size: 18px;
+      color: var(--color-accent);
+      flex-shrink: 0;
     }
-    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
-    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
-    .result h3 { font-size: 14px; font-weight: 600; }
-    .result.success h3 { color: #15803d; }
-    .result.error h3 { color: #dc2626; }
-    .result p { font-size: 13px; color: #475569; line-height: 1.5; }
+    .phase-divider-text {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      font-weight: 500;
+    }
 
-    .result a {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 12px; padding: 9px 14px;
-      font-size: 13px; font-weight: 500;
-      color: #15803d; background: #dcfce7; border: 1px solid #bbf7d0;
-      border-radius: 7px; text-decoration: none; transition: all 0.2s;
+    /* ==========================================
+       WARNING
+       ========================================== */
+    .launch-warning {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      background: var(--color-warning-light);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: #92400E;
+      margin-top: 16px;
     }
-    .result a:hover { background: #bbf7d0; }
+    .launch-warning i { font-size: 20px; color: var(--color-warning); }
+    .launch-warning.visible { display: flex; }
 
-    /* Per-section result panel */
-    .section-result {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      animation: slideIn 0.25s ease;
+    /* ==========================================
+       RESULTS
+       ========================================== */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .section-result.success { background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .section-result.error { background: #fef2f2; border: 1px solid #fecaca; }
-    .section-result.loading { background: #eef2ff; border: 1px solid #c7d2fe; }
-    .section-result-header {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 600;
+
+    .result-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 16px;
+      animation: fadeSlideIn 0.3s ease forwards;
     }
-    .section-result.success .section-result-header { color: #15803d; }
-    .section-result.error .section-result-header { color: #dc2626; }
-    .section-result.loading .section-result-header { color: #4338ca; }
-    .section-result-icon { font-size: 14px; }
-    .section-result-link-row {
-      display: flex; align-items: center; gap: 8px;
+    .result-card.success { border-color: #BBF7D0; background: #F0FDF4; }
+    .result-card.error { border-color: #FECACA; background: #FEF2F2; }
+    .result-card.loading { border-color: var(--color-accent-light); background: var(--color-accent-lighter); }
+    .result-card.hidden { display: none; }
+
+    .result-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .result-card.success .result-card-header { color: #166534; }
+    .result-card.error .result-card-header { color: #991B1B; }
+    .result-card.loading .result-card-header { color: var(--color-accent-hover); }
+    .result-card-header i { font-size: 18px; }
+
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-accent-hover);
+      background: var(--color-accent-lighter);
+      border: 1px solid var(--color-accent-light);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: all var(--transition);
       margin-top: 8px;
     }
-    .section-result-link {
+    .result-link:hover { background: var(--color-accent-light); }
+    .result-link i { font-size: 16px; }
+    .result-link.doc-link {
+      color: #7C3AED;
+      background: #EDE9FE;
+      border-color: #DDD6FE;
+    }
+    .result-link.doc-link:hover { background: #DDD6FE; }
+    .result-link.folder-link {
+      color: #166534;
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+    }
+    .result-link.folder-link:hover { background: #DCFCE7; }
+
+    .result-link-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .result-link-row .result-link {
       flex: 1;
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 12px;
-      font-size: 12px; font-weight: 500;
-      color: #15803d; background: #dcfce7;
-      border: 1px solid #bbf7d0; border-radius: 7px;
-      text-decoration: none; transition: all 0.2s;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      margin-top: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .section-result-link:hover { background: #bbf7d0; }
-    .section-result-link.ai-link {
-      color: #6d28d9; background: #ede9fe; border-color: #ddd6fe;
-    }
-    .section-result-link.ai-link:hover { background: #ddd6fe; }
 
     /* Copy button */
     .copy-btn {
-      width: 36px; height: 36px;
+      width: 38px; height: 38px;
       display: flex; align-items: center; justify-content: center;
-      background: #f0fdf4; border: 1px solid #bbf7d0;
-      border-radius: 7px; cursor: pointer;
-      font-size: 14px; transition: all 0.2s;
+      background: var(--color-accent-lighter);
+      border: 1px solid var(--color-accent-light);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--color-accent);
+      transition: all var(--transition);
       flex-shrink: 0;
     }
-    .copy-btn:hover { background: #dcfce7; }
-    .copy-btn.copied { background: #dcfce7; border-color: #22c55e; }
+    .copy-btn:hover { background: var(--color-accent-light); }
+    .copy-btn.copied {
+      background: var(--color-success-light);
+      border-color: #BBF7D0;
+      color: var(--color-success);
+    }
 
     /* Competitor sub-results */
     .competitor-result-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 0; font-size: 12px; color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 13px;
+      color: var(--color-text-secondary);
     }
     .competitor-result-item a {
-      color: #15803d; text-decoration: none; font-weight: 500;
-      margin: 0; padding: 0; background: none; border: none;
-      display: inline;
+      color: var(--color-accent-hover);
+      text-decoration: none;
+      font-weight: 500;
     }
     .competitor-result-item a:hover { text-decoration: underline; }
     .competitor-result-item .copy-btn {
-      width: 24px; height: 24px; font-size: 11px;
-      display: inline-flex;
-    }
-
-    /* Status dots */
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-    }
-    .status-dot.success { background: #22c55e; }
-    .status-dot.error { background: #ef4444; }
-    .status-dot.skipped { background: #d1d5db; }
-
-    /* Footer */
-    .footer {
-      margin-top: 20px; padding: 16px 0 0;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .footer-time { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
-    .footer-time svg { width: 14px; height: 14px; opacity: 0.6; }
-    .footer-brand { font-size: 11px; color: #94a3b8; }
-    .footer-brand span { color: #6366f1; font-weight: 600; }
-
-    /* Warning */
-    .warning-box {
-      margin-top: 12px; padding: 10px 14px;
-      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
-      font-size: 12px; color: #92400e; line-height: 1.5;
-    }
-
-    /* Tooltips */
-    .field-hint {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      margin-top: 6px;
-      padding: 8px 10px;
-      background: #f0f4ff;
-      border: 1px solid #e0e7ff;
-      border-radius: 8px;
-      font-size: 11px;
-      color: #475569;
-      line-height: 1.5;
-    }
-    .field-hint-icon {
-      flex-shrink: 0;
+      width: 26px; height: 26px;
       font-size: 13px;
-      margin-top: 1px;
     }
-    .section-hint {
-      margin-bottom: 12px;
-      padding: 8px 10px;
-      background: #faf5ff;
-      border: 1px solid #ede9fe;
-      border-radius: 8px;
-      font-size: 11px;
-      color: #6b7280;
-      line-height: 1.5;
+    .detail-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .detail-dot.success { background: var(--color-success); }
+    .detail-dot.error { background: var(--color-error); }
+    .detail-dot.skipped { background: #CBD5E1; }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
+    .master-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 0;
+      margin-top: 20px;
+    }
+    .footer-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+    .footer-info i { font-size: 15px; }
+    .footer-brand {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+    .footer-brand span { color: var(--color-accent); font-weight: 600; }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 767px) {
+      .wizard-content { padding: 20px 16px 32px; }
+      .step-card { padding: 22px 18px; }
+      .wizard-header-subtitle { display: none; }
+    }
+    @media (max-width: 520px) {
+      .form-row { flex-direction: column; gap: 0; }
+      .options-row { flex-direction: column; }
+      .tool-card { padding: 16px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wizard">
 
-    <!-- ======================================== -->
-    <!-- PHASE 1: Data Collection                 -->
-    <!-- ======================================== -->
-    <div class="card" id="phase1Card">
-      <div class="header">
-        <div class="logo">🚀</div>
-        <h1>SEO-аудит — Мастер</h1>
-        <p>Оркестратор: збір даних, аналіз, семантика, метрики, PageSpeed, AI-звіти</p>
-      </div>
+    <!-- HEADER -->
+    <header class="wizard-header">
+      <div class="wizard-header-icon"><i class="ti ti-chart-dots-3"></i></div>
+      <div class="wizard-header-title">SEO Audit — Мастер</div>
+      <div class="wizard-header-subtitle">WebPromo</div>
+    </header>
 
-      <!-- Email (required, shared) -->
-      <div class="form-group">
-        <label>Email менеджера *</label>
-        <div class="input-wrapper">
-          <input type="email" id="managerEmail" placeholder="manager@webpromo.com.ua" autocomplete="off" spellcheck="false">
-          <span class="input-icon">📧</span>
-        </div>
-        <div class="field-hint">
-          <span class="field-hint-icon">💡</span>
-          <span>Результати будуть збережені у вашу папку на Google Drive. Якщо папки ще немає — вона створиться автоматично.</span>
-        </div>
-      </div>
+    <!-- CONTENT -->
+    <main class="wizard-content">
 
-      <!-- Phase 1 label -->
-      <div class="phase-label">
-        <div class="phase-badge">1</div>
-        <div>
-          <div class="phase-title">Збір даних</div>
-          <div class="phase-desc">Аналіз клієнта, конкурентів, розширення семантичного ядра</div>
-        </div>
-      </div>
-
-      <!-- 1. Client analysis -->
-      <div class="section-block" id="clientSection">
-        <div class="section-header" onclick="toggleSection('clientSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">🔍</span>
+      <!-- ======================================== -->
+      <!-- PHASE 1: Data Collection                 -->
+      <!-- ======================================== -->
+      <div class="step-card" id="phase1Card">
+        <div class="step-card-header">
+          <div class="step-card-icon"><i class="ti ti-database"></i></div>
           <div>
-            <div class="section-title">Аналіз клієнта</div>
-            <div class="section-desc">SEO-аудит домену клієнта</div>
+            <div class="step-card-title">Етап 1 — Збір даних</div>
+            <div class="step-card-desc">Аналіз клієнта, конкурентів, розширення семантичного ядра</div>
           </div>
         </div>
-        <div class="section-body">
-          <div class="section-hint">Збирає органічний трафік, ключові фрази, посилальний профіль та поведінкові метрики домену. Результат — Google таблиця з 6 вкладками.</div>
-          <div class="form-group">
-            <label>Домен клієнта</label>
-            <div class="input-wrapper">
-              <input type="text" id="clientDomain" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
-              <span class="input-icon">🔗</span>
-            </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>Вводьте домен без https:// та www. Наприклад: rozetka.com.ua</span>
-            </div>
-          </div>
-          <div class="section-result" id="clientResult" style="display:none;"></div>
-        </div>
-      </div>
 
-      <!-- 2. Competitors -->
-      <div class="section-block" id="competitorsSection">
-        <div class="section-header" onclick="toggleSection('competitorsSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">⚔️</span>
-          <div>
-            <div class="section-title">Аналіз конкурентів</div>
-            <div class="section-desc">SEO-аудит доменів конкурентів</div>
+        <!-- Email (shared) -->
+        <div class="form-group">
+          <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
+          <div class="input-wrap">
+            <i class="ti ti-mail input-ico"></i>
+            <input type="email" id="managerEmail" class="form-input" placeholder="manager@webpromo.com.ua" autocomplete="off" spellcheck="false">
           </div>
+          <div class="form-hint"><i class="ti ti-info-circle"></i> Результати будуть збережені у вашу папку на Google Drive</div>
         </div>
-        <div class="section-body">
-          <div class="section-hint">Для кожного конкурента створюється окрема таблиця з тими ж метриками, що й для клієнта. Конкуренти обробляються послідовно.</div>
-          <div class="form-group">
-            <label>Домени конкурентів</label>
-            <div class="tags-container" id="competitorsTags" onclick="document.getElementById('competitorsInput').focus()">
-              <input type="text" class="tags-input" id="competitorsInput" placeholder="Введіть домен та натисніть Enter" spellcheck="false">
-            </div>
-            <div class="tags-hint">Enter — додати, Backspace — видалити останній. Можна вставити список через Ctrl+V</div>
-          </div>
-          <div class="section-result" id="competitorsResult" style="display:none;"></div>
-        </div>
-      </div>
 
-      <!-- 3. Semantic expansion -->
-      <div class="section-block" id="semanticSection">
-        <div class="section-header" onclick="toggleSection('semanticSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">🌱</span>
-          <div>
-            <div class="section-title">Розширення семантичного ядра</div>
-            <div class="section-desc">GKP: генерація ідей з seed-фраз</div>
-          </div>
-        </div>
-        <div class="section-body">
-          <div class="section-hint">Google Keyword Planner генерує нові ідеї ключових слів на основі ваших seed-фраз. Результат — таблиця з усіма знайденими ключовими словами.</div>
-          <div class="form-group">
-            <label>Таблиця з seed-фразами</label>
-            <div class="input-wrapper">
-              <input type="text" id="semanticUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
-              <span class="input-icon">📋</span>
+        <!-- 1. Client analysis -->
+        <div class="tool-card" id="clientSection">
+          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('clientSection')">
+            <div class="tool-card-icon"><i class="ti ti-world"></i></div>
+            <div>
+              <div class="tool-card-title">Аналіз клієнта</div>
+              <div class="tool-card-desc">SEO-аудит домену клієнта</div>
             </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>Seed-фрази мають бути у першому стовпці першого аркуша таблиці.</span>
-            </div>
+            <div class="tool-toggle on" id="clientToggle"></div>
           </div>
-          <div class="row">
-            <div class="form-group">
-              <label>Мова</label>
-              <select id="semanticLang">
-                <option value="1036" selected>Українська</option>
-                <option value="1000">English</option>
-                <option value="1030">Polski</option>
-                <option value="1031">Русский</option>
-                <option value="1001">Deutsch</option>
-                <option value="1002">Français</option>
-                <option value="1003">Español</option>
-                <option value="1004">Italiano</option>
-                <option value="1014">Português</option>
-                <option value="1010">Nederlands</option>
-                <option value="1021">Čeština</option>
-                <option value="1032">Română</option>
-                <option value="1024">Magyar</option>
-                <option value="1015">Svenska</option>
-                <option value="1037">Türkçe</option>
-                <option value="1009">Dansk</option>
-                <option value="1013">Norsk</option>
-                <option value="1011">Suomi</option>
-                <option value="1033">Slovenčina</option>
-                <option value="1020">Български</option>
-              </select>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-info-circle"></i>
+              <span>Збирає органічний трафік, ключові фрази, посилальний профіль та поведінкові метрики домену. Результат — Google таблиця з 6 вкладками.</span>
             </div>
             <div class="form-group">
-              <label>Регіон</label>
-              <select id="semanticGeo">
-                <option value="2804" selected>Україна</option>
-                <option value="2840">США</option>
-                <option value="2826">Великобританія</option>
-                <option value="2616">Польща</option>
-                <option value="2276">Німеччина</option>
-                <option value="2250">Франція</option>
-                <option value="2724">Іспанія</option>
-                <option value="2380">Італія</option>
-                <option value="2528">Нідерланди</option>
-                <option value="2124">Канада</option>
-                <option value="2036">Австралія</option>
-                <option value="2203">Чехія</option>
-                <option value="2642">Румунія</option>
-                <option value="2040">Австрія</option>
-                <option value="2756">Швейцарія</option>
-                <option value="2792">Туреччина</option>
-                <option value="2752">Швеція</option>
-                <option value="2620">Португалія</option>
-                <option value="2056">Бельгія</option>
-                <option value="2348">Угорщина</option>
-              </select>
-            </div>
-          </div>
-          <div class="section-result" id="semanticResult" style="display:none;"></div>
-        </div>
-      </div>
-
-      <div class="warning-box" id="phase1Warning" style="display: none;">
-        Увімкніть хоча б один блок Етапу 1
-      </div>
-
-      <button class="btn" id="phase1Btn" onclick="handlePhase1Submit()">
-        <span>🚀 Запустити Етап 1</span>
-      </button>
-
-      <div class="result" id="phase1Result"></div>
-    </div>
-
-    <!-- ======================================== -->
-    <!-- PHASE DIVIDER                            -->
-    <!-- ======================================== -->
-    <div class="phase-divider">
-      <div class="phase-divider-line"></div>
-      <div class="phase-divider-arrow">↓</div>
-      <div class="phase-divider-text">Результати Етапу 1 → Етап 2</div>
-      <div class="phase-divider-line"></div>
-    </div>
-
-    <!-- ======================================== -->
-    <!-- PHASE 2: Analysis & Processing           -->
-    <!-- ======================================== -->
-    <div class="card" id="phase2Card">
-
-      <!-- Phase 2 label -->
-      <div class="phase-label">
-        <div class="phase-badge">2</div>
-        <div>
-          <div class="phase-title">Аналіз та обробка</div>
-          <div class="phase-desc">Метрики, PageSpeed, AI-аналіз, PDF-парсинг — використовують результати Етапу 1</div>
-        </div>
-      </div>
-
-      <div class="phase2-hint" id="phase2Hint">
-        <span class="field-hint-icon">🔗</span>
-        <span>Посилання на таблиці з Етапу 1 доступні вище. Натисніть 📋 щоб скопіювати та вставити сюди.</span>
-      </div>
-
-      <!-- 4. Metrics -->
-      <div class="section-block" id="metricsSection">
-        <div class="section-header" onclick="toggleSection('metricsSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">📊</span>
-          <div>
-            <div class="section-title">Отримання метрик</div>
-            <div class="section-desc">GKP: об'єм пошуку для ключових слів</div>
-          </div>
-        </div>
-        <div class="section-body">
-          <div class="section-hint">Отримує об'єм пошуку, конкуренцію та CPC для списку ключових слів через Google Keyword Planner. Підходить для вже зібраного семантичного ядра.</div>
-          <div class="form-group">
-            <label>Таблиця з ключовими словами</label>
-            <div class="input-wrapper">
-              <input type="text" id="metricsUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
-              <span class="input-icon">📋</span>
-            </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>Ключові слова мають бути у першому стовпці. Можна використати результат з Етапу 1 «Розширення семантики».</span>
-            </div>
-          </div>
-          <div class="row">
-            <div class="form-group">
-              <label>Мова</label>
-              <select id="metricsLang">
-                <option value="1036" selected>Українська</option>
-                <option value="1000">English</option>
-                <option value="1030">Polski</option>
-                <option value="1031">Русский</option>
-                <option value="1001">Deutsch</option>
-                <option value="1002">Français</option>
-                <option value="1003">Español</option>
-                <option value="1004">Italiano</option>
-                <option value="1014">Português</option>
-                <option value="1010">Nederlands</option>
-                <option value="1021">Čeština</option>
-                <option value="1032">Română</option>
-                <option value="1024">Magyar</option>
-                <option value="1015">Svenska</option>
-                <option value="1037">Türkçe</option>
-                <option value="1009">Dansk</option>
-                <option value="1013">Norsk</option>
-                <option value="1011">Suomi</option>
-                <option value="1033">Slovenčina</option>
-                <option value="1020">Български</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Регіон</label>
-              <select id="metricsGeo">
-                <option value="2804" selected>Україна</option>
-                <option value="2840">США</option>
-                <option value="2826">Великобританія</option>
-                <option value="2616">Польща</option>
-                <option value="2276">Німеччина</option>
-                <option value="2250">Франція</option>
-                <option value="2724">Іспанія</option>
-                <option value="2380">Італія</option>
-                <option value="2528">Нідерланди</option>
-                <option value="2124">Канада</option>
-                <option value="2036">Австралія</option>
-                <option value="2203">Чехія</option>
-                <option value="2642">Румунія</option>
-                <option value="2040">Австрія</option>
-                <option value="2756">Швейцарія</option>
-                <option value="2792">Туреччина</option>
-                <option value="2752">Швеція</option>
-                <option value="2620">Португалія</option>
-                <option value="2056">Бельгія</option>
-                <option value="2348">Угорщина</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn-section" id="metricsBtn" onclick="handleMetricsSubmit()">
-            <span>📊 Отримати метрики</span>
-          </button>
-          <div class="section-result" id="metricsResult" style="display:none;"></div>
-        </div>
-      </div>
-
-      <!-- 5. PageSpeed -->
-      <div class="section-block" id="pagespeedSection">
-        <div class="section-header" onclick="toggleSection('pagespeedSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">⚡</span>
-          <div>
-            <div class="section-title">PageSpeed Test</div>
-            <div class="section-desc">Аналіз швидкості завантаження сторінок</div>
-          </div>
-        </div>
-        <div class="section-body">
-          <div class="section-hint">Тестує швидкість завантаження сторінок через Google PageSpeed Insights API. Результат — Core Web Vitals (LCP, FID, CLS) та оцінка продуктивності для кожної URL.</div>
-          <div class="form-group">
-            <label>Таблиця з URL для тестування</label>
-            <div class="input-wrapper">
-              <input type="text" id="pagespeedUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
-              <span class="input-icon">📋</span>
-            </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>URL-адреси сторінок мають бути у першому стовпці. Тестування батчами по 5 URL з паузами.</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Тип тесту</label>
-            <div class="options-row">
-              <div class="option-card selected" id="optMobile" onclick="toggleOption('optMobile')">
-                <span class="option-icon">📱</span>
-                <span class="option-label">Mobile</span>
-                <span class="option-check">✓</span>
+              <label class="form-label"><i class="ti ti-link"></i> Домен клієнта</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="clientDomain" class="form-input" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
               </div>
-              <div class="option-card selected" id="optDesktop" onclick="toggleOption('optDesktop')">
-                <span class="option-icon">🖥️</span>
-                <span class="option-label">Desktop</span>
-                <span class="option-check">✓</span>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Вводьте домен без https:// та www</div>
+            </div>
+            <div class="result-card hidden" id="clientResult"></div>
+          </div>
+        </div>
+
+        <!-- 2. Competitors -->
+        <div class="tool-card" id="competitorsSection">
+          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('competitorsSection')">
+            <div class="tool-card-icon"><i class="ti ti-users"></i></div>
+            <div>
+              <div class="tool-card-title">Аналіз конкурентів</div>
+              <div class="tool-card-desc">SEO-аудит доменів конкурентів</div>
+            </div>
+            <div class="tool-toggle on" id="competitorsToggle"></div>
+          </div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-info-circle"></i>
+              <span>Для кожного конкурента створюється окрема таблиця з тими ж метриками, що й для клієнта. Конкуренти обробляються послідовно.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-world"></i> Домени конкурентів</label>
+              <div class="tags-wrap" id="competitorsTags" onclick="document.getElementById('competitorsInput').focus()">
+                <input type="text" class="tags-input" id="competitorsInput" placeholder="Введіть домен та натисніть Enter" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Enter — додати, Backspace — видалити. Можна вставити список (Ctrl+V).</div>
+            </div>
+            <div class="result-card hidden" id="competitorsResult"></div>
+          </div>
+        </div>
+
+        <!-- 3. Semantic expansion -->
+        <div class="tool-card" id="semanticSection">
+          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('semanticSection')">
+            <div class="tool-card-icon"><i class="ti ti-plant-2"></i></div>
+            <div>
+              <div class="tool-card-title">Розширення семантичного ядра</div>
+              <div class="tool-card-desc">GKP: генерація ідей з seed-фраз</div>
+            </div>
+            <div class="tool-toggle on" id="semanticToggle"></div>
+          </div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-bulb"></i>
+              <span>Google Keyword Planner генерує нові ідеї ключових слів на основі ваших seed-фраз. Seed-фрази мають бути у першому стовпці.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиця з seed-фразами</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="semanticUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Мова</label>
+                <select id="semanticLang" class="form-select">
+                  <option value="1036" selected>Українська</option>
+                  <option value="1000">English</option>
+                  <option value="1030">Polski</option>
+                  <option value="1031">Русский</option>
+                  <option value="1001">Deutsch</option>
+                  <option value="1002">Français</option>
+                  <option value="1003">Español</option>
+                  <option value="1004">Italiano</option>
+                  <option value="1014">Português</option>
+                  <option value="1010">Nederlands</option>
+                  <option value="1021">Čeština</option>
+                  <option value="1032">Română</option>
+                  <option value="1024">Magyar</option>
+                  <option value="1015">Svenska</option>
+                  <option value="1037">Türkçe</option>
+                  <option value="1009">Dansk</option>
+                  <option value="1013">Norsk</option>
+                  <option value="1011">Suomi</option>
+                  <option value="1033">Slovenčina</option>
+                  <option value="1020">Български</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Регіон</label>
+                <select id="semanticGeo" class="form-select">
+                  <option value="2804" selected>Україна</option>
+                  <option value="2840">США</option>
+                  <option value="2826">Великобританія</option>
+                  <option value="2616">Польща</option>
+                  <option value="2276">Німеччина</option>
+                  <option value="2250">Франція</option>
+                  <option value="2724">Іспанія</option>
+                  <option value="2380">Італія</option>
+                  <option value="2528">Нідерланди</option>
+                  <option value="2124">Канада</option>
+                  <option value="2036">Австралія</option>
+                  <option value="2203">Чехія</option>
+                  <option value="2642">Румунія</option>
+                  <option value="2040">Австрія</option>
+                  <option value="2756">Швейцарія</option>
+                  <option value="2792">Туреччина</option>
+                  <option value="2752">Швеція</option>
+                  <option value="2620">Португалія</option>
+                  <option value="2056">Бельгія</option>
+                  <option value="2348">Угорщина</option>
+                </select>
+              </div>
+            </div>
+            <div class="result-card hidden" id="semanticResult"></div>
           </div>
-          <button class="btn-section" id="pagespeedBtn" onclick="handlePageSpeedSubmit()">
-            <span>⚡ Запустити PageSpeed</span>
-          </button>
-          <div class="section-result" id="pagespeedResult" style="display:none;"></div>
         </div>
+
+        <!-- Warning -->
+        <div class="launch-warning" id="phase1Warning">
+          <i class="ti ti-alert-triangle"></i>
+          <span>Увімкніть хоча б один блок Етапу 1</span>
+        </div>
+
+        <!-- Phase 1 button -->
+        <button class="btn-launch" id="phase1Btn" onclick="handlePhase1Submit()">
+          <i class="ti ti-rocket"></i> Запустити Етап 1
+        </button>
+
+        <!-- Phase 1 overall result -->
+        <div class="result-card hidden" id="phase1Result"></div>
       </div>
 
-      <!-- 6. AI Analysis (NEW) -->
-      <div class="section-block" id="aiSection">
-        <div class="section-header" onclick="toggleSection('aiSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">🤖</span>
+      <!-- ======================================== -->
+      <!-- PHASE DIVIDER                            -->
+      <!-- ======================================== -->
+      <div class="phase-divider">
+        <div class="phase-divider-line"></div>
+        <div class="phase-divider-icon"><i class="ti ti-arrow-down"></i></div>
+        <div class="phase-divider-text">Результати Етапу 1 → Етап 2</div>
+        <div class="phase-divider-line"></div>
+      </div>
+
+      <!-- ======================================== -->
+      <!-- PHASE 2: Analysis & Processing           -->
+      <!-- ======================================== -->
+      <div class="step-card" id="phase2Card">
+        <div class="step-card-header">
+          <div class="step-card-icon"><i class="ti ti-sparkles"></i></div>
           <div>
-            <div class="section-title">AI аналіз домену</div>
-            <div class="section-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+            <div class="step-card-title">Етап 2 — Аналіз та обробка</div>
+            <div class="step-card-desc">Метрики, PageSpeed, AI-аналіз, PDF-парсинг — використовують результати Етапу 1</div>
           </div>
         </div>
-        <div class="section-body">
-          <div class="section-hint">Згенерує AI-звіт (Google Doc) з рекомендаціями на основі готової таблиці аналізу домену. Використовуйте результат «Аналіз клієнта» з Етапу 1 або будь-яку іншу таблицю.</div>
-          <div class="form-group">
-            <label>Таблиця з аналізом домену</label>
-            <div class="input-wrapper">
-              <input type="text" id="aiSpreadsheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
-              <span class="input-icon">📋</span>
-            </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>Вставте посилання на таблицю аналізу клієнта з Етапу 1 (кнопка 📋) або будь-яку іншу таблицю аналізу.</span>
+
+        <!-- Phase 2 hint (shown after Phase 1) -->
+        <div class="info-box hidden" id="phase2Hint">
+          <i class="ti ti-link"></i>
+          <span>Посилання на таблиці з Етапу 1 доступні вище. Натисніть кнопку копіювання, щоб скопіювати та вставити сюди.</span>
+        </div>
+
+        <!-- 4. Metrics -->
+        <div class="tool-card" id="metricsSection">
+          <div class="tool-card-header tool-card-header-has-body">
+            <div class="tool-card-icon"><i class="ti ti-chart-bar"></i></div>
+            <div>
+              <div class="tool-card-title">Отримання метрик</div>
+              <div class="tool-card-desc">GKP: об'єм пошуку для ключових слів</div>
             </div>
           </div>
-          <button class="btn-section" id="aiBtn" onclick="handleAiSubmit()">
-            <span>🤖 Запустити AI аналіз</span>
-          </button>
-          <div class="section-result" id="aiResult" style="display:none;"></div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-bulb"></i>
+              <span>Отримує об'єм пошуку, конкуренцію та CPC для списку ключових слів через Google Keyword Planner.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиця з ключовими словами</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="metricsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Можна використати результат з Етапу 1 «Розширення семантики»</div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Мова</label>
+                <select id="metricsLang" class="form-select">
+                  <option value="1036" selected>Українська</option>
+                  <option value="1000">English</option>
+                  <option value="1030">Polski</option>
+                  <option value="1031">Русский</option>
+                  <option value="1001">Deutsch</option>
+                  <option value="1002">Français</option>
+                  <option value="1003">Español</option>
+                  <option value="1004">Italiano</option>
+                  <option value="1014">Português</option>
+                  <option value="1010">Nederlands</option>
+                  <option value="1021">Čeština</option>
+                  <option value="1032">Română</option>
+                  <option value="1024">Magyar</option>
+                  <option value="1015">Svenska</option>
+                  <option value="1037">Türkçe</option>
+                  <option value="1009">Dansk</option>
+                  <option value="1013">Norsk</option>
+                  <option value="1011">Suomi</option>
+                  <option value="1033">Slovenčina</option>
+                  <option value="1020">Български</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Регіон</label>
+                <select id="metricsGeo" class="form-select">
+                  <option value="2804" selected>Україна</option>
+                  <option value="2840">США</option>
+                  <option value="2826">Великобританія</option>
+                  <option value="2616">Польща</option>
+                  <option value="2276">Німеччина</option>
+                  <option value="2250">Франція</option>
+                  <option value="2724">Іспанія</option>
+                  <option value="2380">Італія</option>
+                  <option value="2528">Нідерланди</option>
+                  <option value="2124">Канада</option>
+                  <option value="2036">Австралія</option>
+                  <option value="2203">Чехія</option>
+                  <option value="2642">Румунія</option>
+                  <option value="2040">Австрія</option>
+                  <option value="2756">Швейцарія</option>
+                  <option value="2792">Туреччина</option>
+                  <option value="2752">Швеція</option>
+                  <option value="2620">Португалія</option>
+                  <option value="2056">Бельгія</option>
+                  <option value="2348">Угорщина</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-section" id="metricsBtn" onclick="handleMetricsSubmit()">
+              <i class="ti ti-chart-bar"></i> Отримати метрики
+            </button>
+            <div class="result-card hidden" id="metricsResult"></div>
+          </div>
+        </div>
+
+        <!-- 5. PageSpeed -->
+        <div class="tool-card" id="pagespeedSection">
+          <div class="tool-card-header tool-card-header-has-body">
+            <div class="tool-card-icon"><i class="ti ti-gauge"></i></div>
+            <div>
+              <div class="tool-card-title">PageSpeed Test</div>
+              <div class="tool-card-desc">Аналіз швидкості завантаження сторінок</div>
+            </div>
+          </div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-bulb"></i>
+              <span>Тестує швидкість через Google PageSpeed Insights API. Результат — Core Web Vitals (LCP, FID, CLS) та оцінка продуктивності.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиця з URL для тестування</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="pagespeedUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> URL-адреси сторінок мають бути у першому стовпці</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Тип тесту</label>
+              <div class="options-row">
+                <div class="option-card selected" id="optMobile" onclick="toggleOption('optMobile')">
+                  <i class="ti ti-device-mobile option-card-icon"></i>
+                  <span class="option-card-label">Mobile</span>
+                  <i class="ti ti-check option-card-check"></i>
+                </div>
+                <div class="option-card selected" id="optDesktop" onclick="toggleOption('optDesktop')">
+                  <i class="ti ti-device-desktop option-card-icon"></i>
+                  <span class="option-card-label">Desktop</span>
+                  <i class="ti ti-check option-card-check"></i>
+                </div>
+              </div>
+            </div>
+            <button class="btn-section" id="pagespeedBtn" onclick="handlePageSpeedSubmit()">
+              <i class="ti ti-gauge"></i> Запустити PageSpeed
+            </button>
+            <div class="result-card hidden" id="pagespeedResult"></div>
+          </div>
+        </div>
+
+        <!-- 6. AI Analysis -->
+        <div class="tool-card" id="aiSection">
+          <div class="tool-card-header tool-card-header-has-body">
+            <div class="tool-card-icon"><i class="ti ti-brain"></i></div>
+            <div>
+              <div class="tool-card-title">AI аналіз домену</div>
+              <div class="tool-card-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+            </div>
+          </div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-bulb"></i>
+              <span>Згенерує AI-звіт (Google Doc) з рекомендаціями на основі готової таблиці аналізу домену. Використовуйте результат «Аналіз клієнта» з Етапу 1.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиця з аналізом домену</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="aiSpreadsheetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Вставте посилання на таблицю аналізу клієнта з Етапу 1</div>
+            </div>
+            <button class="btn-section" id="aiBtn" onclick="handleAiSubmit()">
+              <i class="ti ti-brain"></i> Запустити AI аналіз
+            </button>
+            <div class="result-card hidden" id="aiResult"></div>
+          </div>
+        </div>
+
+        <!-- 7. PDF Parsing -->
+        <div class="tool-card" id="pdfSection">
+          <div class="tool-card-header tool-card-header-has-body">
+            <div class="tool-card-icon"><i class="ti ti-file-type-pdf"></i></div>
+            <div>
+              <div class="tool-card-title">Парсинг PDF-аудиту</div>
+              <div class="tool-card-desc">PDF у структуровану Google таблицю</div>
+            </div>
+          </div>
+          <div class="tool-card-body">
+            <div class="info-box">
+              <i class="ti ti-bulb"></i>
+              <span>Перетворює PDF-аудит з Google Drive у структуровану Google таблицю з окремими вкладками для кожного розділу.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-file-type-pdf"></i> Посилання на PDF (Google Drive)</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="pdfUrl" class="form-input" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> PDF файл має бути на Google Drive та доступний для перегляду</div>
+            </div>
+            <button class="btn-section" id="pdfBtn" onclick="handlePdfSubmit()">
+              <i class="ti ti-file-type-pdf"></i> Запустити парсинг PDF
+            </button>
+            <div class="result-card hidden" id="pdfResult"></div>
+          </div>
         </div>
       </div>
 
-      <!-- 7. PDF Parsing (NEW) -->
-      <div class="section-block" id="pdfSection">
-        <div class="section-header" onclick="toggleSection('pdfSection')">
-          <div class="section-toggle"></div>
-          <span class="section-icon">📄</span>
-          <div>
-            <div class="section-title">Парсинг PDF-аудиту</div>
-            <div class="section-desc">PDF у структуровану Google таблицю</div>
-          </div>
+      <!-- Footer -->
+      <div class="master-footer">
+        <div class="footer-info">
+          <i class="ti ti-clock"></i>
+          Час залежить від обраних блоків
         </div>
-        <div class="section-body">
-          <div class="section-hint">Перетворює PDF-аудит з Google Drive у структуровану Google таблицю з окремими вкладками для кожного розділу аудиту.</div>
-          <div class="form-group">
-            <label>Посилання на PDF (Google Drive)</label>
-            <div class="input-wrapper">
-              <input type="text" id="pdfUrl" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
-              <span class="input-icon">📎</span>
-            </div>
-            <div class="field-hint">
-              <span class="field-hint-icon">💡</span>
-              <span>PDF файл має бути на Google Drive та доступний для перегляду.</span>
-            </div>
-          </div>
-          <button class="btn-section" id="pdfBtn" onclick="handlePdfSubmit()">
-            <span>📄 Запустити парсинг PDF</span>
-          </button>
-          <div class="section-result" id="pdfResult" style="display:none;"></div>
+        <div class="footer-brand">
+          <span>WebPromo</span>
         </div>
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <div class="footer-time">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Час залежить від обраних блоків
-      </div>
-      <div class="footer-brand">
-        <span>WebPromo</span>
-      </div>
-    </div>
-
+    </main>
   </div>
 
   <script>
     // ======================================
-    // Section toggles
+    // Section toggles (Phase 1)
     // ======================================
     function toggleSection(sectionId) {
       var el = document.getElementById(sectionId);
-      el.classList.toggle('active');
+      var toggle = document.getElementById(sectionId.replace('Section', 'Toggle'));
+      if (el.classList.contains('disabled')) {
+        el.classList.remove('disabled');
+        if (toggle) toggle.classList.add('on');
+        // Restore header margin
+        var header = el.querySelector('.tool-card-header');
+        if (header) header.classList.add('tool-card-header-has-body');
+      } else {
+        el.classList.add('disabled');
+        if (toggle) toggle.classList.remove('on');
+        var header = el.querySelector('.tool-card-header');
+        if (header) header.classList.remove('tool-card-header-has-body');
+      }
       updateWarning();
     }
 
     function isSectionActive(sectionId) {
-      return document.getElementById(sectionId).classList.contains('active');
+      return !document.getElementById(sectionId).classList.contains('disabled');
     }
 
     function updateWarning() {
       var anyActive = isSectionActive('clientSection') || isSectionActive('competitorsSection') ||
         isSectionActive('semanticSection');
-      document.getElementById('phase1Warning').style.display = anyActive ? 'none' : 'block';
+      var w = document.getElementById('phase1Warning');
+      if (anyActive) {
+        w.classList.remove('visible');
+      } else {
+        w.classList.add('visible');
+      }
     }
 
     // ======================================
@@ -889,7 +1155,7 @@
       for (var i = 0; i < competitors.length; i++) {
         var tag = document.createElement('span');
         tag.className = 'tag';
-        tag.innerHTML = competitors[i] + '<span class="tag-remove" data-idx="' + i + '">×</span>';
+        tag.innerHTML = competitors[i] + '<span class="tag-remove" data-idx="' + i + '">&times;</span>';
         container.insertBefore(tag, input);
       }
     }
@@ -955,49 +1221,49 @@
     }
 
     function showCopied(btnEl) {
-      var orig = btnEl.textContent;
       btnEl.classList.add('copied');
-      btnEl.textContent = '✓';
+      var origHtml = btnEl.innerHTML;
+      btnEl.innerHTML = '<i class="ti ti-check"></i>';
       setTimeout(function() {
         btnEl.classList.remove('copied');
-        btnEl.textContent = orig;
+        btnEl.innerHTML = origHtml;
       }, 2000);
     }
 
     // ======================================
-    // Utility: section result renderers
+    // Utility: result renderers
     // ======================================
     function showSectionResult(elementId, status, label, url, linkClass) {
       var el = document.getElementById(elementId);
       if (!el) return;
-      el.style.display = 'block';
+      el.classList.remove('hidden');
 
       if (status === 'success' && url) {
-        el.className = 'section-result success';
-        var cls = linkClass ? 'section-result-link ' + linkClass : 'section-result-link';
+        var cls = linkClass || '';
+        el.className = 'result-card success';
         el.innerHTML =
-          '<div class="section-result-header">' +
-            '<span class="section-result-icon">✓</span>' +
+          '<div class="result-card-header">' +
+            '<i class="ti ti-circle-check"></i>' +
             '<span>' + label + '</span>' +
           '</div>' +
-          '<div class="section-result-link-row">' +
-            '<a href="' + url + '" target="_blank" class="' + cls + '">' +
-              '📊 Відкрити →' +
+          '<div class="result-link-row">' +
+            '<a href="' + url + '" target="_blank" class="result-link ' + cls + '">' +
+              '<i class="ti ti-external-link"></i> Відкрити' +
             '</a>' +
-            '<button class="copy-btn" onclick="copyToClipboard(\'' + url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати посилання">📋</button>' +
+            '<button class="copy-btn" onclick="copyToClipboard(\'' + url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати посилання"><i class="ti ti-copy"></i></button>' +
           '</div>';
       } else if (status === 'success') {
-        el.className = 'section-result success';
+        el.className = 'result-card success';
         el.innerHTML =
-          '<div class="section-result-header">' +
-            '<span class="section-result-icon">✓</span>' +
+          '<div class="result-card-header">' +
+            '<i class="ti ti-circle-check"></i>' +
             '<span>' + label + ' — завершено</span>' +
           '</div>';
       } else {
-        el.className = 'section-result error';
+        el.className = 'result-card error';
         el.innerHTML =
-          '<div class="section-result-header">' +
-            '<span class="section-result-icon">✕</span>' +
+          '<div class="result-card-header">' +
+            '<i class="ti ti-circle-x"></i>' +
             '<span>' + label + ' — помилка</span>' +
           '</div>';
       }
@@ -1006,11 +1272,11 @@
     function showSectionError(elementId, message) {
       var el = document.getElementById(elementId);
       if (!el) return;
-      el.style.display = 'block';
-      el.className = 'section-result error';
+      el.classList.remove('hidden');
+      el.className = 'result-card error';
       el.innerHTML =
-        '<div class="section-result-header">' +
-          '<span class="section-result-icon">✕</span>' +
+        '<div class="result-card-header">' +
+          '<i class="ti ti-circle-x"></i>' +
           '<span>' + message + '</span>' +
         '</div>';
     }
@@ -1018,11 +1284,11 @@
     function showSectionLoading(elementId, message) {
       var el = document.getElementById(elementId);
       if (!el) return;
-      el.style.display = 'block';
-      el.className = 'section-result loading';
+      el.classList.remove('hidden');
+      el.className = 'result-card loading';
       el.innerHTML =
-        '<div class="section-result-header">' +
-          '<span class="section-result-icon">⏳</span>' +
+        '<div class="result-card-header">' +
+          '<i class="ti ti-loader-2"></i>' +
           '<span>' + message + '</span>' +
         '</div>';
     }
@@ -1030,26 +1296,26 @@
     function showCompetitorsResult(competitorsData) {
       var el = document.getElementById('competitorsResult');
       if (!el) return;
-      el.style.display = 'block';
+      el.classList.remove('hidden');
 
       var allSuccess = true;
       for (var i = 0; i < competitorsData.length; i++) {
         if (competitorsData[i].status !== 'success') allSuccess = false;
       }
 
-      el.className = 'section-result ' + (allSuccess ? 'success' : 'error');
-      var html = '<div class="section-result-header">' +
-        '<span class="section-result-icon">' + (allSuccess ? '✓' : '⚠') + '</span>' +
+      el.className = 'result-card ' + (allSuccess ? 'success' : 'error');
+      var html = '<div class="result-card-header">' +
+        '<i class="ti ti-' + (allSuccess ? 'circle-check' : 'alert-triangle') + '"></i>' +
         '<span>Конкуренти: ' + competitorsData.length + ' доменів</span></div>';
 
       for (var i = 0; i < competitorsData.length; i++) {
         var c = competitorsData[i];
         html += '<div class="competitor-result-item">';
-        html += '<span class="status-dot ' + c.status + '"></span>';
+        html += '<span class="detail-dot ' + c.status + '"></span>';
         html += '<span>' + c.domain + '</span>';
         if (c.status === 'success' && c.spreadsheet_url) {
           html += ' — <a href="' + c.spreadsheet_url + '" target="_blank">таблиця</a>';
-          html += ' <button class="copy-btn" onclick="copyToClipboard(\'' + c.spreadsheet_url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати">📋</button>';
+          html += ' <button class="copy-btn" onclick="copyToClipboard(\'' + c.spreadsheet_url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати"><i class="ti ti-copy"></i></button>';
         }
         html += '</div>';
       }
@@ -1061,7 +1327,7 @@
       var ids = ['clientResult', 'competitorsResult', 'semanticResult', 'phase1Result'];
       for (var i = 0; i < ids.length; i++) {
         var el = document.getElementById(ids[i]);
-        if (el) { el.style.display = 'none'; el.className = (ids[i] === 'phase1Result') ? 'result' : 'section-result'; el.innerHTML = ''; }
+        if (el) { el.classList.add('hidden'); el.className = 'result-card hidden'; el.innerHTML = ''; }
       }
     }
 
@@ -1096,7 +1362,7 @@
         }
       }
 
-      // Build formData (Phase 1 only)
+      // Build formData
       var formData = { manager_email: email };
 
       if (isSectionActive('clientSection')) {
@@ -1145,16 +1411,18 @@
 
       // Overall result
       var r = document.getElementById('phase1Result');
-      r.className = 'result success';
-      var folderHtml = '<div class="result-header">' +
-        '<div class="result-icon" style="background:#dcfce7;color:#16a34a;">✓</div>' +
-        '<h3 style="color:#15803d;">Етап 1 завершено</h3>' +
+      r.classList.remove('hidden');
+      r.className = 'result-card success';
+      var html = '<div class="result-card-header">' +
+        '<i class="ti ti-circle-check"></i>' +
+        '<span>Етап 1 завершено</span>' +
         '</div>' +
-        '<p>Папка проекту створена. Результати зібрані.</p>';
+        '<p style="font-size:13px;color:#475569;margin-top:4px;">Папка проекту створена. Результати зібрані.</p>';
       if (data.folderUrl) {
-        folderHtml += '<a href="' + data.folderUrl + '" target="_blank">📂 Відкрити папку проекту →</a>';
+        html += '<a href="' + data.folderUrl + '" target="_blank" class="result-link folder-link">' +
+          '<i class="ti ti-folder"></i> Відкрити папку проекту</a>';
       }
-      r.innerHTML = folderHtml;
+      r.innerHTML = html;
 
       // Per-section results
       if (d.client_analysis) {
@@ -1181,22 +1449,23 @@
       }
 
       // Show Phase 2 hint
-      document.getElementById('phase2Hint').classList.add('visible');
+      document.getElementById('phase2Hint').classList.remove('hidden');
     }
 
     function showPhase1Error(message) {
       var r = document.getElementById('phase1Result');
-      r.className = 'result error';
+      r.classList.remove('hidden');
+      r.className = 'result-card error';
       r.innerHTML =
-        '<div class="result-header">' +
-          '<div class="result-icon" style="background:#fee2e2;color:#dc2626;">✕</div>' +
-          '<h3 style="color:#dc2626;">Помилка</h3>' +
+        '<div class="result-card-header">' +
+          '<i class="ti ti-circle-x"></i>' +
+          '<span>Помилка</span>' +
         '</div>' +
-        '<p>' + message + '</p>';
+        '<p style="font-size:13px;color:#991B1B;margin-top:4px;">' + message + '</p>';
     }
 
     // ======================================
-    // PHASE 2: Metrics (individual)
+    // PHASE 2: Metrics
     // ======================================
     function handleMetricsSubmit() {
       var mUrl = document.getElementById('metricsUrl').value.trim();
@@ -1213,7 +1482,7 @@
 
       var btn = document.getElementById('metricsBtn');
       btn.disabled = true;
-      btn.classList.add('btn-section-loading');
+      btn.classList.add('btn-loading');
       showSectionLoading('metricsResult', 'Отримання метрик...');
 
       var formData = {
@@ -1226,7 +1495,7 @@
       google.script.run
         .withSuccessHandler(function(response) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           if (response.success) {
             var extra = response.totalKeywords ? ' (' + response.totalKeywords + ' ключових слів)' : '';
             showSectionResult('metricsResult', 'success', 'Метрики отримано' + extra, response.spreadsheetUrl);
@@ -1236,14 +1505,14 @@
         })
         .withFailureHandler(function(error) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           showSectionError('metricsResult', error.toString());
         })
         .submitGKPMetrics(formData);
     }
 
     // ======================================
-    // PHASE 2: PageSpeed (individual)
+    // PHASE 2: PageSpeed
     // ======================================
     function handlePageSpeedSubmit() {
       var pUrl = document.getElementById('pagespeedUrl').value.trim();
@@ -1254,7 +1523,7 @@
 
       var btn = document.getElementById('pagespeedBtn');
       btn.disabled = true;
-      btn.classList.add('btn-section-loading');
+      btn.classList.add('btn-loading');
       showSectionLoading('pagespeedResult', 'Тестування PageSpeed...');
 
       var formData = {
@@ -1266,7 +1535,7 @@
       google.script.run
         .withSuccessHandler(function(response) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           if (response.success) {
             var extra = response.totalUrls ? ' (' + response.totalUrls + ' URL)' : '';
             showSectionResult('pagespeedResult', 'success', 'PageSpeed завершено' + extra, response.spreadsheetUrl);
@@ -1276,14 +1545,14 @@
         })
         .withFailureHandler(function(error) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           showSectionError('pagespeedResult', error.toString());
         })
         .submitPageSpeedTest(formData);
     }
 
     // ======================================
-    // PHASE 2: AI Analysis (individual)
+    // PHASE 2: AI Analysis
     // ======================================
     function handleAiSubmit() {
       var url = document.getElementById('aiSpreadsheetUrl').value.trim();
@@ -1294,30 +1563,30 @@
 
       var btn = document.getElementById('aiBtn');
       btn.disabled = true;
-      btn.classList.add('btn-section-loading');
+      btn.classList.add('btn-loading');
       showSectionLoading('aiResult', 'Генерація AI-звіту...');
 
       google.script.run
         .withSuccessHandler(function(response) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           if (response.success) {
             var label = 'AI-звіт створено' + (response.domain ? ' (' + response.domain + ')' : '');
-            showSectionResult('aiResult', 'success', label, response.docUrl, 'ai-link');
+            showSectionResult('aiResult', 'success', label, response.docUrl, 'doc-link');
           } else {
             showSectionError('aiResult', response.error || 'Невідома помилка');
           }
         })
         .withFailureHandler(function(error) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           showSectionError('aiResult', error.toString());
         })
         .submitAIAnalysis(url);
     }
 
     // ======================================
-    // PHASE 2: PDF Parsing (individual)
+    // PHASE 2: PDF Parsing
     // ======================================
     function handlePdfSubmit() {
       var url = document.getElementById('pdfUrl').value.trim();
@@ -1328,13 +1597,13 @@
 
       var btn = document.getElementById('pdfBtn');
       btn.disabled = true;
-      btn.classList.add('btn-section-loading');
+      btn.classList.add('btn-loading');
       showSectionLoading('pdfResult', 'Парсинг PDF...');
 
       google.script.run
         .withSuccessHandler(function(response) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           if (response.success) {
             var extra = response.totalSheets ? ' (' + response.totalSheets + ' вкладок)' : '';
             showSectionResult('pdfResult', 'success', 'PDF оброблено' + extra, response.spreadsheetUrl);
@@ -1344,19 +1613,37 @@
         })
         .withFailureHandler(function(error) {
           btn.disabled = false;
-          btn.classList.remove('btn-section-loading');
+          btn.classList.remove('btn-loading');
           showSectionError('pdfResult', error.toString());
         })
         .submitPdfAuditParse({ pdfUrl: url });
     }
 
     // ======================================
-    // Init
+    // Enter key handlers
     // ======================================
     document.getElementById('managerEmail').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') handlePhase1Submit();
     });
+    document.getElementById('clientDomain').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handlePhase1Submit();
+    });
+    document.getElementById('metricsUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handleMetricsSubmit();
+    });
+    document.getElementById('pagespeedUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handlePageSpeedSubmit();
+    });
+    document.getElementById('aiSpreadsheetUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handleAiSubmit();
+    });
+    document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') handlePdfSubmit();
+    });
 
+    // ======================================
+    // Init
+    // ======================================
     document.getElementById('managerEmail').focus();
   </script>
 </body>
