@@ -141,7 +141,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract seeds from sheet (skip header row, limit to 300)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst seeds = column.slice(1).filter(k => k && k.trim()).slice(0, 300);\nreturn [{ json: { seeds: seeds } }];"
+        "jsCode": "// Extract seeds from sheet (all rows from A1, limit to 300)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst seeds = column.filter(k => k && k.trim()).slice(0, 300);\nreturn [{ json: { seeds: seeds } }];"
       },
       "id": "ideas-021",
       "name": "Ideas - Parse Sheet Seeds",
@@ -568,7 +568,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract keywords from sheet (skip header row)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\n// Skip first row (header) and filter empty\nconst keywords = column.slice(1).filter(k => k && k.trim());\n\nreturn [{ json: { keywords: keywords } }];"
+        "jsCode": "// Extract keywords from sheet (all rows from A1)\nconst values = $input.first().json.values || [];\nconst column = values[0] || [];\nconst keywords = column.filter(k => k && k.trim());\n\nreturn [{ json: { keywords: keywords } }];"
       },
       "id": "metrics-005",
       "name": "Metrics - Parse Sheet",
