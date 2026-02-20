@@ -560,7 +560,7 @@
             </div>
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на Google Drive. Вкажіть домен клієнта без https:// та www.</span>
+              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на Google Drive. Вкажіть домен клієнта у будь-якому форматі — ми автоматично приведемо його до потрібного вигляду.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
@@ -574,9 +574,9 @@
               <label class="form-label"><i class="ti ti-world"></i> Домен клієнта <span class="required-mark">*</span></label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="fDomain" class="form-input" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
+                <input type="text" id="fDomain" class="form-input" placeholder="https://www.example.com.ua або example.com.ua" autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> Без https:// та www. Наприклад: rozetka.com.ua</div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Можна вводити з https://, www. або без — ми приберемо зайве автоматично</div>
               <div class="form-error" id="fDomainErr">Введіть домен клієнта</div>
             </div>
           </div>
@@ -601,7 +601,7 @@
               <div class="tags-wrap" id="compTagsWrap" onclick="document.getElementById('compInput').focus()">
                 <input type="text" class="tags-input" id="compInput" placeholder="Введіть домен та натисніть Enter" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> Enter — додати, Backspace — видалити. Можна вставити список (Ctrl+V).</div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Enter — додати, Backspace — видалити. Можна вставити список (Ctrl+V). Формат будь-який — https://, www. приберемо автоматично.</div>
               <div class="tags-count" id="compCount"></div>
             </div>
           </div>
@@ -985,10 +985,28 @@ function skipStep() {
   if (currentStep === 4) buildSummary();
 }
 
+function normalizeDomain(val) {
+  return val.trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+}
+
+// Auto-normalize domain field on blur
+document.getElementById('fDomain').addEventListener('blur', function() {
+  var raw = this.value.trim();
+  if (raw) {
+    this.value = normalizeDomain(raw);
+    document.getElementById('fDomainErr').classList.remove('visible');
+    this.classList.remove('error');
+  }
+});
+
 function saveStepData(n) {
   if (n === 1) {
     stepData.email = document.getElementById('fEmail').value.trim();
-    stepData.domain = document.getElementById('fDomain').value.trim().replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/+$/,'');
+    stepData.domain = normalizeDomain(document.getElementById('fDomain').value);
   }
   if (n === 3) {
     var url = document.getElementById('fSemUrl').value.trim();
@@ -1348,7 +1366,7 @@ document.getElementById('compTagsWrap').addEventListener('click', function(e) {
 });
 
 function addComp(val) {
-  var c = val.replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/+$/,'').trim().toLowerCase();
+  var c = normalizeDomain(val);
   if (!c || stepData.competitors.indexOf(c) !== -1) return;
   stepData.competitors.push(c);
   renderComps();
