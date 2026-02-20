@@ -7,12 +7,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
-    /* ==========================================
-       CSS CUSTOM PROPERTIES
-       ========================================== */
     :root {
       --color-primary: #0F172A;
-      --color-primary-light: #1E293B;
       --color-accent: #3B82F6;
       --color-accent-hover: #2563EB;
       --color-accent-light: #DBEAFE;
@@ -36,69 +32,148 @@
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
       --transition: 0.2s ease;
+      --sidebar-w: 260px;
+      --header-h: 56px;
     }
-
-    /* ==========================================
-       RESET & BASE
-       ========================================== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--color-bg);
       color: var(--color-text);
       min-height: 100vh;
+      overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ==========================================
-       LAYOUT
-       ========================================== */
-    .wizard {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .wizard-header {
+    /* === HEADER === */
+    .master-header {
+      height: var(--header-h);
       background: var(--color-primary);
-      padding: 14px 24px;
       display: flex;
       align-items: center;
+      padding: 0 24px;
       gap: 12px;
+      flex-shrink: 0;
     }
-    .wizard-header-icon {
+    .master-header-icon {
       width: 32px; height: 32px;
       background: rgba(59,130,246,0.15);
       border-radius: var(--radius-sm);
       display: flex; align-items: center; justify-content: center;
-      color: var(--color-accent);
-      font-size: 18px;
+      color: var(--color-accent); font-size: 18px;
     }
-    .wizard-header-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #FFFFFF;
-    }
-    .wizard-header-subtitle {
-      font-size: 12px;
-      color: #94A3B8;
-      margin-left: auto;
-    }
-    .wizard-content {
+    .master-header-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .master-header-sub { font-size: 12px; color: var(--color-text-muted); margin-left: auto; }
+
+    /* === LAYOUT === */
+    .master-wrap { display: flex; flex-direction: column; height: 100vh; }
+    .master-layout {
+      display: flex;
       flex: 1;
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 28px 24px 40px;
+      overflow: hidden;
     }
 
-    /* ==========================================
-       CARDS
-       ========================================== */
+    /* === SIDEBAR === */
+    .master-sidebar {
+      width: var(--sidebar-w);
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: 28px 20px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sb-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin: 20px 0 12px 44px;
+    }
+    .sb-group-label:first-child { margin-top: 0; }
+    .sb-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition);
+      position: relative;
+      margin-bottom: 2px;
+    }
+    .sb-step:hover { background: #F8FAFC; }
+    .sb-step.active { background: var(--color-accent-lighter); }
+    .sb-circle {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+      flex-shrink: 0;
+      transition: all var(--transition);
+      background: #F1F5F9;
+      color: var(--color-text-muted);
+    }
+    .sb-step.active .sb-circle {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .sb-step.completed .sb-circle {
+      background: var(--color-success);
+      color: #fff;
+    }
+    .sb-step.skipped .sb-circle {
+      background: transparent;
+      border: 2px dashed #CBD5E1;
+      color: #CBD5E1;
+    }
+    .sb-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); }
+    .sb-step.active .sb-label { color: var(--color-accent); font-weight: 600; }
+    .sb-step.completed .sb-label { color: var(--color-success); }
+    .sb-step.skipped .sb-label { color: #CBD5E1; }
+
+    /* === MOBILE PROGRESS === */
+    .mobile-progress {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 12px 20px;
+    }
+    .mobile-progress-label { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); white-space: nowrap; }
+    .mobile-bar { flex: 1; height: 4px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
+    .mobile-bar-fill { height: 100%; background: var(--color-accent); border-radius: 4px; transition: width 0.3s ease; }
+
+    /* === CONTENT === */
+    .master-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .step-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 40px;
+    }
+    .step-panel { display: none; max-width: 640px; }
+    .step-panel.visible {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === STEP CARD === */
     .step-card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: 28px 24px;
+      padding: 32px 28px;
       box-shadow: var(--shadow-sm);
     }
     .step-card-header {
@@ -118,116 +193,28 @@
       color: var(--color-accent);
       flex-shrink: 0;
     }
-    .step-card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--color-text);
-    }
-    .step-card-desc {
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      margin-top: 2px;
-    }
+    .step-card-title { font-size: 17px; font-weight: 700; }
+    .step-card-desc { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
 
-    /* Tool sub-cards */
-    .tool-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      margin-bottom: 16px;
-      transition: all var(--transition);
-    }
-    .tool-card:last-child { margin-bottom: 0; }
-    .tool-card.disabled {
-      opacity: 0.55;
-      background: #FAFBFC;
-    }
-    .tool-card.disabled .tool-card-body { display: none; }
-    .tool-card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .tool-card-header-has-body { margin-bottom: 16px; }
-    .tool-card.disabled .tool-card-header { margin-bottom: 0; }
-    .tool-card-icon {
-      width: 36px; height: 36px;
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      background: #F1F5F9;
-      color: var(--color-text-secondary);
-      flex-shrink: 0;
-    }
-    .tool-card:not(.disabled) .tool-card-icon {
-      background: var(--color-accent-lighter);
-      color: var(--color-accent);
-    }
-    .tool-card-title { font-size: 14px; font-weight: 600; }
-    .tool-card-desc { font-size: 12px; color: var(--color-text-muted); margin-top: 1px; }
-    .tool-card-body { }
-
-    /* Toggle switch */
-    .tool-toggle {
-      position: relative;
-      width: 40px; height: 22px;
-      background: #CBD5E1;
-      border-radius: 11px;
-      cursor: pointer;
-      transition: background var(--transition);
-      flex-shrink: 0;
-      margin-left: auto;
-    }
-    .tool-toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 3px;
-      width: 16px; height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      transition: transform var(--transition);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-    .tool-toggle.on {
-      background: var(--color-accent);
-    }
-    .tool-toggle.on::after {
-      transform: translateX(18px);
-    }
-
-    /* ==========================================
-       FORM COMPONENTS
-       ========================================== */
-    .form-group { margin-bottom: 18px; }
+    /* === FORMS === */
+    .form-group { margin-bottom: 20px; }
     .form-group:last-child { margin-bottom: 0; }
     .form-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #334155;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #334155;
       margin-bottom: 7px;
     }
     .form-label i { font-size: 15px; color: var(--color-text-muted); }
     .required-mark { color: var(--color-error); font-weight: 700; }
     .input-wrap { position: relative; }
     .input-wrap .input-ico {
-      position: absolute;
-      left: 13px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 17px;
-      color: #94A3B8;
-      pointer-events: none;
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      font-size: 17px; color: #94A3B8; pointer-events: none;
     }
     .form-input {
       width: 100%;
       padding: 12px 14px 12px 42px;
-      font-size: 14px;
-      font-family: inherit;
+      font-size: 14px; font-family: inherit;
       border: 1.5px solid var(--color-border);
       border-radius: var(--radius-sm);
       background: #FAFBFC;
@@ -235,144 +222,100 @@
       transition: all var(--transition);
     }
     .form-input:focus {
-      border-color: var(--color-accent);
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-      outline: none;
+      border-color: var(--color-accent); background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1); outline: none;
     }
     .form-input::placeholder { color: #94A3B8; }
     .form-input.no-icon { padding-left: 14px; }
+    .form-input.error { border-color: var(--color-error); }
     .form-select {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: 14px;
-      font-family: inherit;
+      width: 100%; padding: 12px 14px;
+      font-size: 14px; font-family: inherit;
       border: 1.5px solid var(--color-border);
       border-radius: var(--radius-sm);
-      background: #FAFBFC;
-      color: var(--color-text);
+      background: #FAFBFC; color: var(--color-text);
       transition: all var(--transition);
       cursor: pointer;
-      -webkit-appearance: none;
-      appearance: none;
+      -webkit-appearance: none; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 14px center;
     }
     .form-select:focus {
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-      outline: none;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1); outline: none;
     }
     .form-hint {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--color-text-muted);
-      margin-top: 6px;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--color-text-muted); margin-top: 6px;
     }
     .form-hint i { font-size: 14px; }
-    .form-row {
-      display: flex;
-      gap: 14px;
+    .form-error {
+      font-size: 12px; color: var(--color-error);
+      margin-top: 5px; display: none;
     }
+    .form-error.visible { display: block; }
+    .form-row { display: flex; gap: 14px; }
     .form-row .form-group { flex: 1; }
 
-    /* Info box */
+    /* === INFO BOX === */
     .info-box {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
+      display: flex; align-items: flex-start; gap: 10px;
       padding: 12px 14px;
       background: var(--color-accent-lighter);
       border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      line-height: 1.5;
-      margin-bottom: 18px;
+      font-size: 13px; color: var(--color-text-secondary);
+      line-height: 1.55; margin-bottom: 20px;
     }
     .info-box i { font-size: 17px; color: var(--color-accent); flex-shrink: 0; margin-top: 1px; }
-    .info-box.hidden { display: none; }
 
-    /* ==========================================
-       TAGS INPUT
-       ========================================== */
+    /* === TAGS === */
     .tags-wrap {
       border: 1.5px solid var(--color-border);
       border-radius: var(--radius-sm);
       padding: 8px 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      display: flex; flex-wrap: wrap; gap: 6px;
       min-height: 46px;
-      background: #FAFBFC;
-      cursor: text;
+      background: #FAFBFC; cursor: text;
       transition: all var(--transition);
     }
     .tags-wrap:focus-within {
-      border-color: var(--color-accent);
-      background: #fff;
+      border-color: var(--color-accent); background: #fff;
       box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
     }
     .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
+      display: inline-flex; align-items: center; gap: 5px;
       padding: 5px 8px 5px 10px;
       background: var(--color-accent-light);
       color: var(--color-accent-hover);
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 500;
+      border-radius: 6px; font-size: 13px; font-weight: 500;
       animation: tagPop 0.15s ease;
     }
-    @keyframes tagPop {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    @keyframes tagPop { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
     .tag-remove {
       display: flex; align-items: center; justify-content: center;
-      width: 18px; height: 18px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--color-accent);
-      transition: all var(--transition);
+      width: 18px; height: 18px; border-radius: 4px;
+      cursor: pointer; font-size: 14px;
+      color: var(--color-accent); transition: all var(--transition);
     }
     .tag-remove:hover { background: rgba(59,130,246,0.15); }
     .tags-input {
-      flex: 1;
-      min-width: 140px;
-      border: none;
-      outline: none;
-      font-size: 14px;
-      font-family: inherit;
-      background: transparent;
-      color: var(--color-text);
+      flex: 1; min-width: 140px; border: none; outline: none;
+      font-size: 14px; font-family: inherit;
+      background: transparent; color: var(--color-text);
       padding: 4px 2px;
     }
     .tags-input::placeholder { color: #94A3B8; }
-    .tags-count {
-      font-size: 12px;
-      color: var(--color-text-muted);
-      margin-top: 6px;
-    }
+    .tags-count { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; }
 
-    /* ==========================================
-       OPTION CARDS
-       ========================================== */
+    /* === OPTION CARDS === */
     .options-row { display: flex; gap: 12px; }
     .option-card {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      flex: 1; display: flex; align-items: center; gap: 12px;
       padding: 14px 16px;
       border: 1.5px solid var(--color-border);
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all var(--transition);
+      cursor: pointer; transition: all var(--transition);
       user-select: none;
     }
     .option-card:hover { border-color: var(--color-border-hover); }
@@ -380,43 +323,27 @@
       border-color: var(--color-accent);
       background: var(--color-accent-lighter);
     }
-    .option-card-icon {
-      font-size: 22px;
-      color: var(--color-text-muted);
-    }
+    .option-card-icon { font-size: 22px; color: var(--color-text-muted); }
     .option-card.selected .option-card-icon { color: var(--color-accent); }
     .option-card-label { font-size: 14px; font-weight: 500; }
     .option-card-check {
-      margin-left: auto;
-      font-size: 18px;
-      color: var(--color-accent);
-      opacity: 0;
+      margin-left: auto; font-size: 18px;
+      color: var(--color-accent); opacity: 0;
       transition: opacity var(--transition);
     }
     .option-card.selected .option-card-check { opacity: 1; }
 
-    /* ==========================================
-       BUTTONS
-       ========================================== */
+    /* === BUTTONS === */
     .btn-launch {
-      width: 100%;
-      padding: 16px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
+      width: 100%; padding: 16px;
+      font-size: 15px; font-weight: 600; font-family: inherit;
       color: #fff;
-      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-      border: none;
-      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+      border: none; border-radius: var(--radius-md);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: all var(--transition);
-      margin-top: 20px;
-      position: relative;
-      overflow: hidden;
+      margin-top: 20px; position: relative; overflow: hidden;
     }
     .btn-launch:hover:not(:disabled) {
       box-shadow: 0 6px 20px rgba(59,130,246,0.35);
@@ -424,375 +351,287 @@
     }
     .btn-launch:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
     .btn-launch i { font-size: 20px; }
-
-    .btn-section {
-      width: 100%;
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      color: #fff;
-      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all var(--transition);
-      margin-top: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-section:hover:not(:disabled) {
-      box-shadow: 0 4px 14px rgba(59,130,246,0.3);
-      transform: translateY(-1px);
-    }
-    .btn-section:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-    .btn-section i { font-size: 18px; }
-
-    /* Loading state for buttons */
     .btn-loading > * { visibility: hidden; }
     .btn-loading::after {
-      content: '';
-      position: absolute;
+      content: ''; position: absolute;
       top: 50%; left: 50%;
-      width: 20px; height: 20px;
-      margin: -10px 0 0 -10px;
+      width: 20px; height: 20px; margin: -10px 0 0 -10px;
       border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
+      border-top-color: #fff; border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ==========================================
-       PHASE DIVIDER
-       ========================================== */
-    .phase-divider {
+    /* === STEP NAV === */
+    .step-nav {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin: 24px 0;
-      padding: 0 8px;
-    }
-    .phase-divider-line {
-      flex: 1;
-      height: 1px;
-      background: var(--color-border);
-    }
-    .phase-divider-icon {
-      width: 36px; height: 36px;
-      background: var(--color-accent-lighter);
-      border: 1.5px solid var(--color-accent-light);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      color: var(--color-accent);
+      justify-content: space-between;
+      padding: 16px 40px;
+      border-top: 1px solid var(--color-border);
+      background: var(--color-surface);
       flex-shrink: 0;
     }
-    .phase-divider-text {
-      font-size: 12px;
-      color: var(--color-text-muted);
-      white-space: nowrap;
-      font-weight: 500;
+    .step-nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px;
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      border: none; border-radius: var(--radius-sm);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-btn i { font-size: 17px; }
+    .nav-btn-back { background: transparent; color: var(--color-text-secondary); }
+    .nav-btn-back:hover:not(:disabled) { background: #F1F5F9; }
+    .nav-btn-skip { background: transparent; color: var(--color-text-muted); }
+    .nav-btn-skip:hover:not(:disabled) { color: var(--color-text-secondary); }
+    .nav-btn-next {
+      background: var(--color-accent); color: #fff;
+      padding: 10px 24px;
+    }
+    .nav-btn-next:hover:not(:disabled) {
+      background: var(--color-accent-hover);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.3);
     }
 
-    /* ==========================================
-       WARNING
-       ========================================== */
-    .launch-warning {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 14px;
-      background: var(--color-warning-light);
+    /* === SUMMARY (Step 4) === */
+    .summary-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .summary-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
       border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: #92400E;
-      margin-top: 16px;
+      font-size: 13px; font-weight: 500;
     }
-    .launch-warning i { font-size: 20px; color: var(--color-warning); }
-    .launch-warning.visible { display: flex; }
-
-    /* ==========================================
-       RESULTS
-       ========================================== */
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    .summary-item i:first-child { font-size: 18px; }
+    .summary-item.active {
+      background: var(--color-accent-lighter);
+      color: var(--color-accent-hover);
+    }
+    .summary-item.skipped {
+      background: #F8FAFC;
+      color: var(--color-text-muted);
     }
 
+    /* === RESULTS === */
     .result-card {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
-      padding: 16px;
-      margin-top: 16px;
-      animation: fadeSlideIn 0.3s ease forwards;
+      padding: 16px; margin-top: 16px;
+      animation: fadeIn 0.3s ease;
     }
     .result-card.success { border-color: #BBF7D0; background: #F0FDF4; }
     .result-card.error { border-color: #FECACA; background: #FEF2F2; }
     .result-card.loading { border-color: var(--color-accent-light); background: var(--color-accent-lighter); }
     .result-card.hidden { display: none; }
-
     .result-card-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600;
     }
     .result-card.success .result-card-header { color: #166534; }
     .result-card.error .result-card-header { color: #991B1B; }
     .result-card.loading .result-card-header { color: var(--color-accent-hover); }
     .result-card-header i { font-size: 18px; }
-
     .result-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 13px; font-weight: 500;
       color: var(--color-accent-hover);
       background: var(--color-accent-lighter);
       border: 1px solid var(--color-accent-light);
       border-radius: var(--radius-sm);
-      text-decoration: none;
-      transition: all var(--transition);
+      text-decoration: none; transition: all var(--transition);
       margin-top: 8px;
     }
     .result-link:hover { background: var(--color-accent-light); }
     .result-link i { font-size: 16px; }
-    .result-link.doc-link {
-      color: #7C3AED;
-      background: #EDE9FE;
-      border-color: #DDD6FE;
-    }
+    .result-link.doc-link { color: #7C3AED; background: #EDE9FE; border-color: #DDD6FE; }
     .result-link.doc-link:hover { background: #DDD6FE; }
-    .result-link.folder-link {
-      color: #166534;
-      background: #F0FDF4;
-      border-color: #BBF7D0;
-    }
+    .result-link.folder-link { color: #166534; background: #F0FDF4; border-color: #BBF7D0; }
     .result-link.folder-link:hover { background: #DCFCE7; }
-
-    .result-link-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .result-link-row .result-link {
-      flex: 1;
-      margin-top: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* Copy button */
+    .result-link-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .result-link-row .result-link { flex: 1; margin-top: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .copy-btn {
       width: 38px; height: 38px;
       display: flex; align-items: center; justify-content: center;
       background: var(--color-accent-lighter);
       border: 1px solid var(--color-accent-light);
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 16px;
+      cursor: pointer; font-size: 16px;
       color: var(--color-accent);
-      transition: all var(--transition);
-      flex-shrink: 0;
+      transition: all var(--transition); flex-shrink: 0;
     }
     .copy-btn:hover { background: var(--color-accent-light); }
-    .copy-btn.copied {
-      background: var(--color-success-light);
-      border-color: #BBF7D0;
-      color: var(--color-success);
-    }
-
-    /* Competitor sub-results */
+    .copy-btn.copied { background: var(--color-success-light); border-color: #BBF7D0; color: var(--color-success); }
     .competitor-result-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      font-size: 13px;
-      color: var(--color-text-secondary);
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; font-size: 13px; color: var(--color-text-secondary);
     }
-    .competitor-result-item a {
-      color: var(--color-accent-hover);
-      text-decoration: none;
-      font-weight: 500;
-    }
+    .competitor-result-item a { color: var(--color-accent-hover); text-decoration: none; font-weight: 500; }
     .competitor-result-item a:hover { text-decoration: underline; }
-    .competitor-result-item .copy-btn {
-      width: 26px; height: 26px;
-      font-size: 13px;
-    }
-    .detail-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .competitor-result-item .copy-btn { width: 26px; height: 26px; font-size: 13px; }
+    .detail-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .detail-dot.success { background: var(--color-success); }
     .detail-dot.error { background: var(--color-error); }
-    .detail-dot.skipped { background: #CBD5E1; }
 
-    /* ==========================================
-       FOOTER
-       ========================================== */
-    .master-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0 0;
-      margin-top: 20px;
-    }
-    .footer-info {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--color-text-muted);
-    }
-    .footer-info i { font-size: 15px; }
-    .footer-brand {
-      font-size: 12px;
-      color: var(--color-text-muted);
-    }
-    .footer-brand span { color: var(--color-accent); font-weight: 600; }
-
-    /* ==========================================
-       RESPONSIVE
-       ========================================== */
+    /* === RESPONSIVE === */
     @media (max-width: 767px) {
-      .wizard-content { padding: 20px 16px 32px; }
-      .step-card { padding: 22px 18px; }
-      .wizard-header-subtitle { display: none; }
+      .master-sidebar { display: none; }
+      .mobile-progress { display: flex; }
+      .step-scroll { padding: 20px 16px; }
+      .step-nav { padding: 12px 16px; }
+      .step-card { padding: 24px 20px; }
     }
     @media (max-width: 520px) {
       .form-row { flex-direction: column; gap: 0; }
       .options-row { flex-direction: column; }
-      .tool-card { padding: 16px; }
     }
   </style>
 </head>
 <body>
-  <div class="wizard">
+<div class="master-wrap">
 
-    <!-- HEADER -->
-    <header class="wizard-header">
-      <div class="wizard-header-icon"><i class="ti ti-chart-dots-3"></i></div>
-      <div class="wizard-header-title">SEO Audit — Мастер</div>
-      <div class="wizard-header-subtitle">WebPromo</div>
-    </header>
+  <!-- HEADER -->
+  <header class="master-header">
+    <div class="master-header-icon"><i class="ti ti-chart-dots-3"></i></div>
+    <div class="master-header-title">SEO Audit — Мастер-оркестратор</div>
+    <div class="master-header-sub">WebPromo</div>
+  </header>
+
+  <div class="master-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="master-sidebar" id="sidebar">
+      <div class="sb-group-label">Етап 1 — Збір даних</div>
+      <div class="sb-step active" data-step="1" onclick="goToStep(1)">
+        <div class="sb-circle">1</div>
+        <div class="sb-label">Основні дані</div>
+      </div>
+      <div class="sb-step" data-step="2" onclick="goToStep(2)">
+        <div class="sb-circle">2</div>
+        <div class="sb-label">Конкуренти</div>
+      </div>
+      <div class="sb-step" data-step="3" onclick="goToStep(3)">
+        <div class="sb-circle">3</div>
+        <div class="sb-label">Семантика</div>
+      </div>
+      <div class="sb-step" data-step="4" onclick="goToStep(4)">
+        <div class="sb-circle">4</div>
+        <div class="sb-label">Запуск аналізу</div>
+      </div>
+      <div class="sb-group-label">Етап 2 — Обробка</div>
+      <div class="sb-step" data-step="5" onclick="goToStep(5)">
+        <div class="sb-circle">5</div>
+        <div class="sb-label">Метрики</div>
+      </div>
+      <div class="sb-step" data-step="6" onclick="goToStep(6)">
+        <div class="sb-circle">6</div>
+        <div class="sb-label">PageSpeed</div>
+      </div>
+      <div class="sb-step" data-step="7" onclick="goToStep(7)">
+        <div class="sb-circle">7</div>
+        <div class="sb-label">AI аналіз</div>
+      </div>
+      <div class="sb-step" data-step="8" onclick="goToStep(8)">
+        <div class="sb-circle">8</div>
+        <div class="sb-label">PDF парсинг</div>
+      </div>
+    </aside>
+
+    <!-- MOBILE PROGRESS -->
+    <div class="mobile-progress" id="mobileProgress">
+      <div class="mobile-progress-label" id="mobileLabel">Крок 1 з 8</div>
+      <div class="mobile-bar"><div class="mobile-bar-fill" id="mobileBar" style="width:12.5%"></div></div>
+    </div>
 
     <!-- CONTENT -->
-    <main class="wizard-content">
+    <main class="master-content">
+      <div class="step-scroll">
 
-      <!-- ======================================== -->
-      <!-- PHASE 1: Data Collection                 -->
-      <!-- ======================================== -->
-      <div class="step-card" id="phase1Card">
-        <div class="step-card-header">
-          <div class="step-card-icon"><i class="ti ti-database"></i></div>
-          <div>
-            <div class="step-card-title">Етап 1 — Збір даних</div>
-            <div class="step-card-desc">Аналіз клієнта, конкурентів, розширення семантичного ядра</div>
-          </div>
-        </div>
-
-        <!-- Email (shared) -->
-        <div class="form-group">
-          <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
-          <div class="input-wrap">
-            <i class="ti ti-mail input-ico"></i>
-            <input type="email" id="managerEmail" class="form-input" placeholder="manager@webpromo.com.ua" autocomplete="off" spellcheck="false">
-          </div>
-          <div class="form-hint"><i class="ti ti-info-circle"></i> Результати будуть збережені у вашу папку на Google Drive</div>
-        </div>
-
-        <!-- 1. Client analysis -->
-        <div class="tool-card" id="clientSection">
-          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('clientSection')">
-            <div class="tool-card-icon"><i class="ti ti-world"></i></div>
-            <div>
-              <div class="tool-card-title">Аналіз клієнта</div>
-              <div class="tool-card-desc">SEO-аудит домену клієнта</div>
+        <!-- STEP 1: Основні дані -->
+        <section class="step-panel visible" data-step="1">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-user"></i></div>
+              <div>
+                <div class="step-card-title">Основні дані</div>
+                <div class="step-card-desc">Email менеджера та домен клієнта</div>
+              </div>
             </div>
-            <div class="tool-toggle on" id="clientToggle"></div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Збирає органічний трафік, ключові фрази, посилальний профіль та поведінкові метрики домену. Результат — Google таблиця з 6 вкладками.</span>
+              <span>Введіть email менеджера — результати аналізу будуть збережені у його папку на Google Drive. Вкажіть домен клієнта без https:// та www.</span>
             </div>
             <div class="form-group">
-              <label class="form-label"><i class="ti ti-link"></i> Домен клієнта</label>
+              <label class="form-label"><i class="ti ti-mail"></i> Email менеджера <span class="required-mark">*</span></label>
+              <div class="input-wrap">
+                <i class="ti ti-mail input-ico"></i>
+                <input type="email" id="fEmail" class="form-input" placeholder="manager@webpromo.com.ua" autocomplete="off">
+              </div>
+              <div class="form-error" id="fEmailErr">Введіть коректний email</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-world"></i> Домен клієнта <span class="required-mark">*</span></label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="clientDomain" class="form-input" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
+                <input type="text" id="fDomain" class="form-input" placeholder="example.com.ua" autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> Вводьте домен без https:// та www</div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Без https:// та www. Наприклад: rozetka.com.ua</div>
+              <div class="form-error" id="fDomainErr">Введіть домен клієнта</div>
             </div>
-            <div class="result-card hidden" id="clientResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 2. Competitors -->
-        <div class="tool-card" id="competitorsSection">
-          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('competitorsSection')">
-            <div class="tool-card-icon"><i class="ti ti-users"></i></div>
-            <div>
-              <div class="tool-card-title">Аналіз конкурентів</div>
-              <div class="tool-card-desc">SEO-аудит доменів конкурентів</div>
+        <!-- STEP 2: Конкуренти -->
+        <section class="step-panel" data-step="2">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-users"></i></div>
+              <div>
+                <div class="step-card-title">Аналіз конкурентів</div>
+                <div class="step-card-desc">Додайте домени конкурентів для порівняльного аналізу</div>
+              </div>
             </div>
-            <div class="tool-toggle on" id="competitorsToggle"></div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-info-circle"></i>
-              <span>Для кожного конкурента створюється окрема таблиця з тими ж метриками, що й для клієнта. Конкуренти обробляються послідовно.</span>
+              <span>Для кожного конкурента буде створена окрема таблиця з аналізом органічного трафіку, ключових фраз та посилального профілю. Конкуренти обробляються послідовно.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-world"></i> Домени конкурентів</label>
-              <div class="tags-wrap" id="competitorsTags" onclick="document.getElementById('competitorsInput').focus()">
-                <input type="text" class="tags-input" id="competitorsInput" placeholder="Введіть домен та натисніть Enter" spellcheck="false">
+              <div class="tags-wrap" id="compTagsWrap" onclick="document.getElementById('compInput').focus()">
+                <input type="text" class="tags-input" id="compInput" placeholder="Введіть домен та натисніть Enter" spellcheck="false">
               </div>
               <div class="form-hint"><i class="ti ti-info-circle"></i> Enter — додати, Backspace — видалити. Можна вставити список (Ctrl+V).</div>
+              <div class="tags-count" id="compCount"></div>
             </div>
-            <div class="result-card hidden" id="competitorsResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 3. Semantic expansion -->
-        <div class="tool-card" id="semanticSection">
-          <div class="tool-card-header tool-card-header-has-body" onclick="toggleSection('semanticSection')">
-            <div class="tool-card-icon"><i class="ti ti-plant-2"></i></div>
-            <div>
-              <div class="tool-card-title">Розширення семантичного ядра</div>
-              <div class="tool-card-desc">GKP: генерація ідей з seed-фраз</div>
+        <!-- STEP 3: Семантика -->
+        <section class="step-panel" data-step="3">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-plant-2"></i></div>
+              <div>
+                <div class="step-card-title">Розширення семантичного ядра</div>
+                <div class="step-card-desc">Генерація ідей ключових слів з seed-фраз</div>
+              </div>
             </div>
-            <div class="tool-toggle on" id="semanticToggle"></div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Google Keyword Planner генерує нові ідеї ключових слів на основі ваших seed-фраз. Seed-фрази мають бути у першому стовпці.</span>
+              <span>Google Keyword Planner згенерує нові ідеї на основі seed-фраз з таблиці. Seed-фрази мають бути у першому стовпці першого аркуша.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з seed-фразами</label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="semanticUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+                <input type="text" id="fSemUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Мова</label>
-                <select id="semanticLang" class="form-select">
+                <select id="fSemLang" class="form-select">
                   <option value="1036" selected>Українська</option>
                   <option value="1000">English</option>
                   <option value="1030">Polski</option>
@@ -808,16 +647,11 @@
                   <option value="1024">Magyar</option>
                   <option value="1015">Svenska</option>
                   <option value="1037">Türkçe</option>
-                  <option value="1009">Dansk</option>
-                  <option value="1013">Norsk</option>
-                  <option value="1011">Suomi</option>
-                  <option value="1033">Slovenčina</option>
-                  <option value="1020">Български</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Регіон</label>
-                <select id="semanticGeo" class="form-select">
+                <select id="fSemGeo" class="form-select">
                   <option value="2804" selected>Україна</option>
                   <option value="2840">США</option>
                   <option value="2826">Великобританія</option>
@@ -834,86 +668,64 @@
                   <option value="2040">Австрія</option>
                   <option value="2756">Швейцарія</option>
                   <option value="2792">Туреччина</option>
-                  <option value="2752">Швеція</option>
-                  <option value="2620">Португалія</option>
-                  <option value="2056">Бельгія</option>
-                  <option value="2348">Угорщина</option>
                 </select>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- STEP 4: Запуск аналізу -->
+        <section class="step-panel" data-step="4">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon" style="background:linear-gradient(135deg,var(--color-accent-light),#C7D2FE);color:var(--color-accent-hover);">
+                <i class="ti ti-rocket"></i>
+              </div>
+              <div>
+                <div class="step-card-title">Запуск збору даних</div>
+                <div class="step-card-desc">Перевірте дані та запустіть аналіз</div>
+              </div>
+            </div>
+            <div class="info-box">
+              <i class="ti ti-info-circle"></i>
+              <span>Перевірте обрані параметри та натисніть «Запустити». Час виконання залежить від кількості конкурентів (1-2 хв на домен).</span>
+            </div>
+            <div class="summary-list" id="summaryList"></div>
+            <button class="btn-launch" id="btnLaunch1" onclick="launchPhase1()">
+              <i class="ti ti-rocket"></i> <span>Запустити аналіз</span>
+            </button>
+            <div class="result-card hidden" id="phase1Result"></div>
+            <div class="result-card hidden" id="clientResult"></div>
+            <div class="result-card hidden" id="competitorsResult"></div>
             <div class="result-card hidden" id="semanticResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- Warning -->
-        <div class="launch-warning" id="phase1Warning">
-          <i class="ti ti-alert-triangle"></i>
-          <span>Увімкніть хоча б один блок Етапу 1</span>
-        </div>
-
-        <!-- Phase 1 button -->
-        <button class="btn-launch" id="phase1Btn" onclick="handlePhase1Submit()">
-          <i class="ti ti-rocket"></i> Запустити Етап 1
-        </button>
-
-        <!-- Phase 1 overall result -->
-        <div class="result-card hidden" id="phase1Result"></div>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- PHASE DIVIDER                            -->
-      <!-- ======================================== -->
-      <div class="phase-divider">
-        <div class="phase-divider-line"></div>
-        <div class="phase-divider-icon"><i class="ti ti-arrow-down"></i></div>
-        <div class="phase-divider-text">Результати Етапу 1 → Етап 2</div>
-        <div class="phase-divider-line"></div>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- PHASE 2: Analysis & Processing           -->
-      <!-- ======================================== -->
-      <div class="step-card" id="phase2Card">
-        <div class="step-card-header">
-          <div class="step-card-icon"><i class="ti ti-sparkles"></i></div>
-          <div>
-            <div class="step-card-title">Етап 2 — Аналіз та обробка</div>
-            <div class="step-card-desc">Метрики, PageSpeed, AI-аналіз, PDF-парсинг — використовують результати Етапу 1</div>
-          </div>
-        </div>
-
-        <!-- Phase 2 hint (shown after Phase 1) -->
-        <div class="info-box hidden" id="phase2Hint">
-          <i class="ti ti-link"></i>
-          <span>Посилання на таблиці з Етапу 1 доступні вище. Натисніть кнопку копіювання, щоб скопіювати та вставити сюди.</span>
-        </div>
-
-        <!-- 4. Metrics -->
-        <div class="tool-card" id="metricsSection">
-          <div class="tool-card-header tool-card-header-has-body">
-            <div class="tool-card-icon"><i class="ti ti-chart-bar"></i></div>
-            <div>
-              <div class="tool-card-title">Отримання метрик</div>
-              <div class="tool-card-desc">GKP: об'єм пошуку для ключових слів</div>
+        <!-- STEP 5: Метрики -->
+        <section class="step-panel" data-step="5">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-chart-bar"></i></div>
+              <div>
+                <div class="step-card-title">Отримання метрик</div>
+                <div class="step-card-desc">Об'єм пошуку, конкуренція, CPC для ключових слів</div>
+              </div>
             </div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Отримує об'єм пошуку, конкуренцію та CPC для списку ключових слів через Google Keyword Planner.</span>
+              <span>Вкажіть таблицю з ключовими словами — Google Keyword Planner отримає об'єм пошуку та CPC. Можна використати результат з етапу «Семантика».</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з ключовими словами</label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="metricsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+                <input type="text" id="fMetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> Можна використати результат з Етапу 1 «Розширення семантики»</div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Мова</label>
-                <select id="metricsLang" class="form-select">
+                <select id="fMetLang" class="form-select">
                   <option value="1036" selected>Українська</option>
                   <option value="1000">English</option>
                   <option value="1030">Polski</option>
@@ -929,16 +741,11 @@
                   <option value="1024">Magyar</option>
                   <option value="1015">Svenska</option>
                   <option value="1037">Türkçe</option>
-                  <option value="1009">Dansk</option>
-                  <option value="1013">Norsk</option>
-                  <option value="1011">Suomi</option>
-                  <option value="1033">Slovenčina</option>
-                  <option value="1020">Български</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Регіон</label>
-                <select id="metricsGeo" class="form-select">
+                <select id="fMetGeo" class="form-select">
                   <option value="2804" selected>Україна</option>
                   <option value="2840">США</option>
                   <option value="2826">Великобританія</option>
@@ -955,41 +762,36 @@
                   <option value="2040">Австрія</option>
                   <option value="2756">Швейцарія</option>
                   <option value="2792">Туреччина</option>
-                  <option value="2752">Швеція</option>
-                  <option value="2620">Португалія</option>
-                  <option value="2056">Бельгія</option>
-                  <option value="2348">Угорщина</option>
                 </select>
               </div>
             </div>
-            <button class="btn-section" id="metricsBtn" onclick="handleMetricsSubmit()">
-              <i class="ti ti-chart-bar"></i> Отримати метрики
+            <button class="btn-launch" id="btnMetrics" onclick="launchMetrics()">
+              <i class="ti ti-chart-bar"></i> <span>Отримати метрики</span>
             </button>
             <div class="result-card hidden" id="metricsResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 5. PageSpeed -->
-        <div class="tool-card" id="pagespeedSection">
-          <div class="tool-card-header tool-card-header-has-body">
-            <div class="tool-card-icon"><i class="ti ti-gauge"></i></div>
-            <div>
-              <div class="tool-card-title">PageSpeed Test</div>
-              <div class="tool-card-desc">Аналіз швидкості завантаження сторінок</div>
+        <!-- STEP 6: PageSpeed -->
+        <section class="step-panel" data-step="6">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-gauge"></i></div>
+              <div>
+                <div class="step-card-title">PageSpeed Test</div>
+                <div class="step-card-desc">Аналіз швидкості завантаження сторінок</div>
+              </div>
             </div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Тестує швидкість через Google PageSpeed Insights API. Результат — Core Web Vitals (LCP, FID, CLS) та оцінка продуктивності.</span>
+              <span>Вкажіть таблицю з URL-адресами сторінок — Google PageSpeed Insights протестує швидкість та Core Web Vitals (LCP, FID, CLS).</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з URL для тестування</label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="pagespeedUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+                <input type="text" id="fPsUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> URL-адреси сторінок мають бути у першому стовпці</div>
             </div>
             <div class="form-group">
               <label class="form-label">Тип тесту</label>
@@ -1006,645 +808,669 @@
                 </div>
               </div>
             </div>
-            <button class="btn-section" id="pagespeedBtn" onclick="handlePageSpeedSubmit()">
-              <i class="ti ti-gauge"></i> Запустити PageSpeed
+            <button class="btn-launch" id="btnPageSpeed" onclick="launchPageSpeed()">
+              <i class="ti ti-gauge"></i> <span>Запустити PageSpeed</span>
             </button>
             <div class="result-card hidden" id="pagespeedResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 6. AI Analysis -->
-        <div class="tool-card" id="aiSection">
-          <div class="tool-card-header tool-card-header-has-body">
-            <div class="tool-card-icon"><i class="ti ti-brain"></i></div>
-            <div>
-              <div class="tool-card-title">AI аналіз домену</div>
-              <div class="tool-card-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+        <!-- STEP 7: AI аналіз -->
+        <section class="step-panel" data-step="7">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-brain"></i></div>
+              <div>
+                <div class="step-card-title">AI аналіз домену</div>
+                <div class="step-card-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+              </div>
             </div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Згенерує AI-звіт (Google Doc) з рекомендаціями на основі готової таблиці аналізу домену. Використовуйте результат «Аналіз клієнта» з Етапу 1.</span>
+              <span>Вкажіть таблицю аналізу домену — AI згенерує звіт (Google Doc) з SEO-рекомендаціями. Використовуйте результат «Аналіз клієнта» з Етапу 1.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-table"></i> Таблиця з аналізом домену</label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="aiSpreadsheetUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+                <input type="text" id="fAiUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> Вставте посилання на таблицю аналізу клієнта з Етапу 1</div>
             </div>
-            <button class="btn-section" id="aiBtn" onclick="handleAiSubmit()">
-              <i class="ti ti-brain"></i> Запустити AI аналіз
+            <button class="btn-launch" id="btnAI" onclick="launchAI()">
+              <i class="ti ti-brain"></i> <span>Запустити AI аналіз</span>
             </button>
             <div class="result-card hidden" id="aiResult"></div>
           </div>
-        </div>
+        </section>
 
-        <!-- 7. PDF Parsing -->
-        <div class="tool-card" id="pdfSection">
-          <div class="tool-card-header tool-card-header-has-body">
-            <div class="tool-card-icon"><i class="ti ti-file-type-pdf"></i></div>
-            <div>
-              <div class="tool-card-title">Парсинг PDF-аудиту</div>
-              <div class="tool-card-desc">PDF у структуровану Google таблицю</div>
+        <!-- STEP 8: PDF парсинг -->
+        <section class="step-panel" data-step="8">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-file-type-pdf"></i></div>
+              <div>
+                <div class="step-card-title">Парсинг PDF-аудиту</div>
+                <div class="step-card-desc">Перетворення PDF у структуровану Google таблицю</div>
+              </div>
             </div>
-          </div>
-          <div class="tool-card-body">
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Перетворює PDF-аудит з Google Drive у структуровану Google таблицю з окремими вкладками для кожного розділу.</span>
+              <span>Вкажіть посилання на PDF-аудит з Google Drive — буде створена структурована таблиця з окремими вкладками для кожного розділу.</span>
             </div>
             <div class="form-group">
               <label class="form-label"><i class="ti ti-file-type-pdf"></i> Посилання на PDF (Google Drive)</label>
               <div class="input-wrap">
                 <i class="ti ti-link input-ico"></i>
-                <input type="text" id="pdfUrl" class="form-input" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
+                <input type="text" id="fPdfUrl" class="form-input" placeholder="https://drive.google.com/file/d/..." autocomplete="off" spellcheck="false">
               </div>
-              <div class="form-hint"><i class="ti ti-info-circle"></i> PDF файл має бути на Google Drive та доступний для перегляду</div>
             </div>
-            <button class="btn-section" id="pdfBtn" onclick="handlePdfSubmit()">
-              <i class="ti ti-file-type-pdf"></i> Запустити парсинг PDF
+            <button class="btn-launch" id="btnPDF" onclick="launchPDF()">
+              <i class="ti ti-file-type-pdf"></i> <span>Запустити парсинг PDF</span>
             </button>
             <div class="result-card hidden" id="pdfResult"></div>
           </div>
-        </div>
+        </section>
+
       </div>
 
-      <!-- Footer -->
-      <div class="master-footer">
-        <div class="footer-info">
-          <i class="ti ti-clock"></i>
-          Час залежить від обраних блоків
-        </div>
-        <div class="footer-brand">
-          <span>WebPromo</span>
+      <!-- NAVIGATION -->
+      <div class="step-nav" id="stepNav">
+        <button class="nav-btn nav-btn-back" id="navBack" onclick="prevStep()">
+          <i class="ti ti-arrow-left"></i> Назад
+        </button>
+        <div class="step-nav-right">
+          <button class="nav-btn nav-btn-skip" id="navSkip" onclick="skipStep()">
+            Пропустити крок
+          </button>
+          <button class="nav-btn nav-btn-next" id="navNext" onclick="nextStep()">
+            Далі <i class="ti ti-arrow-right"></i>
+          </button>
         </div>
       </div>
-
     </main>
   </div>
+</div>
 
-  <script>
-    // ======================================
-    // Section toggles (Phase 1)
-    // ======================================
-    function toggleSection(sectionId) {
-      var el = document.getElementById(sectionId);
-      var toggle = document.getElementById(sectionId.replace('Section', 'Toggle'));
-      if (el.classList.contains('disabled')) {
-        el.classList.remove('disabled');
-        if (toggle) toggle.classList.add('on');
-        // Restore header margin
-        var header = el.querySelector('.tool-card-header');
-        if (header) header.classList.add('tool-card-header-has-body');
-      } else {
-        el.classList.add('disabled');
-        if (toggle) toggle.classList.remove('on');
-        var header = el.querySelector('.tool-card-header');
-        if (header) header.classList.remove('tool-card-header-has-body');
-      }
-      updateWarning();
-    }
+<script>
+// =========================================
+// STATE
+// =========================================
+var currentStep = 1;
+var totalSteps = 8;
+var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
+var phase1Done = false;
+var stepData = { email:'', domain:'', competitors:[], semantic:null, phase1Results:null };
 
-    function isSectionActive(sectionId) {
-      return !document.getElementById(sectionId).classList.contains('disabled');
-    }
+// =========================================
+// NAVIGATION
+// =========================================
+function goToStep(n) {
+  if (n < 1 || n > totalSteps) return;
+  // Can go back to completed/skipped, or forward to current+1
+  if (n > currentStep + 1 && stepStatus[n-1] === 'upcoming') return;
+  // For step 5+, must complete step 4 first
+  if (n >= 5 && !phase1Done) return;
 
-    function updateWarning() {
-      var anyActive = isSectionActive('clientSection') || isSectionActive('competitorsSection') ||
-        isSectionActive('semanticSection');
-      var w = document.getElementById('phase1Warning');
-      if (anyActive) {
-        w.classList.remove('visible');
-      } else {
-        w.classList.add('visible');
-      }
-    }
+  // Save current step data
+  saveStepData(currentStep);
 
-    // ======================================
-    // Option cards (PageSpeed)
-    // ======================================
-    function toggleOption(id) {
-      document.getElementById(id).classList.toggle('selected');
-    }
+  // Update previous step status
+  if (stepStatus[currentStep - 1] === 'active') {
+    stepStatus[currentStep - 1] = 'completed';
+  }
 
-    // ======================================
-    // Competitors tags
-    // ======================================
-    var competitors = [];
+  currentStep = n;
+  stepStatus[n - 1] = 'active';
 
-    function addCompetitor(val) {
-      var clean = val.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').trim().toLowerCase();
-      if (!clean || competitors.indexOf(clean) !== -1) return;
-      competitors.push(clean);
-      renderCompetitors();
-    }
+  showStep(n);
+  updateSidebar();
+  updateNav();
 
-    function removeCompetitor(idx) {
-      competitors.splice(idx, 1);
-      renderCompetitors();
-    }
+  // Pre-fill step 4 summary
+  if (n === 4) buildSummary();
+  // Pre-fill from Phase 1 results
+  if (n === 5 && stepData.phase1Results && stepData.phase1Results.semantic) {
+    var el = document.getElementById('fMetUrl');
+    if (!el.value) el.value = stepData.phase1Results.semantic;
+  }
+  if (n === 7 && stepData.phase1Results && stepData.phase1Results.client) {
+    var el = document.getElementById('fAiUrl');
+    if (!el.value) el.value = stepData.phase1Results.client;
+  }
+}
 
-    function renderCompetitors() {
-      var container = document.getElementById('competitorsTags');
-      var input = document.getElementById('competitorsInput');
-      var tags = container.querySelectorAll('.tag');
-      for (var i = 0; i < tags.length; i++) tags[i].remove();
-      for (var i = 0; i < competitors.length; i++) {
-        var tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.innerHTML = competitors[i] + '<span class="tag-remove" data-idx="' + i + '">&times;</span>';
-        container.insertBefore(tag, input);
-      }
-    }
+function nextStep() {
+  if (currentStep === totalSteps) return;
+  if (!validateStep(currentStep)) return;
+  saveStepData(currentStep);
+  stepStatus[currentStep - 1] = 'completed';
+  currentStep++;
+  stepStatus[currentStep - 1] = 'active';
+  showStep(currentStep);
+  updateSidebar();
+  updateNav();
+  if (currentStep === 4) buildSummary();
+  if (currentStep === 5 && stepData.phase1Results && stepData.phase1Results.semantic) {
+    var el = document.getElementById('fMetUrl');
+    if (!el.value) el.value = stepData.phase1Results.semantic;
+  }
+  if (currentStep === 7 && stepData.phase1Results && stepData.phase1Results.client) {
+    var el = document.getElementById('fAiUrl');
+    if (!el.value) el.value = stepData.phase1Results.client;
+  }
+}
 
-    document.getElementById('competitorsInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (this.value.trim()) { addCompetitor(this.value); this.value = ''; }
-      }
-      if (e.key === 'Backspace' && this.value === '' && competitors.length > 0) {
-        removeCompetitor(competitors.length - 1);
-      }
-    });
+function prevStep() {
+  if (currentStep <= 1) return;
+  saveStepData(currentStep);
+  if (stepStatus[currentStep - 1] === 'active') {
+    stepStatus[currentStep - 1] = 'upcoming';
+  }
+  currentStep--;
+  stepStatus[currentStep - 1] = 'active';
+  showStep(currentStep);
+  updateSidebar();
+  updateNav();
+}
 
-    document.getElementById('competitorsInput').addEventListener('paste', function(e) {
-      e.preventDefault();
-      var text = (e.clipboardData || window.clipboardData).getData('text');
-      var items = text.split(/[\n,;]+/);
-      for (var i = 0; i < items.length; i++) {
-        if (items[i].trim()) addCompetitor(items[i]);
-      }
-    });
+function skipStep() {
+  if (currentStep === 1 || currentStep === 4) return;
+  stepStatus[currentStep - 1] = 'skipped';
+  currentStep++;
+  if (currentStep > totalSteps) { currentStep = totalSteps; return; }
+  stepStatus[currentStep - 1] = 'active';
+  showStep(currentStep);
+  updateSidebar();
+  updateNav();
+  if (currentStep === 4) buildSummary();
+}
 
-    document.getElementById('competitorsTags').addEventListener('click', function(e) {
-      if (e.target.classList.contains('tag-remove')) {
-        removeCompetitor(parseInt(e.target.dataset.idx));
-      }
-    });
-
-    // ======================================
-    // Utility: extract spreadsheet ID from URL
-    // ======================================
-    function extractSpreadsheetId(url) {
-      var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      return match ? match[1] : null;
-    }
-
-    // ======================================
-    // Utility: copy to clipboard
-    // ======================================
-    function copyToClipboard(url, btnEl) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function() {
-          showCopied(btnEl);
-        }).catch(function() {
-          fallbackCopy(url, btnEl);
-        });
-      } else {
-        fallbackCopy(url, btnEl);
-      }
-    }
-
-    function fallbackCopy(url, btnEl) {
-      var ta = document.createElement('textarea');
-      ta.value = url;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch(e) {}
-      document.body.removeChild(ta);
-      showCopied(btnEl);
-    }
-
-    function showCopied(btnEl) {
-      btnEl.classList.add('copied');
-      var origHtml = btnEl.innerHTML;
-      btnEl.innerHTML = '<i class="ti ti-check"></i>';
-      setTimeout(function() {
-        btnEl.classList.remove('copied');
-        btnEl.innerHTML = origHtml;
-      }, 2000);
-    }
-
-    // ======================================
-    // Utility: result renderers
-    // ======================================
-    function showSectionResult(elementId, status, label, url, linkClass) {
-      var el = document.getElementById(elementId);
-      if (!el) return;
-      el.classList.remove('hidden');
-
-      if (status === 'success' && url) {
-        var cls = linkClass || '';
-        el.className = 'result-card success';
-        el.innerHTML =
-          '<div class="result-card-header">' +
-            '<i class="ti ti-circle-check"></i>' +
-            '<span>' + label + '</span>' +
-          '</div>' +
-          '<div class="result-link-row">' +
-            '<a href="' + url + '" target="_blank" class="result-link ' + cls + '">' +
-              '<i class="ti ti-external-link"></i> Відкрити' +
-            '</a>' +
-            '<button class="copy-btn" onclick="copyToClipboard(\'' + url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати посилання"><i class="ti ti-copy"></i></button>' +
-          '</div>';
-      } else if (status === 'success') {
-        el.className = 'result-card success';
-        el.innerHTML =
-          '<div class="result-card-header">' +
-            '<i class="ti ti-circle-check"></i>' +
-            '<span>' + label + ' — завершено</span>' +
-          '</div>';
-      } else {
-        el.className = 'result-card error';
-        el.innerHTML =
-          '<div class="result-card-header">' +
-            '<i class="ti ti-circle-x"></i>' +
-            '<span>' + label + ' — помилка</span>' +
-          '</div>';
-      }
-    }
-
-    function showSectionError(elementId, message) {
-      var el = document.getElementById(elementId);
-      if (!el) return;
-      el.classList.remove('hidden');
-      el.className = 'result-card error';
-      el.innerHTML =
-        '<div class="result-card-header">' +
-          '<i class="ti ti-circle-x"></i>' +
-          '<span>' + message + '</span>' +
-        '</div>';
-    }
-
-    function showSectionLoading(elementId, message) {
-      var el = document.getElementById(elementId);
-      if (!el) return;
-      el.classList.remove('hidden');
-      el.className = 'result-card loading';
-      el.innerHTML =
-        '<div class="result-card-header">' +
-          '<i class="ti ti-loader-2"></i>' +
-          '<span>' + message + '</span>' +
-        '</div>';
-    }
-
-    function showCompetitorsResult(competitorsData) {
-      var el = document.getElementById('competitorsResult');
-      if (!el) return;
-      el.classList.remove('hidden');
-
-      var allSuccess = true;
-      for (var i = 0; i < competitorsData.length; i++) {
-        if (competitorsData[i].status !== 'success') allSuccess = false;
-      }
-
-      el.className = 'result-card ' + (allSuccess ? 'success' : 'error');
-      var html = '<div class="result-card-header">' +
-        '<i class="ti ti-' + (allSuccess ? 'circle-check' : 'alert-triangle') + '"></i>' +
-        '<span>Конкуренти: ' + competitorsData.length + ' доменів</span></div>';
-
-      for (var i = 0; i < competitorsData.length; i++) {
-        var c = competitorsData[i];
-        html += '<div class="competitor-result-item">';
-        html += '<span class="detail-dot ' + c.status + '"></span>';
-        html += '<span>' + c.domain + '</span>';
-        if (c.status === 'success' && c.spreadsheet_url) {
-          html += ' — <a href="' + c.spreadsheet_url + '" target="_blank">таблиця</a>';
-          html += ' <button class="copy-btn" onclick="copyToClipboard(\'' + c.spreadsheet_url.replace(/'/g, "\\'") + '\', this)" title="Скопіювати"><i class="ti ti-copy"></i></button>';
-        }
-        html += '</div>';
-      }
-
-      el.innerHTML = html;
-    }
-
-    function clearPhase1Results() {
-      var ids = ['clientResult', 'competitorsResult', 'semanticResult', 'phase1Result'];
-      for (var i = 0; i < ids.length; i++) {
-        var el = document.getElementById(ids[i]);
-        if (el) { el.classList.add('hidden'); el.className = 'result-card hidden'; el.innerHTML = ''; }
-      }
-    }
-
-    // ======================================
-    // PHASE 1: Submit (orchestrator)
-    // ======================================
-    var phase1Results = {};
-
-    function handlePhase1Submit() {
-      var email = document.getElementById('managerEmail').value.trim();
-      if (!email) { showPhase1Error('Введіть email менеджера'); return; }
-      if (!email.includes('@')) { showPhase1Error('Невірний формат email'); return; }
-
-      var anyActive = isSectionActive('clientSection') || isSectionActive('competitorsSection') ||
-        isSectionActive('semanticSection');
-      if (!anyActive) { showPhase1Error('Увімкніть хоча б один блок Етапу 1'); return; }
-
-      var clientDomain = '';
-      if (isSectionActive('clientSection')) {
-        clientDomain = document.getElementById('clientDomain').value.trim();
-        if (!clientDomain) { showPhase1Error('Введіть домен клієнта або вимкніть блок'); return; }
-      }
-
-      if (isSectionActive('competitorsSection') && competitors.length === 0) {
-        showPhase1Error('Додайте хоча б одного конкурента або вимкніть блок'); return;
-      }
-
-      if (isSectionActive('semanticSection')) {
-        var sUrl = document.getElementById('semanticUrl').value.trim();
-        if (!sUrl || !sUrl.includes('docs.google.com/spreadsheets')) {
-          showPhase1Error('Невірне посилання на таблицю для семантики'); return;
-        }
-      }
-
-      // Build formData
-      var formData = { manager_email: email };
-
-      if (isSectionActive('clientSection')) {
-        formData.client_domain = clientDomain;
-      }
-
-      if (isSectionActive('competitorsSection')) {
-        formData.competitors = competitors.slice();
-      }
-
-      if (isSectionActive('semanticSection')) {
-        formData.semantic_expansion = {
-          report_name: 'Розширення семантичного ядра',
-          spreadsheet_url: document.getElementById('semanticUrl').value.trim(),
-          language: document.getElementById('semanticLang').value,
-          geo_target: document.getElementById('semanticGeo').value
-        };
-      }
-
-      // UI: loading
-      var btn = document.getElementById('phase1Btn');
-      btn.disabled = true;
-      btn.classList.add('btn-loading');
-      clearPhase1Results();
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          if (response.success) {
-            showPhase1Success(response);
-          } else {
-            showPhase1Error(response.error || 'Невідома помилка');
-          }
-        })
-        .withFailureHandler(function(error) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          showPhase1Error(error.toString());
-        })
-        .submitAnalizDomenu(formData);
-    }
-
-    function showPhase1Success(data) {
-      var d = data.details || {};
-
-      // Overall result
-      var r = document.getElementById('phase1Result');
-      r.classList.remove('hidden');
-      r.className = 'result-card success';
-      var html = '<div class="result-card-header">' +
-        '<i class="ti ti-circle-check"></i>' +
-        '<span>Етап 1 завершено</span>' +
-        '</div>' +
-        '<p style="font-size:13px;color:#475569;margin-top:4px;">Папка проекту створена. Результати зібрані.</p>';
-      if (data.folderUrl) {
-        html += '<a href="' + data.folderUrl + '" target="_blank" class="result-link folder-link">' +
-          '<i class="ti ti-folder"></i> Відкрити папку проекту</a>';
-      }
-      r.innerHTML = html;
-
-      // Per-section results
-      if (d.client_analysis) {
-        showSectionResult('clientResult', d.client_analysis.status, 'Аналіз клієнта',
-          d.client_analysis.spreadsheet_url);
-        if (d.client_analysis.spreadsheet_url) {
-          phase1Results.client = d.client_analysis.spreadsheet_url;
-        }
-      }
-
-      if (d.competitors_analysis && d.competitors_analysis.length > 0) {
-        showCompetitorsResult(d.competitors_analysis);
-      }
-
-      if (d.semantic_expansion) {
-        var semExtra = d.semantic_expansion.total_keywords
-          ? ' (' + d.semantic_expansion.total_keywords + ' ключових слів)'
-          : '';
-        showSectionResult('semanticResult', d.semantic_expansion.status,
-          'Семантичне ядро' + semExtra, d.semantic_expansion.spreadsheet_url);
-        if (d.semantic_expansion.spreadsheet_url) {
-          phase1Results.semantic = d.semantic_expansion.spreadsheet_url;
-        }
-      }
-
-      // Show Phase 2 hint
-      document.getElementById('phase2Hint').classList.remove('hidden');
-    }
-
-    function showPhase1Error(message) {
-      var r = document.getElementById('phase1Result');
-      r.classList.remove('hidden');
-      r.className = 'result-card error';
-      r.innerHTML =
-        '<div class="result-card-header">' +
-          '<i class="ti ti-circle-x"></i>' +
-          '<span>Помилка</span>' +
-        '</div>' +
-        '<p style="font-size:13px;color:#991B1B;margin-top:4px;">' + message + '</p>';
-    }
-
-    // ======================================
-    // PHASE 2: Metrics
-    // ======================================
-    function handleMetricsSubmit() {
-      var mUrl = document.getElementById('metricsUrl').value.trim();
-      if (!mUrl || !mUrl.includes('docs.google.com/spreadsheets')) {
-        showSectionError('metricsResult', 'Невірне посилання на таблицю з ключовими словами');
-        return;
-      }
-
-      var spreadsheetId = extractSpreadsheetId(mUrl);
-      if (!spreadsheetId) {
-        showSectionError('metricsResult', 'Не вдалося отримати ID таблиці');
-        return;
-      }
-
-      var btn = document.getElementById('metricsBtn');
-      btn.disabled = true;
-      btn.classList.add('btn-loading');
-      showSectionLoading('metricsResult', 'Отримання метрик...');
-
-      var formData = {
-        source_spreadsheet_id: spreadsheetId,
-        doc_name: 'GKP Metrics - ' + new Date().toISOString().slice(0, 10),
-        language: document.getElementById('metricsLang').value,
-        geo_target: document.getElementById('metricsGeo').value
+function saveStepData(n) {
+  if (n === 1) {
+    stepData.email = document.getElementById('fEmail').value.trim();
+    stepData.domain = document.getElementById('fDomain').value.trim().replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/+$/,'');
+  }
+  if (n === 3) {
+    var url = document.getElementById('fSemUrl').value.trim();
+    if (url && url.includes('docs.google.com/spreadsheets')) {
+      stepData.semantic = {
+        url: url,
+        lang: document.getElementById('fSemLang').value,
+        geo: document.getElementById('fSemGeo').value
       };
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          if (response.success) {
-            var extra = response.totalKeywords ? ' (' + response.totalKeywords + ' ключових слів)' : '';
-            showSectionResult('metricsResult', 'success', 'Метрики отримано' + extra, response.spreadsheetUrl);
-          } else {
-            showSectionError('metricsResult', response.error || 'Невідома помилка');
-          }
-        })
-        .withFailureHandler(function(error) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          showSectionError('metricsResult', error.toString());
-        })
-        .submitGKPMetrics(formData);
+    } else {
+      stepData.semantic = null;
     }
+  }
+}
 
-    // ======================================
-    // PHASE 2: PageSpeed
-    // ======================================
-    function handlePageSpeedSubmit() {
-      var pUrl = document.getElementById('pagespeedUrl').value.trim();
-      if (!pUrl || !pUrl.includes('docs.google.com/spreadsheets')) {
-        showSectionError('pagespeedResult', 'Невірне посилання на таблицю з URL');
-        return;
-      }
+function validateStep(n) {
+  if (n === 1) {
+    var email = document.getElementById('fEmail').value.trim();
+    var domain = document.getElementById('fDomain').value.trim();
+    var ok = true;
+    if (!email || !email.includes('@')) {
+      document.getElementById('fEmailErr').classList.add('visible');
+      document.getElementById('fEmail').classList.add('error');
+      ok = false;
+    } else {
+      document.getElementById('fEmailErr').classList.remove('visible');
+      document.getElementById('fEmail').classList.remove('error');
+    }
+    if (!domain) {
+      document.getElementById('fDomainErr').classList.add('visible');
+      document.getElementById('fDomain').classList.add('error');
+      ok = false;
+    } else {
+      document.getElementById('fDomainErr').classList.remove('visible');
+      document.getElementById('fDomain').classList.remove('error');
+    }
+    return ok;
+  }
+  if (n === 4) {
+    return phase1Done;
+  }
+  return true;
+}
 
-      var btn = document.getElementById('pagespeedBtn');
+// =========================================
+// UI UPDATES
+// =========================================
+function showStep(n) {
+  var panels = document.querySelectorAll('.step-panel');
+  for (var i = 0; i < panels.length; i++) {
+    panels[i].classList.remove('visible');
+  }
+  var target = document.querySelector('.step-panel[data-step="'+n+'"]');
+  if (target) target.classList.add('visible');
+  // Scroll to top
+  document.querySelector('.step-scroll').scrollTop = 0;
+}
+
+function updateSidebar() {
+  var steps = document.querySelectorAll('.sb-step');
+  for (var i = 0; i < steps.length; i++) {
+    var s = steps[i];
+    var idx = parseInt(s.dataset.step) - 1;
+    s.className = 'sb-step ' + stepStatus[idx];
+    var circle = s.querySelector('.sb-circle');
+    if (stepStatus[idx] === 'completed') {
+      circle.innerHTML = '<i class="ti ti-check" style="font-size:15px"></i>';
+    } else if (stepStatus[idx] === 'skipped') {
+      circle.innerHTML = '<i class="ti ti-minus" style="font-size:13px"></i>';
+    } else {
+      circle.textContent = idx + 1;
+    }
+  }
+  // Mobile
+  document.getElementById('mobileLabel').textContent = 'Крок ' + currentStep + ' з ' + totalSteps;
+  document.getElementById('mobileBar').style.width = (currentStep / totalSteps * 100) + '%';
+}
+
+function updateNav() {
+  var back = document.getElementById('navBack');
+  var skip = document.getElementById('navSkip');
+  var next = document.getElementById('navNext');
+
+  // Back
+  back.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+
+  // Skip — show for optional steps (2,3,5,6,7,8), hide for 1 and 4
+  skip.style.display = (currentStep === 1 || currentStep === 4) ? 'none' : '';
+
+  // Next
+  if (currentStep === 4) {
+    next.innerHTML = phase1Done
+      ? 'Далі <i class="ti ti-arrow-right"></i>'
+      : 'Очікується запуск';
+    next.disabled = !phase1Done;
+  } else if (currentStep === totalSteps) {
+    next.style.display = 'none';
+  } else {
+    next.style.display = '';
+    next.disabled = false;
+    next.innerHTML = 'Далі <i class="ti ti-arrow-right"></i>';
+  }
+}
+
+// =========================================
+// STEP 4: SUMMARY + LAUNCH
+// =========================================
+function buildSummary() {
+  saveStepData(3); // ensure semantic saved
+  var el = document.getElementById('summaryList');
+  var html = '';
+
+  // Client
+  html += '<div class="summary-item active"><i class="ti ti-world"></i> Аналіз клієнта: <strong>' + (stepData.domain || '—') + '</strong></div>';
+
+  // Competitors
+  if (stepData.competitors.length > 0) {
+    html += '<div class="summary-item active"><i class="ti ti-users"></i> Конкуренти: <strong>' + stepData.competitors.length + ' доменів</strong></div>';
+  } else if (stepStatus[1] === 'skipped') {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Конкуренти: пропущено</div>';
+  } else {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Конкуренти: не додано</div>';
+  }
+
+  // Semantic
+  if (stepData.semantic) {
+    html += '<div class="summary-item active"><i class="ti ti-plant-2"></i> Семантика: <strong>таблиця додана</strong></div>';
+  } else if (stepStatus[2] === 'skipped') {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Семантика: пропущено</div>';
+  } else {
+    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Семантика: не заповнено</div>';
+  }
+
+  el.innerHTML = html;
+
+  // Reset launch button if not done
+  if (!phase1Done) {
+    var btn = document.getElementById('btnLaunch1');
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
+  }
+}
+
+function launchPhase1() {
+  if (phase1Done) return;
+  var formData = { manager_email: stepData.email, client_domain: stepData.domain };
+
+  if (stepData.competitors.length > 0) {
+    formData.competitors = stepData.competitors.slice();
+  }
+  if (stepData.semantic) {
+    formData.semantic_expansion = {
+      report_name: 'Розширення семантичного ядра',
+      spreadsheet_url: stepData.semantic.url,
+      language: stepData.semantic.lang,
+      geo_target: stepData.semantic.geo
+    };
+  }
+
+  var btn = document.getElementById('btnLaunch1');
+  btn.disabled = true;
+  btn.classList.add('btn-loading');
+  hideResults(['phase1Result','clientResult','competitorsResult','semanticResult']);
+
+  google.script.run
+    .withSuccessHandler(function(r) {
       btn.disabled = true;
-      btn.classList.add('btn-loading');
-      showSectionLoading('pagespeedResult', 'Тестування PageSpeed...');
-
-      var formData = {
-        spreadsheetUrl: pUrl,
-        testMobile: document.getElementById('optMobile').classList.contains('selected'),
-        testDesktop: document.getElementById('optDesktop').classList.contains('selected')
-      };
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          if (response.success) {
-            var extra = response.totalUrls ? ' (' + response.totalUrls + ' URL)' : '';
-            showSectionResult('pagespeedResult', 'success', 'PageSpeed завершено' + extra, response.spreadsheetUrl);
-          } else {
-            showSectionError('pagespeedResult', response.error || 'Невідома помилка');
-          }
-        })
-        .withFailureHandler(function(error) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          showSectionError('pagespeedResult', error.toString());
-        })
-        .submitPageSpeedTest(formData);
-    }
-
-    // ======================================
-    // PHASE 2: AI Analysis
-    // ======================================
-    function handleAiSubmit() {
-      var url = document.getElementById('aiSpreadsheetUrl').value.trim();
-      if (!url || !url.includes('docs.google.com/spreadsheets')) {
-        showSectionError('aiResult', 'Невірне посилання на таблицю. Має бути Google Sheets URL.');
-        return;
+      btn.classList.remove('btn-loading');
+      if (r.success) {
+        phase1Done = true;
+        btn.innerHTML = '<i class="ti ti-circle-check"></i> <span>Аналіз завершено</span>';
+        btn.style.background = 'var(--color-success)';
+        onPhase1Success(r);
+        updateNav();
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        showResultError('phase1Result', r.error || 'Невідома помилка');
       }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      btn.classList.remove('btn-loading');
+      showResultError('phase1Result', e.toString());
+    })
+    .submitAnalizDomenu(formData);
+}
 
-      var btn = document.getElementById('aiBtn');
-      btn.disabled = true;
-      btn.classList.add('btn-loading');
-      showSectionLoading('aiResult', 'Генерація AI-звіту...');
+function onPhase1Success(data) {
+  var d = data.details || {};
+  stepData.phase1Results = {};
 
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          if (response.success) {
-            var label = 'AI-звіт створено' + (response.domain ? ' (' + response.domain + ')' : '');
-            showSectionResult('aiResult', 'success', label, response.docUrl, 'doc-link');
-          } else {
-            showSectionError('aiResult', response.error || 'Невідома помилка');
-          }
-        })
-        .withFailureHandler(function(error) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          showSectionError('aiResult', error.toString());
-        })
-        .submitAIAnalysis(url);
+  // Overall
+  var r = document.getElementById('phase1Result');
+  r.classList.remove('hidden');
+  r.className = 'result-card success';
+  var html = '<div class="result-card-header"><i class="ti ti-circle-check"></i> Збір даних завершено</div>';
+  if (data.folderUrl) {
+    html += '<a href="'+data.folderUrl+'" target="_blank" class="result-link folder-link"><i class="ti ti-folder"></i> Відкрити папку проекту</a>';
+  }
+  r.innerHTML = html;
+
+  // Client
+  if (d.client_analysis) {
+    showResultSuccess('clientResult', 'Аналіз клієнта', d.client_analysis.spreadsheet_url);
+    if (d.client_analysis.spreadsheet_url) stepData.phase1Results.client = d.client_analysis.spreadsheet_url;
+  }
+
+  // Competitors
+  if (d.competitors_analysis && d.competitors_analysis.length > 0) {
+    showCompetitorsResult(d.competitors_analysis);
+  }
+
+  // Semantic
+  if (d.semantic_expansion) {
+    var extra = d.semantic_expansion.total_keywords ? ' (' + d.semantic_expansion.total_keywords + ' ключових слів)' : '';
+    showResultSuccess('semanticResult', 'Семантичне ядро' + extra, d.semantic_expansion.spreadsheet_url);
+    if (d.semantic_expansion.spreadsheet_url) stepData.phase1Results.semantic = d.semantic_expansion.spreadsheet_url;
+  }
+}
+
+// =========================================
+// PHASE 2 LAUNCHES
+// =========================================
+function launchMetrics() {
+  var url = document.getElementById('fMetUrl').value.trim();
+  if (!url || !url.includes('docs.google.com/spreadsheets')) {
+    showResultError('metricsResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  }
+  var sid = extractSpreadsheetId(url);
+  if (!sid) { showResultError('metricsResult', 'Не вдалося отримати ID таблиці'); return; }
+
+  var btn = document.getElementById('btnMetrics');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('metricsResult', 'Отримання метрик...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var ex = r.totalKeywords ? ' (' + r.totalKeywords + ' ключових слів)' : '';
+        showResultSuccess('metricsResult', 'Метрики отримано' + ex, r.spreadsheetUrl);
+      } else { showResultError('metricsResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('metricsResult', e.toString());
+    })
+    .submitGKPMetrics({
+      source_spreadsheet_id: sid,
+      doc_name: 'GKP Metrics - ' + new Date().toISOString().slice(0,10),
+      language: document.getElementById('fMetLang').value,
+      geo_target: document.getElementById('fMetGeo').value,
+      manager_email: stepData.email
+    });
+}
+
+function launchPageSpeed() {
+  var url = document.getElementById('fPsUrl').value.trim();
+  if (!url || !url.includes('docs.google.com/spreadsheets')) {
+    showResultError('pagespeedResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  }
+  var btn = document.getElementById('btnPageSpeed');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('pagespeedResult', 'Тестування PageSpeed...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var ex = r.totalUrls ? ' (' + r.totalUrls + ' URL)' : '';
+        showResultSuccess('pagespeedResult', 'PageSpeed завершено' + ex, r.spreadsheetUrl);
+      } else { showResultError('pagespeedResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('pagespeedResult', e.toString());
+    })
+    .submitPageSpeedTest({
+      spreadsheetUrl: url,
+      testMobile: document.getElementById('optMobile').classList.contains('selected'),
+      testDesktop: document.getElementById('optDesktop').classList.contains('selected'),
+      manager_email: stepData.email
+    });
+}
+
+function launchAI() {
+  var url = document.getElementById('fAiUrl').value.trim();
+  if (!url || !url.includes('docs.google.com/spreadsheets')) {
+    showResultError('aiResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  }
+  var btn = document.getElementById('btnAI');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('aiResult', 'Генерація AI-звіту...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var label = 'AI-звіт створено' + (r.domain ? ' (' + r.domain + ')' : '');
+        showResultSuccess('aiResult', label, r.docUrl, 'doc-link');
+      } else { showResultError('aiResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('aiResult', e.toString());
+    })
+    .submitAIAnalysis(url);
+}
+
+function launchPDF() {
+  var url = document.getElementById('fPdfUrl').value.trim();
+  if (!url || !url.includes('drive.google.com')) {
+    showResultError('pdfResult', 'Вкажіть коректне посилання на PDF (Google Drive)'); return;
+  }
+  var btn = document.getElementById('btnPDF');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('pdfResult', 'Парсинг PDF...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var ex = r.totalSheets ? ' (' + r.totalSheets + ' вкладок)' : '';
+        showResultSuccess('pdfResult', 'PDF оброблено' + ex, r.spreadsheetUrl);
+      } else { showResultError('pdfResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('pdfResult', e.toString());
+    })
+    .submitPdfAuditParse({ pdfUrl: url, manager_email: stepData.email });
+}
+
+// =========================================
+// COMPETITORS TAGS
+// =========================================
+document.getElementById('compInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (this.value.trim()) { addComp(this.value); this.value = ''; }
+  }
+  if (e.key === 'Backspace' && this.value === '' && stepData.competitors.length > 0) {
+    stepData.competitors.pop(); renderComps();
+  }
+});
+document.getElementById('compInput').addEventListener('paste', function(e) {
+  e.preventDefault();
+  var text = (e.clipboardData || window.clipboardData).getData('text');
+  text.split(/[\n,;]+/).forEach(function(s) { if (s.trim()) addComp(s); });
+});
+document.getElementById('compTagsWrap').addEventListener('click', function(e) {
+  if (e.target.classList.contains('tag-remove')) {
+    stepData.competitors.splice(parseInt(e.target.dataset.idx), 1);
+    renderComps();
+  }
+});
+
+function addComp(val) {
+  var c = val.replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/+$/,'').trim().toLowerCase();
+  if (!c || stepData.competitors.indexOf(c) !== -1) return;
+  stepData.competitors.push(c);
+  renderComps();
+}
+
+function renderComps() {
+  var wrap = document.getElementById('compTagsWrap');
+  var input = document.getElementById('compInput');
+  wrap.querySelectorAll('.tag').forEach(function(t) { t.remove(); });
+  stepData.competitors.forEach(function(c, i) {
+    var tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.innerHTML = c + '<span class="tag-remove" data-idx="'+i+'">&times;</span>';
+    wrap.insertBefore(tag, input);
+  });
+  var cnt = document.getElementById('compCount');
+  cnt.textContent = stepData.competitors.length > 0 ? stepData.competitors.length + ' конкурентів додано' : '';
+}
+
+// =========================================
+// UTILITY
+// =========================================
+function toggleOption(id) { document.getElementById(id).classList.toggle('selected'); }
+
+function extractSpreadsheetId(url) {
+  var m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function copyToClipboard(url, btnEl) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() { showCopied(btnEl); }).catch(function() { fallbackCopy(url, btnEl); });
+  } else { fallbackCopy(url, btnEl); }
+}
+function fallbackCopy(url, btnEl) {
+  var ta = document.createElement('textarea');
+  ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta); showCopied(btnEl);
+}
+function showCopied(btnEl) {
+  btnEl.classList.add('copied');
+  var orig = btnEl.innerHTML;
+  btnEl.innerHTML = '<i class="ti ti-check"></i>';
+  setTimeout(function() { btnEl.classList.remove('copied'); btnEl.innerHTML = orig; }, 2000);
+}
+
+// =========================================
+// RESULT RENDERERS
+// =========================================
+function showResultSuccess(id, label, url, linkCls) {
+  var el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.className = 'result-card success';
+  if (url) {
+    var cls = linkCls || '';
+    el.innerHTML = '<div class="result-card-header"><i class="ti ti-circle-check"></i> ' + label + '</div>' +
+      '<div class="result-link-row">' +
+        '<a href="'+url+'" target="_blank" class="result-link '+cls+'"><i class="ti ti-external-link"></i> Відкрити</a>' +
+        '<button class="copy-btn" onclick="copyToClipboard(\''+url.replace(/'/g,"\\'")+'\',this)" title="Скопіювати"><i class="ti ti-copy"></i></button>' +
+      '</div>';
+  } else {
+    el.innerHTML = '<div class="result-card-header"><i class="ti ti-circle-check"></i> ' + label + ' — завершено</div>';
+  }
+}
+
+function showResultError(id, msg) {
+  var el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.className = 'result-card error';
+  el.innerHTML = '<div class="result-card-header"><i class="ti ti-circle-x"></i> ' + msg + '</div>';
+}
+
+function showResultLoading(id, msg) {
+  var el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.className = 'result-card loading';
+  el.innerHTML = '<div class="result-card-header"><i class="ti ti-loader-2"></i> ' + msg + '</div>';
+}
+
+function hideResults(ids) {
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.add('hidden'); el.className = 'result-card hidden'; el.innerHTML = ''; }
+  });
+}
+
+function showCompetitorsResult(data) {
+  var el = document.getElementById('competitorsResult');
+  el.classList.remove('hidden');
+  var ok = true;
+  data.forEach(function(c) { if (c.status !== 'success') ok = false; });
+  el.className = 'result-card ' + (ok ? 'success' : 'error');
+  var html = '<div class="result-card-header"><i class="ti ti-'+(ok?'circle-check':'alert-triangle')+'"></i> Конкуренти: '+data.length+' доменів</div>';
+  data.forEach(function(c) {
+    html += '<div class="competitor-result-item"><span class="detail-dot '+c.status+'"></span> '+c.domain;
+    if (c.status === 'success' && c.spreadsheet_url) {
+      html += ' — <a href="'+c.spreadsheet_url+'" target="_blank">таблиця</a>';
+      html += ' <button class="copy-btn" onclick="copyToClipboard(\''+c.spreadsheet_url.replace(/'/g,"\\'")+'\',this)"><i class="ti ti-copy"></i></button>';
     }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
 
-    // ======================================
-    // PHASE 2: PDF Parsing
-    // ======================================
-    function handlePdfSubmit() {
-      var url = document.getElementById('pdfUrl').value.trim();
-      if (!url || !url.includes('drive.google.com')) {
-        showSectionError('pdfResult', 'Невірне посилання на PDF. Має бути Google Drive URL.');
-        return;
-      }
+// =========================================
+// ENTER KEY HANDLERS
+// =========================================
+document.getElementById('fEmail').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
+document.getElementById('fDomain').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
+document.getElementById('fSemUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
+document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchMetrics(); });
+document.getElementById('fPsUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPageSpeed(); });
+document.getElementById('fAiUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchAI(); });
+document.getElementById('fPdfUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPDF(); });
 
-      var btn = document.getElementById('pdfBtn');
-      btn.disabled = true;
-      btn.classList.add('btn-loading');
-      showSectionLoading('pdfResult', 'Парсинг PDF...');
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          if (response.success) {
-            var extra = response.totalSheets ? ' (' + response.totalSheets + ' вкладок)' : '';
-            showSectionResult('pdfResult', 'success', 'PDF оброблено' + extra, response.spreadsheetUrl);
-          } else {
-            showSectionError('pdfResult', response.error || 'Невідома помилка');
-          }
-        })
-        .withFailureHandler(function(error) {
-          btn.disabled = false;
-          btn.classList.remove('btn-loading');
-          showSectionError('pdfResult', error.toString());
-        })
-        .submitPdfAuditParse({ pdfUrl: url });
-    }
-
-    // ======================================
-    // Enter key handlers
-    // ======================================
-    document.getElementById('managerEmail').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handlePhase1Submit();
-    });
-    document.getElementById('clientDomain').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handlePhase1Submit();
-    });
-    document.getElementById('metricsUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handleMetricsSubmit();
-    });
-    document.getElementById('pagespeedUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handlePageSpeedSubmit();
-    });
-    document.getElementById('aiSpreadsheetUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handleAiSubmit();
-    });
-    document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handlePdfSubmit();
-    });
-
-    // ======================================
-    // Init
-    // ======================================
-    document.getElementById('managerEmail').focus();
-  </script>
+// =========================================
+// INIT
+// =========================================
+updateNav();
+document.getElementById('fEmail').focus();
+</script>
 </body>
 </html>
