@@ -933,7 +933,7 @@ var stepData = { email:'', domain:'', competitors:[], semantic:null, metrics:nul
 // Steps that require data entry or explicit action to be marked completed
 // Step 1: required (email+domain), step 6: requires phase1 launch
 // Steps 2,3,4,5,7,8: optional (can be skipped)
-var REQUIRED_STEPS = [1, 6];
+var REQUIRED_STEPS = [1];
 
 // =========================================
 // NAVIGATION
@@ -943,10 +943,9 @@ var REQUIRED_STEPS = [1, 6];
 function sidebarClick(n) {
   if (n < 1 || n > totalSteps) return;
   // Can only click on: current, completed, skipped, or the next upcoming step
+  // Steps 7-8 (AI, PDF) are always accessible from sidebar — they are independent tools
   var targetStatus = stepStatus[n - 1];
-  if (targetStatus === 'upcoming' && n > currentStep + 1) return;
-  // For step 7+, must complete step 6 first
-  if (n >= 7 && !phase1Done) return;
+  if (n <= 6 && targetStatus === 'upcoming' && n > currentStep + 1) return;
 
   saveStepData(currentStep);
 
@@ -1109,7 +1108,7 @@ function validateStep(n) {
     return ok;
   }
   if (n === 6) {
-    return phase1Done;
+    return true;
   }
   return true;
 }
@@ -1161,10 +1160,8 @@ function updateNav() {
 
   // Next
   if (currentStep === 6) {
-    next.innerHTML = phase1Done
-      ? 'Далі <i class="ti ti-arrow-right"></i>'
-      : 'Очікується запуск';
-    next.disabled = !phase1Done;
+    next.innerHTML = 'Далі <i class="ti ti-arrow-right"></i>';
+    next.disabled = false;
   } else if (currentStep === totalSteps) {
     next.style.display = 'none';
   } else {
