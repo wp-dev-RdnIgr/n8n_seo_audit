@@ -137,9 +137,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent1",
@@ -169,9 +169,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent2",
@@ -201,9 +201,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent3",
@@ -233,9 +233,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent4",
@@ -265,9 +265,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent5",
@@ -297,9 +297,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-agent6",
@@ -357,9 +357,9 @@
         "options": {},
         "modelId": {
           "__rl": true,
-          "value": "gpt-4o",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "GPT-4O"
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "node-final-agent",
