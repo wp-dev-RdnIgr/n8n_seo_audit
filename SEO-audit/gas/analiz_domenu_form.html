@@ -476,6 +476,49 @@
     .detail-dot.success { background: var(--color-success); }
     .detail-dot.error { background: var(--color-error); }
 
+    /* === AI COMPETITOR URL LIST === */
+    .ai-url-list { display: flex; flex-direction: column; gap: 10px; }
+    .ai-url-row { display: flex; align-items: center; gap: 8px; }
+    .ai-url-num {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      background: var(--color-accent-lighter);
+      color: var(--color-accent);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ai-url-row .input-wrap { flex: 1; }
+    .ai-url-row .form-input { padding: 10px 14px 10px 40px; font-size: 13px; }
+    .ai-url-remove {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-error);
+      font-size: 15px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition);
+    }
+    .ai-url-remove:hover { background: var(--color-error-light); border-color: #FECACA; }
+    .ai-url-remove.hidden { visibility: hidden; pointer-events: none; }
+    .ai-url-add {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      color: var(--color-accent);
+      background: var(--color-accent-lighter);
+      border: 1.5px dashed var(--color-accent-light);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-top: 6px;
+    }
+    .ai-url-add:hover { background: var(--color-accent-light); border-color: var(--color-accent); }
+    .ai-url-add i { font-size: 16px; }
+
     /* === REQUIREMENTS LIST === */
     .req-list {
       margin: 0; padding: 0 0 0 18px;
@@ -835,28 +878,35 @@
           </div>
         </section>
 
-        <!-- STEP 7: AI аналіз -->
+        <!-- STEP 7: AI аналіз конкурентів -->
         <section class="step-panel" data-step="7">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-brain"></i></div>
               <div>
-                <div class="step-card-title">AI аналіз домену</div>
-                <div class="step-card-desc">AI-звіт з рекомендаціями на основі таблиці аналізу</div>
+                <div class="step-card-title">AI аналіз конкурентів</div>
+                <div class="step-card-desc">Зведений AI-звіт по всіх конкурентах в один Google-документ</div>
               </div>
             </div>
             <div class="info-box">
               <i class="ti ti-bulb"></i>
-              <span>Вкажіть таблицю аналізу домену — AI згенерує звіт (Google Doc) з SEO-рекомендаціями. Використовуйте результат «Аналіз клієнта» з кроку 6.</span>
+              <span>Додайте таблиці аналізу для кожного конкурента. AI послідовно проаналізує кожного та зведе результати в один документ.</span>
             </div>
             <div class="form-group">
-              <label class="form-label"><i class="ti ti-table"></i> Таблиця з аналізом домену</label>
-              <div class="input-wrap">
-                <i class="ti ti-link input-ico"></i>
-                <input type="text" id="fAiUrl" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+              <label class="form-label"><i class="ti ti-table"></i> Таблиці з аналізом конкурентів</label>
+              <div class="ai-url-list" id="aiUrlList">
+                <div class="ai-url-row" data-idx="0">
+                  <div class="ai-url-num">1</div>
+                  <div class="input-wrap">
+                    <i class="ti ti-link input-ico"></i>
+                    <input type="text" class="form-input ai-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">
+                  </div>
+                  <button class="ai-url-remove hidden" onclick="removeAiUrl(this)" title="Видалити"><i class="ti ti-x"></i></button>
+                </div>
               </div>
-              <ul class="req-list">
-                <li>Посилання на Google Таблицю з результатом аналізу домену</li>
+              <button class="ai-url-add" onclick="addAiUrl()"><i class="ti ti-plus"></i> Додати конкурента</button>
+              <ul class="req-list" style="margin-top: 10px;">
+                <li>Google Таблиця з результатами аналізу кожного конкурента</li>
                 <li>Таблиця має бути з відкритим доступом</li>
               </ul>
             </div>
@@ -1339,20 +1389,70 @@ function onPhase1Success(data) {
 // =========================================
 // PHASE 2 LAUNCHES (Steps 7, 8)
 // =========================================
+// --- AI URL list management ---
+function addAiUrl() {
+  var list = document.getElementById('aiUrlList');
+  var count = list.children.length;
+  var row = document.createElement('div');
+  row.className = 'ai-url-row';
+  row.dataset.idx = count;
+  row.innerHTML =
+    '<div class="ai-url-num">' + (count + 1) + '</div>' +
+    '<div class="input-wrap">' +
+      '<i class="ti ti-link input-ico"></i>' +
+      '<input type="text" class="form-input ai-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" spellcheck="false">' +
+    '</div>' +
+    '<button class="ai-url-remove" onclick="removeAiUrl(this)" title="Видалити"><i class="ti ti-x"></i></button>';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+  renumberAiUrls();
+}
+
+function removeAiUrl(btn) {
+  btn.closest('.ai-url-row').remove();
+  renumberAiUrls();
+}
+
+function renumberAiUrls() {
+  var rows = document.querySelectorAll('.ai-url-row');
+  rows.forEach(function(row, i) {
+    row.querySelector('.ai-url-num').textContent = i + 1;
+    var rm = row.querySelector('.ai-url-remove');
+    if (rows.length <= 1) { rm.classList.add('hidden'); }
+    else { rm.classList.remove('hidden'); }
+  });
+}
+
+function getAiUrls() {
+  var inputs = document.querySelectorAll('.ai-url-input');
+  var urls = [];
+  for (var i = 0; i < inputs.length; i++) {
+    var v = inputs[i].value.trim();
+    if (v) urls.push(v);
+  }
+  return urls;
+}
+
 function launchAI() {
-  var url = document.getElementById('fAiUrl').value.trim();
-  if (!url || !url.includes('docs.google.com/spreadsheets')) {
-    showResultError('aiResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  var urls = getAiUrls();
+  if (urls.length === 0) {
+    showResultError('aiResult', 'Додайте хоча б одне посилання на таблицю конкурента'); return;
+  }
+  for (var i = 0; i < urls.length; i++) {
+    if (!urls[i].includes('docs.google.com/spreadsheets')) {
+      showResultError('aiResult', 'Конкурент ' + (i + 1) + ': невірний формат. Має бути Google Sheets URL'); return;
+    }
   }
   var btn = document.getElementById('btnAI');
   btn.disabled = true; btn.classList.add('btn-loading');
-  showResultLoading('aiResult', 'Генерація AI-звіту...');
+  showResultLoading('aiResult', 'Аналіз ' + urls.length + ' конкурент(ів)... ~' + (urls.length * 3) + '-' + (urls.length * 5) + ' хв');
 
   google.script.run
     .withSuccessHandler(function(r) {
       btn.disabled = false; btn.classList.remove('btn-loading');
       if (r.success) {
-        var label = 'AI-звіт створено' + (r.domain ? ' (' + r.domain + ')' : '');
+        var domains = r.domains && r.domains.length > 0 ? r.domains.join(', ') : r.domain || '';
+        var label = 'AI-звіт створено (' + (r.competitorsCount || urls.length) + ' конкурент(ів)' + (domains ? ': ' + domains : '') + ')';
         showResultSuccess('aiResult', label, r.docUrl, 'doc-link');
       } else { showResultError('aiResult', r.error || 'Помилка'); }
     })
@@ -1360,7 +1460,7 @@ function launchAI() {
       btn.disabled = false; btn.classList.remove('btn-loading');
       showResultError('aiResult', e.toString());
     })
-    .submitAIAnalysis({ url: url, manager_email: stepData.email });
+    .submitAIAnalysis({ urls: urls, manager_email: stepData.email });
 }
 
 function launchPDF() {
