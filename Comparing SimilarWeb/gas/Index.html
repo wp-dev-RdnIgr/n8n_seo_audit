@@ -537,6 +537,7 @@
         <button class="btn btn-secondary" onclick="switchTab('data')"><i class="ti ti-chart-bar"></i> View Data</button>
         <button class="btn btn-secondary" onclick="switchTab('queue')"><i class="ti ti-list-check"></i> Task Queue</button>
         <button class="btn btn-secondary" onclick="loadDashboard()"><i class="ti ti-refresh"></i> Refresh Stats</button>
+        <button class="btn btn-warning" id="buildQueueBtn" onclick="buildQueue()"><i class="ti ti-playlist-add"></i> Build Queue</button>
       </div>
     </div>
   </div>
@@ -1243,6 +1244,35 @@ function deleteTask(id) {
     .withSuccessHandler(function() { toast('Task deleted', 'success'); loadQueue(); })
     .withFailureHandler(function(err) { toast(err.message, 'error'); })
     .deleteTask(id);
+}
+
+// ===== BUILD QUEUE =====
+function buildQueue() {
+  var btn = document.getElementById('buildQueueBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Building...';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-playlist-add"></i> Build Queue';
+      if (r.success) {
+        if (r.tasksCreated === 0) {
+          toast(r.message, 'info');
+        } else {
+          toast(r.message, 'success');
+        }
+        loadDashboard();
+      } else {
+        toast(r.error, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-playlist-add"></i> Build Queue';
+      toast(err.message, 'error');
+    })
+    .buildFullQueue();
 }
 
 // ===== LOGS =====

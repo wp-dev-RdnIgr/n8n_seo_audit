@@ -260,6 +260,32 @@ function getErrorLogs(limit) {
 }
 
 // ============================================
+// BUILD FULL QUEUE (triggers n8n "Проверка полноты" webhook)
+// ============================================
+
+var N8N_QUEUE_BUILD_WEBHOOK = 'https://n8n.rnd.webpromo.tools/webhook/f3e7ad54-24db-469d-9fc5-d9c1c6d1a078';
+
+function buildFullQueue() {
+  try {
+    var resp = UrlFetchApp.fetch(N8N_QUEUE_BUILD_WEBHOOK, {
+      method: 'get',
+      muteHttpExceptions: true
+    });
+
+    var code = resp.getResponseCode();
+    var body = resp.getContentText();
+
+    if (code >= 200 && code < 300) {
+      return { success: true, message: 'Queue build triggered in n8n. Check Task Queue tab for results.' };
+    } else {
+      return { success: false, error: 'n8n returned HTTP ' + code + ': ' + body.substring(0, 200) };
+    }
+  } catch (e) {
+    return { success: false, error: 'Failed to reach n8n: ' + e.toString() };
+  }
+}
+
+// ============================================
 // DASHBOARD STATS
 // ============================================
 
