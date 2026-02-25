@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #3B82F6;
+      --primary-hover: #2563EB;
+      --primary-light: #EFF6FF;
+      --primary-border: #BFDBFE;
+      --success: #10B981;
+      --success-light: #ECFDF5;
+      --warning: #F59E0B;
+      --warning-light: #FFFBEB;
+      --error: #EF4444;
+      --error-light: #FEF2F2;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+      --border-hover: #CBD5E1;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ===== TOP BAR ===== */
+    .topbar {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+    .topbar-brand .icon-box {
+      width: 32px; height: 32px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #94A3B8;
+    }
+    .topbar-status .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #EF4444;
+    }
+    .topbar-status .dot.connected { background: #10B981; }
+
+    /* ===== TAB NAV ===== */
+    .tab-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--bg); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    .tab-btn .badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .content { padding: 24px; max-width: 1280px; margin: 0 auto; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card + .card { margin-top: 16px; }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title i { color: var(--primary); font-size: 20px; }
+
+    /* ===== STAT CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.15s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+    .stat-card .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; line-height: 1.2; }
+    .stat-card .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* ===== FORMS ===== */
+    .form-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .form-group { flex: 1; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    input::placeholder { color: #94A3B8; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background: var(--error-light); color: var(--error); }
+    .btn-danger:hover { background: var(--error); color: #fff; }
+    .btn-success { background: var(--success-light); color: var(--success); }
+    .btn-success:hover { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning-light); color: #92400E; }
+    .btn-warning:hover { background: var(--warning); color: #fff; }
+    .btn-icon {
+      width: 32px; height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { background: var(--bg); color: var(--text); }
+
+    /* ===== TABLES ===== */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: var(--bg);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #F8FAFC; }
+    .td-actions { white-space: nowrap; display: flex; gap: 4px; }
+
+    /* ===== BADGES ===== */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-pending { background: var(--warning-light); color: #92400E; }
+    .badge-processing { background: var(--primary-light); color: var(--primary); }
+    .badge-done { background: var(--success-light); color: #065F46; }
+    .badge-error { background: var(--error-light); color: var(--error); }
+    .badge-active { background: var(--success-light); color: #065F46; }
+    .badge-client { background: var(--primary-light); color: var(--primary); }
+    .badge-competitor { background: #F3F4F6; color: #6B7280; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+    }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; color: var(--border-hover); }
+    .empty-state p { font-size: 14px; }
+
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn 0.3s ease;
+      max-width: 400px;
+    }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--error); }
+    .toast-info { background: var(--primary); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* ===== SPINNER ===== */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    .spinner-dark {
+      border-color: rgba(0,0,0,0.1);
+      border-top-color: var(--primary);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      gap: 10px;
+    }
+
+    /* ===== EXPAND ROW ===== */
+    .expand-row { cursor: pointer; }
+    .expand-row i.ti-chevron-right { transition: transform 0.2s; font-size: 14px; }
+    .expand-row.open i.ti-chevron-right { transform: rotate(90deg); }
+    .sub-row { background: #F8FAFC; }
+    .sub-row td { padding-left: 48px !important; font-size: 12px; }
+
+    /* ===== DATA TABLE ===== */
+    .data-table th, .data-table td { text-align: right; }
+    .data-table th:first-child, .data-table td:first-child { text-align: left; }
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { text-align: left; }
+
+    /* ===== SETTINGS ===== */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .content { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .form-row { flex-direction: column; }
+      .settings-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .tab-nav { padding: 0 16px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP BAR ===== -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="icon-box"><i class="ti ti-chart-arrows-vertical"></i></div>
+    SimilarWeb Comparing
+  </div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-status" id="connectionStatus">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Not connected</span>
+  </div>
+</div>
+
+<!-- ===== TAB NAV ===== -->
+<div class="tab-nav">
+  <button class="tab-btn active" data-tab="dashboard">
+    <i class="ti ti-layout-dashboard"></i> Dashboard
+  </button>
+  <button class="tab-btn" data-tab="clients">
+    <i class="ti ti-users"></i> Clients
+    <span class="badge" id="clientsBadge">0</span>
+  </button>
+  <button class="tab-btn" data-tab="data">
+    <i class="ti ti-chart-bar"></i> Data
+  </button>
+  <button class="tab-btn" data-tab="queue">
+    <i class="ti ti-list-check"></i> Queue
+    <span class="badge" id="queueBadge">0</span>
+  </button>
+  <button class="tab-btn" data-tab="logs">
+    <i class="ti ti-bug"></i> Logs
+  </button>
+  <button class="tab-btn" data-tab="settings">
+    <i class="ti ti-settings"></i> Settings
+  </button>
+</div>
+
+<!-- ===== CONTENT ===== -->
+<div class="content">
+
+  <!-- TAB: DASHBOARD -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--primary-light);color:var(--primary)"><i class="ti ti-building"></i></div>
+        <div class="stat-value" id="statClients">—</div>
+        <div class="stat-label">Clients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#F3E8FF;color:#7C3AED"><i class="ti ti-users-group"></i></div>
+        <div class="stat-value" id="statCompetitors">—</div>
+        <div class="stat-label">Competitors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--warning-light);color:var(--warning)"><i class="ti ti-clock"></i></div>
+        <div class="stat-value" id="statPending">—</div>
+        <div class="stat-label">Pending Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--success-light);color:var(--success)"><i class="ti ti-circle-check"></i></div>
+        <div class="stat-value" id="statDone">—</div>
+        <div class="stat-label">Completed Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--error-light);color:var(--error)"><i class="ti ti-alert-triangle"></i></div>
+        <div class="stat-value" id="statErrors">—</div>
+        <div class="stat-label">Recent Errors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#ECFDF5;color:#059669"><i class="ti ti-database"></i></div>
+        <div class="stat-value" id="statDataRows">—</div>
+        <div class="stat-label">Data Rows</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-rocket"></i> Quick Actions</div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="switchTab('clients')"><i class="ti ti-plus"></i> Add Client</button>
+        <button class="btn btn-secondary" onclick="switchTab('data')"><i class="ti ti-chart-bar"></i> View Data</button>
+        <button class="btn btn-secondary" onclick="switchTab('queue')"><i class="ti ti-list-check"></i> Task Queue</button>
+        <button class="btn btn-secondary" onclick="loadDashboard()"><i class="ti ti-refresh"></i> Refresh Stats</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CLIENTS -->
+  <div class="tab-panel" id="tab-clients">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-user-plus"></i> Add Client</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client Domain</label>
+          <input type="text" id="newClientSite" placeholder="example.com">
+        </div>
+        <div class="form-group">
+          <label>Manager Email (optional)</label>
+          <input type="email" id="newClientEmail" placeholder="manager@company.com">
+        </div>
+        <button class="btn btn-primary" id="addClientBtn" onclick="addClient()">
+          <i class="ti ti-plus"></i> Add
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-building"></i> All Clients</div>
+        <button class="btn btn-sm btn-secondary" onclick="loadClients()"><i class="ti ti-refresh"></i> Refresh</button>
+      </div>
+      <div id="clientsTableWrap">
+        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading clients...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: DATA -->
+  <div class="tab-panel" id="tab-data">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-filter"></i> Filters</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client</label>
+          <select id="dataClientSelect" onchange="loadDataForClient()">
+            <option value="">Select client...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Period</label>
+          <select id="dataPeriodSelect" onchange="loadDataForClient()">
+            <option value="">All periods</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="loadDataForClient()">
+          <i class="ti ti-search"></i> Load
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-chart-bar"></i> SimilarWeb Metrics</div>
+      </div>
+      <div id="dataTableWrap">
+        <div class="empty-state">
+          <i class="ti ti-chart-dots"></i>
+          <p>Select a client to view comparison data</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: QUEUE -->
+  <div class="tab-panel" id="tab-queue">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-playlist-add"></i> Create Tasks</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client</label>
+          <select id="queueClientSelect">
+            <option value="">Select client...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Period (YYYY.MM)</label>
+          <input type="text" id="queuePeriod" placeholder="2025.01" value="">
+        </div>
+        <button class="btn btn-primary" id="createTasksBtn" onclick="createTasks()">
+          <i class="ti ti-player-play"></i> Create
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-list-check"></i> Task Queue</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="queueStatusFilter" onchange="loadQueue()" style="width:auto;padding:6px 10px;font-size:12px">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="done">Done</option>
+            <option value="error">Error</option>
+          </select>
+          <button class="btn btn-sm btn-secondary" onclick="loadQueue()"><i class="ti ti-refresh"></i></button>
+        </div>
+      </div>
+      <div id="queueTableWrap">
+        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading queue...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LOGS -->
+  <div class="tab-panel" id="tab-logs">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-bug"></i> Error Logs</div>
+        <button class="btn btn-sm btn-secondary" onclick="loadLogs()"><i class="ti ti-refresh"></i> Refresh</button>
+      </div>
+      <div id="logsTableWrap">
+        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-database-cog"></i> Supabase Connection</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Supabase URL</label>
+          <input type="url" id="settingsUrl" placeholder="https://xxxxx.supabase.co">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Service Role Key</label>
+          <input type="password" id="settingsKey" placeholder="eyJhbGciOi...">
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-primary" id="saveConfigBtn" onclick="saveConfig()">
+          <i class="ti ti-device-floppy"></i> Save
+        </button>
+        <button class="btn btn-secondary" id="testConnBtn" onclick="testConnection()">
+          <i class="ti ti-plug-connected"></i> Test Connection
+        </button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-info-circle"></i> About</div>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);">
+        <strong>SimilarWeb Comparing</strong> — dashboard for managing client/competitor comparison data from SimilarWeb via Browse AI robots.
+        Data is stored in Supabase PostgreSQL. Tasks are processed by n8n workflow.
+      </p>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">
+        <div>Tables: <code>clients</code>, <code>competitors</code>, <code>similarweb_data</code>, <code>task_queue</code>, <code>error_logs</code></div>
+        <div style="margin-top:4px">Metrics: monthly_visits, unique_visitors, visit_duration, pages_per_visit, bounce_rate, visits_per_visitor, deduplicated_audience, page_views, direct, organic_search, paid_search, display_ads, social, email, ai_traffic</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODAL: COMPETITORS ===== -->
+<div class="modal-overlay hidden" id="competitorModal">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-users-group" style="color:var(--primary)"></i> Competitors: <span id="modalClientName"></span></div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <input type="text" id="newCompetitorSite" placeholder="competitor.com">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addCompetitor()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+    <div id="competitorsList" style="max-height:300px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCompetitorModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== STATE =====
+var currentClientId = null;
+var clientsCache = [];
+
+// ===== TOAST =====
+function toast(msg, type) {
+  type = type || 'info';
+  var icon = type === 'success' ? 'ti-check' : type === 'error' ? 'ti-x' : 'ti-info-circle';
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.innerHTML = '<i class="ti ' + icon + '"></i> ' + escHtml(msg);
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; setTimeout(function() { el.remove(); }, 300); }, 4000);
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== TAB SWITCHING =====
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() { switchTab(btn.dataset.tab); });
+});
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  var btn = document.querySelector('[data-tab="' + tabId + '"]');
+  if (btn) btn.classList.add('active');
+  var panel = document.getElementById('tab-' + tabId);
+  if (panel) panel.classList.add('active');
+
+  if (tabId === 'dashboard') loadDashboard();
+  if (tabId === 'clients') loadClients();
+  if (tabId === 'data') { populateClientSelects(); loadPeriods(); }
+  if (tabId === 'queue') { populateClientSelects(); loadQueue(); }
+  if (tabId === 'logs') loadLogs();
+  if (tabId === 'settings') loadConfig();
+}
+
+// ===== DASHBOARD =====
+function loadDashboard() {
+  google.script.run
+    .withSuccessHandler(function(stats) {
+      document.getElementById('statClients').textContent = stats.totalClients;
+      document.getElementById('statCompetitors').textContent = stats.totalCompetitors;
+      document.getElementById('statPending').textContent = stats.pendingTasks;
+      document.getElementById('statDone').textContent = stats.completedTasks;
+      document.getElementById('statErrors').textContent = stats.recentErrors;
+      document.getElementById('statDataRows').textContent = stats.dataRows;
+      document.getElementById('clientsBadge').textContent = stats.totalClients;
+      document.getElementById('queueBadge').textContent = stats.pendingTasks;
+    })
+    .withFailureHandler(function(err) {
+      console.error(err);
+    })
+    .getDashboardStats();
+}
+
+// ===== SETTINGS =====
+function loadConfig() {
+  google.script.run
+    .withSuccessHandler(function(cfg) {
+      document.getElementById('settingsUrl').value = cfg.url || '';
+      document.getElementById('settingsKey').value = cfg.key || '';
+      updateConnectionStatus(!!cfg.url && !!cfg.key);
+    })
+    .getSupabaseConfig();
+}
+
+function saveConfig() {
+  var url = document.getElementById('settingsUrl').value.trim();
+  var key = document.getElementById('settingsKey').value.trim();
+  if (!url || !key) { toast('Fill in both URL and Key', 'error'); return; }
+
+  var btn = document.getElementById('saveConfigBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save';
+      if (r.success) {
+        toast('Settings saved', 'success');
+        updateConnectionStatus(true);
+      } else {
+        toast(r.error, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save';
+      toast(err.message, 'error');
+    })
+    .saveSupabaseConfig(url, key);
+}
+
+function testConnection() {
+  var btn = document.getElementById('testConnBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Testing...';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-plug-connected"></i> Test Connection';
+      if (r.success) {
+        toast('Connection successful!', 'success');
+        updateConnectionStatus(true);
+      } else {
+        toast('Connection failed: ' + r.error, 'error');
+        updateConnectionStatus(false);
+      }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-plug-connected"></i> Test Connection';
+      toast('Connection failed: ' + err.message, 'error');
+      updateConnectionStatus(false);
+    })
+    .testSupabaseConnection();
+}
+
+function updateConnectionStatus(connected) {
+  document.getElementById('statusDot').className = 'dot' + (connected ? ' connected' : '');
+  document.getElementById('statusText').textContent = connected ? 'Supabase connected' : 'Not connected';
+}
+
+// ===== CLIENTS =====
+function loadClients() {
+  document.getElementById('clientsTableWrap').innerHTML =
+    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading clients...</div>';
+
+  google.script.run
+    .withSuccessHandler(function(clients) {
+      clientsCache = clients || [];
+      document.getElementById('clientsBadge').textContent = clientsCache.length;
+      renderClientsTable(clientsCache);
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('clientsTableWrap').innerHTML =
+        '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
+    })
+    .getClients();
+}
+
+function renderClientsTable(clients) {
+  if (!clients || clients.length === 0) {
+    document.getElementById('clientsTableWrap').innerHTML =
+      '<div class="empty-state"><i class="ti ti-building-off"></i><p>No clients yet. Add your first client above.</p></div>';
+    return;
+  }
+  var html = '<div class="table-wrap"><table><thead><tr>'
+    + '<th>Domain</th><th>Email</th><th>Status</th><th>Created</th><th>Actions</th>'
+    + '</tr></thead><tbody>';
+  for (var i = 0; i < clients.length; i++) {
+    var c = clients[i];
+    var date = c.created_at ? new Date(c.created_at).toLocaleDateString() : '—';
+    html += '<tr>'
+      + '<td><strong>' + escHtml(c.client_site) + '</strong></td>'
+      + '<td>' + escHtml(c.employee_email || '—') + '</td>'
+      + '<td><span class="badge-status badge-active">' + escHtml(c.client_status || 'active') + '</span></td>'
+      + '<td style="color:var(--text-secondary);font-size:12px">' + date + '</td>'
+      + '<td><div class="td-actions">'
+      + '<button class="btn-icon" title="Manage competitors" onclick="openCompetitorModal(\'' + c.id + '\',\'' + escHtml(c.client_site) + '\')"><i class="ti ti-users-group"></i></button>'
+      + '<button class="btn-icon" title="Delete client" onclick="deleteClient(\'' + c.id + '\',\'' + escHtml(c.client_site) + '\')"><i class="ti ti-trash" style="color:var(--error)"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+  }
+  html += '</tbody></table></div>';
+  document.getElementById('clientsTableWrap').innerHTML = html;
+}
+
+function addClient() {
+  var site = document.getElementById('newClientSite').value.trim();
+  var email = document.getElementById('newClientEmail').value.trim();
+  if (!site) { toast('Enter a domain', 'error'); return; }
+
+  var btn = document.getElementById('addClientBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-plus"></i> Add';
+      if (r.success) {
+        toast('Client added: ' + site, 'success');
+        document.getElementById('newClientSite').value = '';
+        document.getElementById('newClientEmail').value = '';
+        loadClients();
+      } else {
+        toast(r.error, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-plus"></i> Add';
+      toast(err.message, 'error');
+    })
+    .addClient(site, email);
+}
+
+function deleteClient(id, name) {
+  if (!confirm('Delete client "' + name + '" and all its competitors?')) return;
+
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Client deleted', 'success');
+      loadClients();
+    })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .deleteClient(id);
+}
+
+// ===== COMPETITORS MODAL =====
+function openCompetitorModal(clientId, clientName) {
+  currentClientId = clientId;
+  document.getElementById('modalClientName').textContent = clientName;
+  document.getElementById('newCompetitorSite').value = '';
+  document.getElementById('competitorModal').classList.remove('hidden');
+  loadCompetitors(clientId);
+}
+
+function closeCompetitorModal() {
+  document.getElementById('competitorModal').classList.add('hidden');
+  currentClientId = null;
+}
+
+function loadCompetitors(clientId) {
+  document.getElementById('competitorsList').innerHTML =
+    '<div class="loading-overlay"><span class="spinner spinner-dark"></span></div>';
+
+  google.script.run
+    .withSuccessHandler(function(comps) {
+      var wrap = document.getElementById('competitorsList');
+      if (!comps || comps.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:13px">No competitors yet</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < comps.length; i++) {
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:13px">' + escHtml(comps[i].competitor_site) + '</span>'
+          + '<button class="btn-icon" onclick="deleteCompetitor(\'' + comps[i].id + '\')" title="Remove"><i class="ti ti-x" style="color:var(--error);font-size:14px"></i></button>'
+          + '</div>';
+      }
+      wrap.innerHTML = html;
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('competitorsList').innerHTML =
+        '<div style="text-align:center;padding:16px;color:var(--error);font-size:13px">' + escHtml(err.message) + '</div>';
+    })
+    .getCompetitors(clientId);
+}
+
+function addCompetitor() {
+  var site = document.getElementById('newCompetitorSite').value.trim();
+  if (!site || !currentClientId) { toast('Enter competitor domain', 'error'); return; }
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) {
+        toast('Competitor added', 'success');
+        document.getElementById('newCompetitorSite').value = '';
+        loadCompetitors(currentClientId);
+      } else {
+        toast(r.error, 'error');
+      }
+    })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .addCompetitor(currentClientId, site);
+}
+
+function deleteCompetitor(id) {
+  google.script.run
+    .withSuccessHandler(function() {
+      toast('Competitor removed', 'success');
+      if (currentClientId) loadCompetitors(currentClientId);
+    })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .deleteCompetitor(id);
+}
+
+// ===== SELECTS =====
+function populateClientSelects() {
+  if (clientsCache.length === 0) {
+    google.script.run
+      .withSuccessHandler(function(clients) {
+        clientsCache = clients || [];
+        fillSelects();
+      })
+      .getClients();
+  } else {
+    fillSelects();
+  }
+}
+
+function fillSelects() {
+  var selects = ['dataClientSelect', 'queueClientSelect'];
+  for (var s = 0; s < selects.length; s++) {
+    var sel = document.getElementById(selects[s]);
+    var val = sel.value;
+    sel.innerHTML = '<option value="">Select client...</option>';
+    for (var i = 0; i < clientsCache.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = clientsCache[i].id;
+      opt.textContent = clientsCache[i].client_site;
+      sel.appendChild(opt);
+    }
+    if (val) sel.value = val;
+  }
+}
+
+function loadPeriods() {
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      var sel = document.getElementById('dataPeriodSelect');
+      var seen = {};
+      sel.innerHTML = '<option value="">All periods</option>';
+      if (rows) {
+        for (var i = 0; i < rows.length; i++) {
+          var p = rows[i].period;
+          if (p && !seen[p]) {
+            seen[p] = true;
+            var opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            sel.appendChild(opt);
+          }
+        }
+      }
+    })
+    .getAvailablePeriods();
+}
+
+// ===== DATA =====
+function loadDataForClient() {
+  var clientId = document.getElementById('dataClientSelect').value;
+  var period = document.getElementById('dataPeriodSelect').value;
+  if (!clientId) {
+    document.getElementById('dataTableWrap').innerHTML =
+      '<div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a client to view comparison data</p></div>';
+    return;
+  }
+
+  document.getElementById('dataTableWrap').innerHTML =
+    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading data...</div>';
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      renderDataTable(rows);
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('dataTableWrap').innerHTML =
+        '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
+    })
+    .getSimilarwebData(clientId, period || null);
+}
+
+function renderDataTable(rows) {
+  if (!rows || rows.length === 0) {
+    document.getElementById('dataTableWrap').innerHTML =
+      '<div class="empty-state"><i class="ti ti-database-off"></i><p>No data for selected filters</p></div>';
+    return;
+  }
+
+  var cols = [
+    { key: 'site', label: 'Site' },
+    { key: 'site_type', label: 'Type' },
+    { key: 'period', label: 'Period' },
+    { key: 'monthly_visits', label: 'Visits' },
+    { key: 'unique_visitors', label: 'Uniques' },
+    { key: 'visit_duration', label: 'Duration' },
+    { key: 'pages_per_visit', label: 'Pages/Visit' },
+    { key: 'bounce_rate', label: 'Bounce' },
+    { key: 'direct', label: 'Direct' },
+    { key: 'organic_search', label: 'Organic' },
+    { key: 'paid_search', label: 'Paid' },
+    { key: 'social', label: 'Social' },
+    { key: 'ai_traffic', label: 'AI' }
+  ];
+
+  var html = '<div class="table-wrap"><table class="data-table"><thead><tr>';
+  for (var c = 0; c < cols.length; c++) {
+    html += '<th>' + cols[c].label + '</th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    html += '<tr>';
+    for (var j = 0; j < cols.length; j++) {
+      var val = r[cols[j].key] || '—';
+      if (cols[j].key === 'site') {
+        html += '<td><strong>' + escHtml(val) + '</strong></td>';
+      } else if (cols[j].key === 'site_type') {
+        html += '<td><span class="badge-status badge-' + val + '">' + escHtml(val) + '</span></td>';
+      } else {
+        html += '<td>' + escHtml(val) + '</td>';
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+  document.getElementById('dataTableWrap').innerHTML = html;
+}
+
+// ===== QUEUE =====
+function loadQueue() {
+  var status = document.getElementById('queueStatusFilter').value;
+  document.getElementById('queueTableWrap').innerHTML =
+    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading queue...</div>';
+
+  google.script.run
+    .withSuccessHandler(function(tasks) { renderQueueTable(tasks); })
+    .withFailureHandler(function(err) {
+      document.getElementById('queueTableWrap').innerHTML =
+        '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
+    })
+    .getTaskQueue(status);
+}
+
+function renderQueueTable(tasks) {
+  if (!tasks || tasks.length === 0) {
+    document.getElementById('queueTableWrap').innerHTML =
+      '<div class="empty-state"><i class="ti ti-list-check"></i><p>No tasks in queue</p></div>';
+    return;
+  }
+  document.getElementById('queueBadge').textContent = tasks.filter(function(t) { return t.status === 'pending'; }).length;
+
+  var html = '<div class="table-wrap"><table><thead><tr>'
+    + '<th>Client</th><th>Sites</th><th>Period</th><th>Chunk</th><th>Status</th><th>Created</th><th>Actions</th>'
+    + '</tr></thead><tbody>';
+  for (var i = 0; i < tasks.length; i++) {
+    var t = tasks[i];
+    var sites = (t.sites_list || '').split(',');
+    var sitesDisplay = sites.length > 2
+      ? escHtml(sites[0]) + ', ' + escHtml(sites[1]) + ' +' + (sites.length - 2)
+      : escHtml(t.sites_list);
+    var date = t.created_at ? new Date(t.created_at).toLocaleString() : '—';
+
+    html += '<tr>'
+      + '<td><strong>' + escHtml(t.client_site) + '</strong></td>'
+      + '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + escHtml(t.sites_list) + '">' + sitesDisplay + '</td>'
+      + '<td>' + escHtml(t.period) + '</td>'
+      + '<td>' + t.chunk_index + '/' + t.total_chunks + '</td>'
+      + '<td><span class="badge-status badge-' + t.status + '">' + escHtml(t.status) + '</span></td>'
+      + '<td style="font-size:12px;color:var(--text-secondary)">' + date + '</td>'
+      + '<td><div class="td-actions">';
+
+    if (t.status === 'error') {
+      html += '<button class="btn btn-sm btn-warning" onclick="retryTask(\'' + escHtml(t.queue_id) + '\')"><i class="ti ti-refresh"></i> Retry</button>';
+    }
+    html += '<button class="btn-icon" onclick="deleteTask(\'' + t.id + '\')" title="Delete"><i class="ti ti-trash" style="color:var(--error);font-size:14px"></i></button>';
+    html += '</div></td></tr>';
+
+    if (t.error_message) {
+      html += '<tr class="sub-row"><td colspan="7" style="color:var(--error);font-size:12px;padding:6px 14px 6px 48px">'
+        + '<i class="ti ti-alert-triangle"></i> ' + escHtml(t.error_message) + '</td></tr>';
+    }
+  }
+  html += '</tbody></table></div>';
+  document.getElementById('queueTableWrap').innerHTML = html;
+}
+
+function createTasks() {
+  var clientId = document.getElementById('queueClientSelect').value;
+  var period = document.getElementById('queuePeriod').value.trim();
+  if (!clientId) { toast('Select a client', 'error'); return; }
+  if (!period || !/^\d{4}\.\d{2}$/.test(period)) { toast('Period format: YYYY.MM', 'error'); return; }
+
+  var btn = document.getElementById('createTasksBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating...';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-player-play"></i> Create';
+      if (r.success) {
+        toast('Created ' + r.tasksCreated + ' tasks', 'success');
+        loadQueue();
+      } else {
+        toast(r.error, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-player-play"></i> Create';
+      toast(err.message, 'error');
+    })
+    .createComparisonTasks(clientId, period);
+}
+
+function retryTask(queueId) {
+  google.script.run
+    .withSuccessHandler(function() { toast('Task re-queued', 'success'); loadQueue(); })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .retryTask(queueId);
+}
+
+function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  google.script.run
+    .withSuccessHandler(function() { toast('Task deleted', 'success'); loadQueue(); })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .deleteTask(id);
+}
+
+// ===== LOGS =====
+function loadLogs() {
+  document.getElementById('logsTableWrap').innerHTML =
+    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>';
+
+  google.script.run
+    .withSuccessHandler(function(logs) {
+      if (!logs || logs.length === 0) {
+        document.getElementById('logsTableWrap').innerHTML =
+          '<div class="empty-state"><i class="ti ti-mood-happy"></i><p>No errors logged</p></div>';
+        return;
+      }
+      var html = '<div class="table-wrap"><table><thead><tr>'
+        + '<th>Date</th><th>Robot</th><th>Period</th><th>Sites</th><th>Error</th>'
+        + '</tr></thead><tbody>';
+      for (var i = 0; i < logs.length; i++) {
+        var l = logs[i];
+        var date = l.created_at ? new Date(l.created_at).toLocaleString() : '—';
+        html += '<tr>'
+          + '<td style="font-size:12px;white-space:nowrap">' + date + '</td>'
+          + '<td><span class="badge-status badge-processing">' + escHtml(l.robot_type || '—') + '</span></td>'
+          + '<td>' + escHtml(l.period || '—') + '</td>'
+          + '<td style="font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis">' + escHtml(l.sites || '—') + '</td>'
+          + '<td style="font-size:12px;color:var(--error);max-width:300px">' + escHtml(l.error_message || '—') + '</td>'
+          + '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('logsTableWrap').innerHTML = html;
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('logsTableWrap').innerHTML =
+        '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
+    })
+    .getErrorLogs(50);
+}
+
+// ===== INIT =====
+(function init() {
+  loadConfig();
+  loadDashboard();
+  // Set default period
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('queuePeriod').value = y + '.' + m;
+})();
+
+// Close modal on overlay click
+document.getElementById('competitorModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCompetitorModal();
+});
+
+// Enter key handlers
+document.getElementById('newClientSite').addEventListener('keydown', function(e) { if (e.key === 'Enter') addClient(); });
+document.getElementById('newCompetitorSite').addEventListener('keydown', function(e) { if (e.key === 'Enter') addCompetitor(); });
+</script>
+</body>
+</html>
