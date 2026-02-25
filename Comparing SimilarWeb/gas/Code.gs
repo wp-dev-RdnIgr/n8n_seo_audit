@@ -30,9 +30,42 @@ function saveSupabaseConfig(url, key) {
 }
 
 function testSupabaseConnection() {
+  var config = getSupabaseConfig();
+  if (!config.url || !config.key) return { success: false, error: 'URL and Key not configured' };
+
   try {
-    var data = supabaseGet('/rest/v1/clients?select=id&limit=1');
-    return { success: true, message: 'Connected! DB is reachable.' };
+    // Step 1: test basic connectivity via REST root
+    var options = {
+      method: 'get',
+      headers: {
+        'apikey': config.key,
+        'Authorization': 'Bearer ' + config.key
+      },
+      muteHttpExceptions: true
+    };
+
+    var resp = UrlFetchApp.fetch(config.url + '/rest/v1/', options);
+    var code = resp.getResponseCode();
+
+    if (code === 404) {
+      return { success: false, error: 'URL wrong or REST API not available. URL: ' + config.url };
+    }
+
+    // Step 2: try to read clients table
+    var resp2 = UrlFetchApp.fetch(config.url + '/rest/v1/clients?select=id&limit=1', options);
+    var code2 = resp2.getResponseCode();
+    var text2 = resp2.getContentText();
+
+    if (code2 >= 400) {
+      // Possibly schema cache needs reload
+      // Try to notify PostgREST to reload via /rest/v1/rpc endpoint
+      return {
+        success: false,
+        error: 'Tables not visible (HTTP ' + code2 + '). Go to Supabase Dashboard → Settings → API → click "Reload schema cache". Then try again. Details: ' + text2.substring(0, 200)
+      };
+    }
+
+    return { success: true, message: 'Connected! Found clients table. Response code: ' + code2 };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
