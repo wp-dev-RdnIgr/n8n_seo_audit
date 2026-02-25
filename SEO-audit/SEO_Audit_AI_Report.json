@@ -127,7 +127,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -135,7 +134,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent1",
       "name": "Agent 1 - Organic Traffic",
@@ -154,7 +159,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -162,7 +166,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent2",
       "name": "Agent 2 - Link Profile",
@@ -181,7 +191,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -189,7 +198,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent3",
       "name": "Agent 3 - Top Pages Links",
@@ -208,7 +223,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -216,7 +230,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent4",
       "name": "Agent 4 - Behavioral",
@@ -235,7 +255,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -243,7 +262,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent5",
       "name": "Agent 5 - Keywords",
@@ -262,7 +287,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -270,7 +294,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-agent6",
       "name": "Agent 6 - Traffic Pages",
@@ -317,7 +347,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o",
         "messages": {
           "values": [
             {
@@ -325,7 +354,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        }
       },
       "id": "node-final-agent",
       "name": "Final Summary Agent",
