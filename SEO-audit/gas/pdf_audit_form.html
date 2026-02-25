@@ -4,313 +4,677 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-border: #E0E7FF;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --error: #DC2626;
+      --error-light: #FEF2F2;
+      --error-border: #FECACA;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --nav-bg: #0F172A;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--bg);
       min-height: 100vh;
-      padding: 40px 20px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
-    .container { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 24px; }
 
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .nav-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-link.active {
+      color: #fff;
+      background: rgba(79,70,229,0.45);
+    }
+
+    /* ==========================================
+       MAIN LAYOUT
+       ========================================== */
+    .main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+    }
+
+    /* ==========================================
+       PAGE HEADER
+       ========================================== */
     .page-header {
       text-align: center;
-      color: #ffffff;
-      padding: 0 0 8px;
+      margin-bottom: 28px;
     }
+
     .page-header h1 {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
       margin-bottom: 6px;
     }
+
     .page-header p {
       font-size: 14px;
-      opacity: 0.85;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
+    /* ==========================================
+       CARD
+       ========================================== */
     .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 32px 28px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 20px;
     }
+
     .card-header {
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #F1F5F9;
     }
+
     .card-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 22px;
       flex-shrink: 0;
     }
-    .card-icon.ai { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); }
-    .card-icon.pdf { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
-    .card-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1e293b;
+
+    .card-icon.indigo {
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
     }
+
+    .card-icon.red {
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
+      color: var(--error);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
     .card-desc {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
       margin-top: 2px;
       line-height: 1.4;
     }
 
-    .form-group { margin-bottom: 18px; }
-    .form-group:last-of-type { margin-bottom: 0; }
-    label {
+    /* ==========================================
+       FORM
+       ========================================== */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
-      margin-bottom: 8px;
+      color: var(--text);
+      margin-bottom: 6px;
     }
-    .input-wrapper { position: relative; }
-    .input-icon {
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
       position: absolute;
-      left: 14px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 18px;
-      color: #94a3b8;
+      color: var(--text-muted);
       pointer-events: none;
+      transition: color 0.2s;
     }
-    input[type="text"] {
+
+    .input-field {
       width: 100%;
-      padding: 14px 14px 14px 44px;
+      padding: 11px 14px 11px 40px;
       font-size: 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      background: #f8fafc;
-      color: #1e293b;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
       transition: all 0.2s ease;
     }
-    input[type="text"]:focus {
-      border-color: #667eea;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
-      outline: none;
+
+    .input-field::placeholder {
+      color: var(--text-muted);
     }
-    input[type="text"]::placeholder { color: #94a3b8; }
+
+    .input-field:hover {
+      border-color: #CBD5E1;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .input-field:focus ~ i {
+      color: var(--primary);
+    }
+
     .input-hint {
-      font-size: 11px;
-      color: #94a3b8;
+      font-size: 12px;
+      color: var(--text-muted);
       margin-top: 6px;
+      line-height: 1.4;
     }
 
-    .divider {
-      height: 1px;
-      background: #f1f5f9;
-      margin: 20px 0;
-    }
-
+    /* ==========================================
+       BUTTON
+       ========================================== */
     .btn {
       width: 100%;
-      padding: 15px;
-      font-size: 15px;
+      padding: 12px 20px;
+      font-size: 14px;
       font-weight: 600;
-      color: #ffffff;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 22px;
     }
+
     .btn:hover:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
     .btn:disabled {
-      opacity: 0.7;
+      opacity: 0.6;
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
     }
-    .btn-ai { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); }
-    .btn-pdf { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .btn .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #ffffff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       TIME NOTE
+       ========================================== */
     .time-note {
       text-align: center;
       font-size: 12px;
-      color: #94a3b8;
-      margin-top: 10px;
+      color: var(--text-muted);
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
     }
 
-    /* Progress steps */
+    .time-note i {
+      font-size: 14px;
+    }
+
+    /* ==========================================
+       PROGRESS STEPS
+       ========================================== */
     .progress-steps {
       display: none;
-      margin-top: 18px;
-      padding: 14px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
     }
-    .progress-steps.visible { display: block; }
+
+    .progress-steps.visible {
+      display: block;
+      animation: slideIn 0.25s ease;
+    }
+
     .progress-step {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 8px 0;
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--text-muted);
+      font-weight: 500;
     }
-    .progress-step.active { color: #667eea; font-weight: 500; }
-    .progress-step.done { color: #16a34a; }
-    .progress-step.error { color: #dc2626; }
+
+    .progress-step.active {
+      color: var(--primary);
+    }
+
+    .progress-step.done {
+      color: var(--success);
+    }
+
+    .progress-step.error {
+      color: var(--error);
+    }
+
     .step-icon {
-      width: 24px; height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      background: #f1f5f9;
+      font-size: 13px;
+      background: #F1F5F9;
       flex-shrink: 0;
+      transition: all 0.2s;
     }
+
     .progress-step.active .step-icon {
-      background: #eef2ff;
-      color: #667eea;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
     }
+
     .progress-step.active .step-icon::after {
       content: '';
-      width: 10px; height: 10px;
-      border: 2px solid #667eea;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--primary);
       border-top-color: transparent;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
-    .progress-step.done .step-icon { background: #dcfce7; color: #16a34a; }
-    .progress-step.error .step-icon { background: #fee2e2; color: #dc2626; }
 
-    .result {
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 12px;
-      display: none;
+    .progress-step.done .step-icon {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
     }
+
+    .progress-step.done .step-icon i {
+      font-size: 14px;
+    }
+
+    .progress-step.error .step-icon {
+      background: var(--error-light);
+      color: var(--error);
+      border: 1px solid var(--error-border);
+    }
+
+    .progress-step.error .step-icon i {
+      font-size: 14px;
+    }
+
+    /* ==========================================
+       RESULT
+       ========================================== */
+    .result {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .result.success {
       display: block;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
     }
+
     .result.error {
       display: block;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
     }
+
     .result-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
-    .result-icon {
-      width: 32px; height: 32px;
-      border-radius: 8px;
+
+    .result-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      flex-shrink: 0;
     }
-    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
-    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
-    .result-title { font-size: 15px; font-weight: 600; }
-    .result.success .result-title { color: #15803d; }
-    .result.error .result-title { color: #dc2626; }
+
+    .result-badge i {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .result.success .result-badge {
+      background: var(--success);
+    }
+
+    .result.error .result-badge {
+      background: var(--error);
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .result.success .result-title {
+      color: #065F46;
+    }
+
+    .result.error .result-title {
+      color: var(--error);
+    }
+
     .result-text {
       font-size: 13px;
-      color: #475569;
+      color: var(--text-secondary);
       margin-bottom: 14px;
-      line-height: 1.5;
+      line-height: 1.55;
     }
+
     .result-stats {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 14px;
       flex-wrap: wrap;
     }
+
     .stat {
-      background: #dcfce7;
-      padding: 8px 12px;
-      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #D1FAE5;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-size: 12px;
-      color: #166534;
+      color: #065F46;
+      font-weight: 500;
     }
-    .stat strong { font-weight: 600; }
-    .result-links { display: flex; flex-direction: column; gap: 8px; }
+
+    .stat i {
+      font-size: 14px;
+    }
+
+    .result-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .result-link {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 20px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #15803d;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #065F46;
+      background: #D1FAE5;
+      border: 1px solid var(--success-border);
+      border-radius: var(--radius-sm);
       text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
-    .result-link:hover { background: #bbf7d0; }
-    .result-link.ai-link {
-      color: #6d28d9;
-      background: #ede9fe;
-      border-color: #ddd6fe;
-    }
-    .result-link.ai-link:hover { background: #ddd6fe; }
 
+    .result-link:hover {
+      background: #A7F3D0;
+    }
+
+    .result-link i {
+      font-size: 17px;
+    }
+
+    .result-link.indigo-link {
+      color: var(--primary-hover);
+      background: var(--primary-light);
+      border-color: var(--primary-border);
+    }
+
+    .result-link.indigo-link:hover {
+      background: var(--primary-border);
+    }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
     .footer {
       text-align: center;
-      padding: 8px 0;
+      padding: 8px 0 0;
       font-size: 12px;
+      color: var(--text-muted);
     }
+
     .footer-brand {
-      color: rgba(255,255,255,0.8);
       font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 768px) {
+      .nav-links {
+        gap: 0;
+      }
+
+      .nav-link {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .nav-inner {
+        gap: 16px;
+      }
+
+      .main {
+        padding: 24px 16px 48px;
+      }
+
+      .card {
+        padding: 22px 18px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Page header -->
+
+  <!-- ── Navigation ── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">W</div>
+        <span class="nav-brand-text">SEO Hub</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Populated dynamically via getWebAppUrl() -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <div class="main">
+
+    <!-- Page Header -->
     <div class="page-header">
-      <h1>&#129302; SEO AI Інструменти</h1>
+      <h1>AI Інструменти</h1>
       <p>AI-аналіз домену та парсинг PDF аудитів</p>
     </div>
 
     <!-- ============================================ -->
-    <!-- SECTION 1: AI Domain Analysis                -->
+    <!-- CARD 1: AI Domain Analysis                   -->
     <!-- ============================================ -->
     <div class="card">
       <div class="card-header">
-        <div class="card-icon ai">&#129302;</div>
+        <div class="card-icon indigo">
+          <i class="ti ti-brain"></i>
+        </div>
         <div>
           <div class="card-title">AI аналіз домену</div>
           <div class="card-desc">Згенерувати AI-звіт з рекомендаціями на основі таблиці аналізу домену</div>
@@ -318,23 +682,30 @@
       </div>
 
       <div class="form-group">
-        <label>Посилання на таблицю з аналізом домену</label>
+        <label class="form-label" for="aiSpreadsheetUrl">Посилання на таблицю з аналізом домену</label>
         <div class="input-wrapper">
-          <span class="input-icon">&#128279;</span>
           <input
             type="text"
+            class="input-field"
             id="aiSpreadsheetUrl"
             placeholder="https://docs.google.com/spreadsheets/d/..."
+            autocomplete="off"
+            spellcheck="false"
           >
+          <i class="ti ti-link"></i>
         </div>
         <p class="input-hint">Google Sheets таблиця з результатами аналізу домену</p>
       </div>
 
-      <button class="btn btn-ai" id="aiSubmitBtn" onclick="handleAiSubmit()">
-        <span>&#129302; Запустити AI аналіз</span>
+      <button class="btn" id="aiSubmitBtn" onclick="handleAiSubmit()">
+        <i class="ti ti-brain"></i>
+        <span>Запустити AI аналіз</span>
       </button>
 
-      <div class="time-note">&#9203; Орієнтовний час: 2-4 хв</div>
+      <div class="time-note">
+        <i class="ti ti-clock"></i>
+        <span>Орієнтовний час: 2-4 хв</span>
+      </div>
 
       <div class="progress-steps" id="aiProgress">
         <div class="progress-step" id="aiStep1">
@@ -347,11 +718,13 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECTION 2: PDF Document Analysis             -->
+    <!-- CARD 2: PDF Document Analysis                -->
     <!-- ============================================ -->
     <div class="card">
       <div class="card-header">
-        <div class="card-icon pdf">&#128196;</div>
+        <div class="card-icon red">
+          <i class="ti ti-file-type-pdf"></i>
+        </div>
         <div>
           <div class="card-title">AI аналіз PDF документа</div>
           <div class="card-desc">Парсинг технічного SEO-аудиту з PDF у структуровану Google таблицю</div>
@@ -359,23 +732,30 @@
       </div>
 
       <div class="form-group">
-        <label>Посилання на PDF документ (Google Drive)</label>
+        <label class="form-label" for="pdfUrl">Посилання на PDF документ (Google Drive)</label>
         <div class="input-wrapper">
-          <span class="input-icon">&#128279;</span>
           <input
             type="text"
+            class="input-field"
             id="pdfUrl"
             placeholder="https://drive.google.com/file/d/..."
+            autocomplete="off"
+            spellcheck="false"
           >
+          <i class="ti ti-link"></i>
         </div>
         <p class="input-hint">PDF файл на Google Drive (має бути доступний для перегляду)</p>
       </div>
 
-      <button class="btn btn-pdf" id="pdfSubmitBtn" onclick="handlePdfSubmit()">
-        <span>&#128640; Запустити парсинг PDF</span>
+      <button class="btn" id="pdfSubmitBtn" onclick="handlePdfSubmit()">
+        <i class="ti ti-file-type-pdf"></i>
+        <span>Запустити парсинг PDF</span>
       </button>
 
-      <div class="time-note">&#9203; Орієнтовний час: 1-3 хв</div>
+      <div class="time-note">
+        <i class="ti ti-clock"></i>
+        <span>Орієнтовний час: 1-3 хв</span>
+      </div>
 
       <div class="progress-steps" id="pdfProgress">
         <div class="progress-step" id="pdfStep1">
@@ -387,12 +767,43 @@
       <div class="result" id="pdfResult"></div>
     </div>
 
+    <!-- Footer -->
     <div class="footer">
       <span class="footer-brand">WebPromo</span>
     </div>
+
   </div>
 
   <script>
+    // ============================================
+    // NAVIGATION: build links dynamically
+    // ============================================
+    (function buildNav() {
+      var navData = [
+        { label: 'Аналіз',      page: 'audit' },
+        { label: 'Мастер',      page: 'master' },
+        { label: 'Wizard',       page: 'wizard' },
+        { label: 'GKP',          page: 'gkp' },
+        { label: 'Ідеї GKP',    page: 'gkp_ideas' },
+        { label: 'Метрики GKP', page: 'gkp_metrics' },
+        { label: 'PageSpeed',    page: 'pagespeed' },
+        { label: 'AI Tools',     page: 'pdf_audit' }
+      ];
+
+      google.script.run
+        .withSuccessHandler(function(baseUrl) {
+          var container = document.getElementById('navLinks');
+          navData.forEach(function(item) {
+            var a = document.createElement('a');
+            a.className = 'nav-link' + (item.page === 'pdf_audit' ? ' active' : '');
+            a.href = baseUrl + '?page=' + item.page;
+            a.textContent = item.label;
+            container.appendChild(a);
+          });
+        })
+        .getWebAppUrl();
+    })();
+
     // ============================================
     // SECTION 1: AI Domain Analysis
     // ============================================
@@ -425,7 +836,7 @@
       google.script.run
         .withSuccessHandler(function(response) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#129302; Запустити AI аналіз</span>';
+          submitBtn.innerHTML = '<i class="ti ti-brain"></i><span>Запустити AI аналіз</span>';
 
           if (response.success) {
             setStepState('aiStep1', 'done');
@@ -437,7 +848,7 @@
         })
         .withFailureHandler(function(error) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#129302; Запустити AI аналіз</span>';
+          submitBtn.innerHTML = '<i class="ti ti-brain"></i><span>Запустити AI аналіз</span>';
           setStepState('aiStep1', 'error');
           showAiError('Помилка: ' + error.message);
         })
@@ -452,14 +863,14 @@
       if (data.docUrl) {
         linkHtml =
           '<div class="result-links">' +
-            '<a href="' + data.docUrl + '" target="_blank" class="result-link ai-link">' +
-              '&#129302; Відкрити AI-звіт' +
+            '<a href="' + data.docUrl + '" target="_blank" class="result-link indigo-link">' +
+              '<i class="ti ti-external-link"></i> Відкрити AI-звіт' +
             '</a>' +
           '</div>';
       }
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10003;</div>' +
+          '<div class="result-badge"><i class="ti ti-check"></i></div>' +
           '<div class="result-title">AI-звіт створено!</div>' +
         '</div>' +
         '<p class="result-text">' +
@@ -476,7 +887,7 @@
       resultDiv.style.display = 'block';
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10007;</div>' +
+          '<div class="result-badge"><i class="ti ti-x"></i></div>' +
           '<div class="result-title">Помилка</div>' +
         '</div>' +
         '<p class="result-text">' + message + '</p>';
@@ -515,7 +926,7 @@
       google.script.run
         .withSuccessHandler(function(response) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#128640; Запустити парсинг PDF</span>';
+          submitBtn.innerHTML = '<i class="ti ti-file-type-pdf"></i><span>Запустити парсинг PDF</span>';
 
           if (response.success) {
             setStepState('pdfStep1', 'done');
@@ -527,7 +938,7 @@
         })
         .withFailureHandler(function(error) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>&#128640; Запустити парсинг PDF</span>';
+          submitBtn.innerHTML = '<i class="ti ti-file-type-pdf"></i><span>Запустити парсинг PDF</span>';
           setStepState('pdfStep1', 'error');
           showPdfError('Помилка: ' + error.message);
         })
@@ -545,13 +956,13 @@
         linkHtml =
           '<div class="result-links">' +
             '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
-              '&#128200; Відкрити таблицю з результатами' +
+              '<i class="ti ti-table"></i> Відкрити таблицю з результатами' +
             '</a>' +
           '</div>';
       }
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10003;</div>' +
+          '<div class="result-badge"><i class="ti ti-check"></i></div>' +
           '<div class="result-title">Парсинг завершено!</div>' +
         '</div>' +
         '<p class="result-text">' +
@@ -560,8 +971,8 @@
         '</p>' +
         (data.processingTime || data.totalSheets ?
           '<div class="result-stats">' +
-            (data.processingTime ? '<div class="stat">&#128337; <strong>' + data.processingTime + '</strong> сек</div>' : '') +
-            (data.totalSheets ? '<div class="stat">&#128196; <strong>' + data.totalSheets + '</strong> вкладок</div>' : '') +
+            (data.processingTime ? '<div class="stat"><i class="ti ti-clock"></i> <strong>' + data.processingTime + '</strong> сек</div>' : '') +
+            (data.totalSheets ? '<div class="stat"><i class="ti ti-file"></i> <strong>' + data.totalSheets + '</strong> вкладок</div>' : '') +
           '</div>' : '') +
         linkHtml;
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -574,7 +985,7 @@
       resultDiv.style.display = 'block';
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10007;</div>' +
+          '<div class="result-badge"><i class="ti ti-x"></i></div>' +
           '<div class="result-title">Помилка</div>' +
         '</div>' +
         '<p class="result-text">' + message + '</p>';
@@ -590,9 +1001,9 @@
       el.className = 'progress-step' + (state ? ' ' + state : '');
       var icon = el.querySelector('.step-icon');
       if (state === 'done') {
-        icon.innerHTML = '&#10003;';
+        icon.innerHTML = '<i class="ti ti-check"></i>';
       } else if (state === 'error') {
-        icon.innerHTML = '&#10007;';
+        icon.innerHTML = '<i class="ti ti-x"></i>';
       } else {
         icon.innerHTML = '';
       }

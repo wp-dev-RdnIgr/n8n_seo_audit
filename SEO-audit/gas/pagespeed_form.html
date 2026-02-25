@@ -2,248 +2,774 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-border: #E0E7FF;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --error: #DC2626;
+      --error-light: #FEF2F2;
+      --error-border: #FECACA;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --nav-bg: #0F172A;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: var(--bg);
       min-height: 100vh;
-      padding: 24px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-    .container { width: 100%; max-width: 520px; }
-    .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    }
-    .header { text-align: center; margin-bottom: 28px; }
-    .logo {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 18px;
-      font-size: 24px;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-    }
-    .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-    .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
-
-    .form-group { margin-bottom: 20px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-    .input-wrapper { position: relative; }
-    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.4; }
-    input[type="text"] {
-      width: 100%;
-      padding: 14px 14px 14px 44px;
       font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .nav-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-link.active {
+      color: #fff;
+      background: rgba(79,70,229,0.45);
+    }
+
+    /* ==========================================
+       MAIN CONTENT
+       ========================================== */
+    .main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ==========================================
+       CARD
+       ========================================== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ==========================================
+       HEADER
+       ========================================== */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .header-icon i {
+      font-size: 22px;
+      color: var(--primary);
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ==========================================
+       FORM
+       ========================================== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      font-size: 14px;
       font-family: inherit;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
     }
-    input[type="text"]:focus { border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12); }
 
-    .table-hint {
-      margin-top: 12px;
-      padding: 12px 14px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+    .input-field::placeholder {
+      color: var(--text-muted);
     }
+
+    .input-field:hover {
+      border-color: #CBD5E1;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .input-field:focus ~ i {
+      color: var(--primary);
+    }
+
+    /* ==========================================
+       TABLE HINT
+       ========================================== */
+    .table-hint {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
     .table-hint-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-bottom: 8px;
     }
+
     .table-example {
-      font-family: 'SF Mono', Monaco, monospace;
+      font-family: 'SF Mono', 'Fira Code', Monaco, Consolas, monospace;
       font-size: 11px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.6;
     }
+
     .table-example .row {
       display: flex;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--border);
       padding: 4px 0;
     }
-    .table-example .row:last-child { border-bottom: none; }
-    .table-example .col-a {
-      width: 40px;
-      color: #94a3b8;
-      font-weight: 500;
+
+    .table-example .row:last-child {
+      border-bottom: none;
     }
+
+    .table-example .col-a {
+      width: 36px;
+      color: var(--text-muted);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
     .table-example .col-val {
       flex: 1;
-      color: #334155;
+      color: var(--text);
     }
-    .table-example .header-row { background: #f1f5f9; margin: 0 -8px; padding: 4px 8px; border-radius: 4px; }
 
-    .options { display: flex; gap: 12px; margin-bottom: 20px; }
+    .table-example .header-row {
+      background: var(--primary-light);
+      margin: 0 -8px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .table-example .header-row .col-val {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ==========================================
+       TEST TYPE TOGGLE OPTIONS
+       ========================================== */
+    .options-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
     .option-card {
       flex: 1;
-      padding: 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      padding: 14px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       text-align: center;
-      background: #f8fafc;
+      background: var(--surface);
+      user-select: none;
     }
-    .option-card.selected { border-color: #10b981; background: #f0fdf4; }
-    .option-card:hover { border-color: #10b981; }
-    .option-icon { font-size: 24px; margin-bottom: 6px; }
-    .option-label { font-size: 12px; font-weight: 600; color: #374151; }
 
+    .option-card:hover {
+      border-color: #CBD5E1;
+      background: #F8FAFC;
+    }
+
+    .option-card.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .option-card.selected:hover {
+      background: var(--primary-light);
+    }
+
+    .option-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .option-icon i {
+      font-size: 24px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .option-card.selected .option-icon i {
+      color: var(--primary);
+    }
+
+    .option-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .option-card.selected .option-label {
+      color: var(--primary);
+    }
+
+    /* ==========================================
+       BUTTON
+       ========================================== */
     .btn {
       width: 100%;
-      padding: 14px 24px;
+      padding: 12px 20px;
       font-size: 14px;
       font-weight: 600;
-      color: white;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
       position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35); }
-    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
-    .btn-loading span { visibility: hidden; }
+
+    .btn:hover {
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn-loading .btn-content {
+      visibility: hidden;
+    }
+
     .btn-loading::after {
       content: "";
-      position: absolute; top: 50%; left: 50%;
-      width: 20px; height: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
       margin: -10px 0 0 -10px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.65s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       TIME NOTE
+       ========================================== */
     .time-note {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--text-muted);
       margin-top: 12px;
     }
 
-    .result { margin-top: 20px; padding: 16px 18px; border-radius: 10px; display: none; }
-    .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
+    .time-note i {
+      font-size: 14px;
+    }
+
+    /* ==========================================
+       RESULT
+       ========================================== */
+    .result {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: var(--radius-sm);
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result.success {
+      display: block;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
+    }
+
+    .result.error {
+      display: block;
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
+    }
+
     .result-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-    .result-icon {
-      width: 28px; height: 28px;
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 14px;
+
+    .result-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
-    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
-    .result-title { font-size: 14px; font-weight: 600; }
-    .result.success .result-title { color: #15803d; }
-    .result.error .result-title { color: #dc2626; }
-    .result-text { font-size: 13px; color: #475569; margin-bottom: 12px; }
+
+    .result-badge i {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .result.success .result-badge {
+      background: var(--success);
+    }
+
+    .result.error .result-badge {
+      background: var(--error);
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .result.success .result-title {
+      color: #065F46;
+    }
+
+    .result.error .result-title {
+      color: var(--error);
+    }
+
+    .result-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .result-body strong {
+      font-weight: 600;
+      color: var(--text);
+    }
+
     .result-link {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 10px 16px;
+      margin-top: 10px;
+      padding: 8px 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #15803d;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
+      border-radius: 6px;
       text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
-    .result-link:hover { background: #bbf7d0; }
 
-    .metrics-preview {
-      margin-top: 28px;
-      padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
+    .result-link i {
+      font-size: 16px;
     }
-    .metrics-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 14px; letter-spacing: 0.5px; }
+
+    .result.success .result-link {
+      color: #065F46;
+      background: #D1FAE5;
+      border: 1px solid var(--success-border);
+    }
+
+    .result.success .result-link:hover {
+      background: var(--success-border);
+    }
+
+    /* ==========================================
+       SEPARATOR
+       ========================================== */
+    .separator {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ==========================================
+       METRICS PREVIEW
+       ========================================== */
+    .metrics-section {
+      margin-top: 0;
+    }
+
+    .metrics-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 12px;
+    }
+
+    .metrics-label i {
+      font-size: 15px;
+    }
+
     .metric-item {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 10px 12px;
-      background: #f9fafb;
-      border: 1px solid #f3f4f6;
-      border-radius: 8px;
-      margin-bottom: 8px;
+      background: var(--bg);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      transition: all 0.15s ease;
     }
-    .metric-badge {
-      min-width: 42px; height: 24px;
-      padding: 0 8px;
-      border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: white;
-    }
-    .badge-green { background: #10b981; }
-    .badge-orange { background: #f59e0b; }
-    .badge-red { background: #ef4444; }
-    .badge-blue { background: #3b82f6; }
-    .metric-info { flex: 1; }
-    .metric-name { font-size: 13px; font-weight: 500; color: #1e293b; }
-    .metric-desc { font-size: 11px; color: #94a3b8; }
 
-    .footer {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid #f3f4f6;
-      display: flex;
-      justify-content: center;
-      font-size: 12px;
+    .metric-item:last-child {
+      margin-bottom: 0;
     }
-    .footer-brand { color: #10b981; font-weight: 600; }
+
+    .metric-item:hover {
+      border-color: var(--border);
+      background: var(--surface);
+    }
+
+    .metric-badge {
+      min-width: 40px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .badge-green { background: var(--success); }
+    .badge-orange { background: #F59E0B; }
+    .badge-red { background: var(--error); }
+    .badge-blue { background: #3B82F6; }
+
+    .metric-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .metric-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .metric-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
+    .footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-brand {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .footer-brand strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 580px) {
+      .card {
+        padding: 24px 18px;
+      }
+      .nav-links {
+        gap: 1px;
+      }
+      .nav-link {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      .nav-inner {
+        gap: 16px;
+      }
+      .options {
+        gap: 8px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- ==========================================
+       NAVIGATION
+       ========================================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">W</div>
+        <span class="nav-brand-text">SEO Hub</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Populated dynamically via getWebAppUrl() -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       MAIN CONTENT
+       ========================================== -->
+  <div class="main">
     <div class="card">
+
+      <!-- Header -->
       <div class="header">
-        <div class="logo">&#9889;</div>
+        <div class="header-icon">
+          <i class="ti ti-bolt"></i>
+        </div>
         <h1>PageSpeed Test</h1>
         <p>Масовий аналіз швидкості завантаження сторінок через Google PageSpeed Insights API</p>
       </div>
 
+      <!-- Spreadsheet URL Input -->
       <div class="form-group">
-        <label>Посилання на таблицю з URLs</label>
+        <label class="form-label" for="spreadsheetUrl">Посилання на таблицю з URLs</label>
         <div class="input-wrapper">
           <input
             type="text"
+            class="input-field"
             id="spreadsheetUrl"
             placeholder="https://docs.google.com/spreadsheets/d/..."
             autocomplete="off"
             spellcheck="false"
           >
-          <span class="input-icon">&#128203;</span>
+          <i class="ti ti-link"></i>
         </div>
 
+        <!-- Table structure hint -->
         <div class="table-hint">
-          <div class="table-hint-title">Структура таблиці:</div>
+          <div class="table-hint-title">Структура таблицi</div>
           <div class="table-example">
             <div class="row header-row">
               <div class="col-a">A1</div>
@@ -259,55 +785,73 @@
             </div>
             <div class="row">
               <div class="col-a">...</div>
-              <div class="col-val">інші URLs</div>
+              <div class="col-val">iншi URLs</div>
             </div>
           </div>
         </div>
       </div>
 
-      <label style="margin-bottom: 12px;">Тип тесту</label>
+      <!-- Test Type Toggle -->
+      <label class="options-label">Тип тесту</label>
       <div class="options">
         <div class="option-card selected" id="optMobile" onclick="toggleOption('mobile')">
-          <div class="option-icon">&#128241;</div>
+          <div class="option-icon"><i class="ti ti-device-mobile"></i></div>
           <div class="option-label">Mobile</div>
         </div>
         <div class="option-card selected" id="optDesktop" onclick="toggleOption('desktop')">
-          <div class="option-icon">&#128421;&#65039;</div>
+          <div class="option-icon"><i class="ti ti-device-desktop"></i></div>
           <div class="option-label">Desktop</div>
         </div>
       </div>
 
+      <!-- Submit Button -->
       <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>&#128640; Запустити тест</span>
+        <span class="btn-content"><i class="ti ti-player-play"></i> Запустити тест</span>
       </button>
 
-      <div class="time-note">&#9203; Приблизний час: ~30 секунд на кожен URL</div>
+      <!-- Time Note -->
+      <div class="time-note">
+        <i class="ti ti-clock"></i>
+        ~30 секунд на кожен URL
+      </div>
 
+      <!-- Result Area -->
       <div class="result" id="result"></div>
 
-      <div class="metrics-preview">
-        <div class="metrics-title">Метрики у звіті</div>
+      <!-- Separator -->
+      <div class="separator"></div>
+
+      <!-- Metrics Preview -->
+      <div class="metrics-section">
+        <div class="metrics-label">
+          <i class="ti ti-chart-dots-3"></i>
+          Метрики у звiтi
+        </div>
+
         <div class="metric-item">
           <div class="metric-badge badge-green">90+</div>
           <div class="metric-info">
             <div class="metric-name">Performance Score</div>
-            <div class="metric-desc">Загальна оцінка продуктивності (0-100)</div>
+            <div class="metric-desc">Загальна оцiнка продуктивностi (0-100)</div>
           </div>
         </div>
+
         <div class="metric-item">
           <div class="metric-badge badge-orange">LCP</div>
           <div class="metric-info">
             <div class="metric-name">Largest Contentful Paint</div>
-            <div class="metric-desc">Час завантаження найбільшого елементу</div>
+            <div class="metric-desc">Час завантаження найбiльшого елементу</div>
           </div>
         </div>
+
         <div class="metric-item">
           <div class="metric-badge badge-red">CLS</div>
           <div class="metric-info">
             <div class="metric-name">Cumulative Layout Shift</div>
-            <div class="metric-desc">Зміщення макету при завантаженні</div>
+            <div class="metric-desc">Змiщення макету при завантаженнi</div>
           </div>
         </div>
+
         <div class="metric-item">
           <div class="metric-badge badge-blue">TBT</div>
           <div class="metric-info">
@@ -317,13 +861,48 @@
         </div>
       </div>
 
+      <!-- Footer -->
       <div class="footer">
-        <span class="footer-brand">WebPromo</span>
+        <div class="footer-brand">
+          <strong>WebPromo</strong>
+        </div>
       </div>
+
     </div>
   </div>
 
+  <!-- ==========================================
+       JAVASCRIPT
+       ========================================== -->
   <script>
+    // ── Navigation: build links dynamically ──
+    (function buildNav() {
+      var navData = [
+        { label: 'Аналіз',       page: 'audit' },
+        { label: 'Мастер',       page: 'master' },
+        { label: 'Wizard',        page: 'wizard' },
+        { label: 'GKP',           page: 'gkp' },
+        { label: 'Ідеї GKP',     page: 'gkp_ideas' },
+        { label: 'Метрики GKP',  page: 'gkp_metrics' },
+        { label: 'PageSpeed',     page: 'pagespeed' },
+        { label: 'AI Tools',      page: 'pdf_audit' }
+      ];
+
+      google.script.run
+        .withSuccessHandler(function(baseUrl) {
+          var container = document.getElementById('navLinks');
+          navData.forEach(function(item) {
+            var a = document.createElement('a');
+            a.className = 'nav-link' + (item.page === 'pagespeed' ? ' active' : '');
+            a.href = baseUrl + '?page=' + item.page;
+            a.textContent = item.label;
+            container.appendChild(a);
+          });
+        })
+        .getWebAppUrl();
+    })();
+
+    // ── Toggle state ──
     var testMobile = true;
     var testDesktop = true;
 
@@ -337,6 +916,7 @@
       }
     }
 
+    // ── Form submission ──
     function handleSubmit() {
       var urlInput = document.getElementById('spreadsheetUrl');
       var submitBtn = document.getElementById('submitBtn');
@@ -387,34 +967,39 @@
         });
     }
 
+    // ── Show success result ──
     function showSuccess(data) {
       var resultDiv = document.getElementById('result');
       resultDiv.className = 'result success';
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10003;</div>' +
+          '<div class="result-badge"><i class="ti ti-check"></i></div>' +
           '<div class="result-title">Тест завершено!</div>' +
         '</div>' +
-        '<p class="result-text">' +
+        '<div class="result-body">' +
           'Протестовано <strong>' + data.totalUrls + '</strong> URL за <strong>' + data.processingTime + '</strong> секунд. ' +
           'Результати з AI-аналізом готові.' +
-        '</p>' +
-        '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
-          '&#128200; Відкрити таблицю з результатами' +
-        '</a>';
+          '<br><a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
+            '<i class="ti ti-external-link"></i> Відкрити таблицю з результатами' +
+          '</a>' +
+        '</div>';
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+    // ── Show error result ──
     function showError(message) {
       var resultDiv = document.getElementById('result');
       resultDiv.className = 'result error';
       resultDiv.innerHTML =
         '<div class="result-header">' +
-          '<div class="result-icon">&#10007;</div>' +
+          '<div class="result-badge"><i class="ti ti-x"></i></div>' +
           '<div class="result-title">Помилка</div>' +
         '</div>' +
-        '<p class="result-text">' + message + '</p>';
+        '<div class="result-body">' + message + '</div>';
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+    // ── Enter key triggers submit ──
     document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') handleSubmit();
     });

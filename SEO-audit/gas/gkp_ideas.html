@@ -2,212 +2,652 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-border: #E0E7FF;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --error: #DC2626;
+      --error-light: #FEF2F2;
+      --error-border: #FECACA;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --nav-bg: #0F172A;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: var(--bg);
       min-height: 100vh;
-      padding: 24px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
     }
-    .container { width: 100%; max-width: 520px; }
+
+    .nav-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-link.active {
+      color: #fff;
+      background: rgba(79,70,229,0.45);
+    }
+
+    /* ==========================================
+       MAIN CONTENT
+       ========================================== */
+    .main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ==========================================
+       CARD
+       ========================================== */
     .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
-    .header { text-align: center; margin-bottom: 28px; }
-    .logo {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 18px;
-      font-size: 24px;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+
+    /* ==========================================
+       HEADER
+       ========================================== */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
     }
-    .header h1 { font-size: 21px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-    .header p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
     .stage-badge {
       display: inline-block;
-      padding: 4px 12px;
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
+      padding: 4px 14px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
       border-radius: 20px;
       font-size: 11px;
       font-weight: 600;
-      color: #065f46;
-      margin-bottom: 12px;
+      color: var(--primary);
+      margin-bottom: 16px;
     }
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
-    .label-hint { font-weight: 400; color: #94a3b8; font-size: 11px; }
-    .input-wrapper { position: relative; }
-    .input-icon {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      font-size: 16px; opacity: 0.4; pointer-events: none;
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
     }
-    input[type="text"], input[type="url"] {
+
+    .header-icon i {
+      font-size: 22px;
+      color: var(--primary);
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ==========================================
+       INFO BOX
+       ========================================== */
+    .info-box {
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .info-box i {
+      font-size: 18px;
+      color: var(--primary);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .info-box p {
+      font-size: 13px;
+      color: var(--primary-hover);
+      line-height: 1.55;
+    }
+
+    .info-box strong {
+      color: var(--primary);
+    }
+
+    /* ==========================================
+       FORM
+       ========================================== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .label-hint {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .input-field {
       width: 100%;
-      padding: 12px 14px 12px 44px;
-      font-size: 14px; font-family: inherit; color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      padding: 11px 14px 11px 40px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
     }
-    select {
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-field:hover {
+      border-color: #CBD5E1;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .input-field:focus ~ i {
+      color: var(--primary);
+    }
+
+    /* ── Selects ── */
+    .select-field {
       width: 100%;
-      padding: 12px 14px;
-      font-size: 14px; font-family: inherit; color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      padding: 11px 32px 11px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       cursor: pointer;
       appearance: none;
+      -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 14px center;
+      background-position: right 12px center;
+      transition: all 0.2s ease;
     }
-    input:hover, select:hover { border-color: #cbd5e1; background: #f1f5f9; }
-    input:focus, select:focus { border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12); }
-    input::placeholder { color: #94a3b8; }
-    .row { display: flex; gap: 12px; }
-    .row .form-group { flex: 1; }
-    .info-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 18px;
+
+    .select-field:hover {
+      border-color: #CBD5E1;
     }
-    .info-box p { font-size: 12px; color: #0369a1; line-height: 1.5; }
-    .info-box strong { color: #0c4a6e; }
+
+    .select-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row .form-group {
+      flex: 1;
+    }
+
+    /* ==========================================
+       BUTTON
+       ========================================== */
     .btn {
       width: 100%;
-      padding: 14px 24px;
-      font-size: 14px; font-weight: 600; font-family: inherit;
-      color: white;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
-      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35); }
-    .btn:active { transform: translateY(0); }
-    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-loading span { visibility: hidden; }
+
+    .btn:hover {
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn-loading .btn-content {
+      visibility: hidden;
+    }
+
     .btn-loading::after {
       content: "";
-      position: absolute; top: 50%; left: 50%;
-      width: 20px; height: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
       margin: -10px 0 0 -10px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.65s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       RESULT
+       ========================================== */
     .result {
       margin-top: 20px;
       padding: 16px 18px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       display: none;
-      animation: slideIn 0.25s ease;
+      animation: slideIn 0.3s ease;
     }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-    .result.success { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .result.error { display: block; background: #fef2f2; border: 1px solid #fecaca; }
-    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .result-icon {
-      width: 28px; height: 28px;
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700;
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .result.success .result-icon { background: #dcfce7; color: #16a34a; }
-    .result.error .result-icon { background: #fee2e2; color: #dc2626; }
-    .result h3 { font-size: 14px; font-weight: 600; }
-    .result.success h3 { color: #15803d; }
-    .result.error h3 { color: #dc2626; }
-    .result p { font-size: 13px; color: #475569; line-height: 1.5; }
-    .result a {
-      display: inline-flex; align-items: center; gap: 6px;
+
+    .result.success {
+      display: block;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
+    }
+
+    .result.error {
+      display: block;
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .result-badge i {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .result.success .result-badge {
+      background: var(--success);
+    }
+
+    .result.error .result-badge {
+      background: var(--error);
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .result.success .result-title {
+      color: #065F46;
+    }
+
+    .result.error .result-title {
+      color: var(--error);
+    }
+
+    .result-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 12px;
       padding: 9px 14px;
-      font-size: 13px; font-weight: 500;
-      color: #15803d;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #065F46;
+      background: #D1FAE5;
+      border: 1px solid var(--success-border);
+      border-radius: 6px;
       text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
-    .result a:hover { background: #bbf7d0; }
-    .result .stats { display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #bbf7d0; }
-    .stat { text-align: center; }
-    .stat-value { font-size: 20px; font-weight: 700; color: #15803d; }
-    .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    .result-link:hover {
+      background: var(--success-border);
+    }
+
+    .result-link i {
+      font-size: 16px;
+    }
+
+    .result .stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--success-border);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #065F46;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ==========================================
+       FOOTER
+       ========================================== */
     .footer {
-      margin-top: 20px;
+      margin-top: 24px;
       padding-top: 16px;
-      border-top: 1px solid #f3f4f6;
-      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .footer-time { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
-    .footer-time svg { width: 14px; height: 14px; opacity: 0.6; }
-    .footer-brand { font-size: 11px; color: #94a3b8; }
-    .footer-brand span { color: #10b981; font-weight: 600; }
+
+    .footer-time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer-time i {
+      font-size: 15px;
+    }
+
+    .footer-brand {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .footer-brand strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 600px) {
+      .main {
+        padding: 24px 16px 40px;
+      }
+      .card {
+        padding: 24px 20px;
+      }
+      .row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- ══════════════ Navigation ══════════════ -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">W</div>
+        <span class="nav-brand-text">SEO Hub</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Populated dynamically via getWebAppUrl() -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════ Main Content ══════════════ -->
+  <div class="main">
     <div class="card">
+
+      <!-- Header -->
       <div class="header">
         <div class="stage-badge">Етап 1</div>
-        <div class="logo">💡</div>
+        <div class="header-icon">
+          <i class="ti ti-bulb"></i>
+        </div>
         <h1>Генерація ідей</h1>
         <p>Розширення семантичного ядра з seed-фраз</p>
       </div>
 
+      <!-- Info box -->
       <div class="info-box">
+        <i class="ti ti-info-circle"></i>
         <p><strong>Як це працює:</strong> Завантажте таблицю з seed-фразами (до 300 шт.) у колонці A. Система згенерує тисячі пов'язаних ключових слів з даними про обсяг пошуку.</p>
       </div>
 
+      <!-- Form -->
       <div class="form-group">
-        <label>Назва звіту</label>
+        <label class="form-label">Назва звіту</label>
         <div class="input-wrapper">
-          <input type="text" id="docName" placeholder="GKP Ideas - Nike UA">
-          <span class="input-icon">📄</span>
+          <input type="text" class="input-field" id="docName" placeholder="GKP Ideas - Nike UA">
+          <i class="ti ti-file-text"></i>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Посилання на таблицю з seed-фразами <span class="label-hint">(колонка A)</span></label>
+        <label class="form-label">Посилання на таблицю з seed-фразами <span class="label-hint">(колонка A)</span></label>
         <div class="input-wrapper">
-          <input type="url" id="sourceSheet" placeholder="https://docs.google.com/spreadsheets/d/...">
-          <span class="input-icon">📊</span>
+          <input type="url" class="input-field" id="sourceSheet" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <i class="ti ti-link"></i>
         </div>
       </div>
 
       <div class="row">
         <div class="form-group">
-          <label>Мова</label>
-          <select id="language">
+          <label class="form-label">Мова</label>
+          <select class="select-field" id="language">
             <option value="1036" selected>Українська</option>
             <option value="1000">English</option>
             <option value="1030">Polski</option>
@@ -231,8 +671,8 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Геотаргетинг</label>
-          <select id="geoTarget">
+          <label class="form-label">Геотаргетинг</label>
+          <select class="select-field" id="geoTarget">
             <option value="2804" selected>Україна</option>
             <option value="2840">США</option>
             <option value="2826">Великобританія</option>
@@ -257,38 +697,77 @@
         </div>
       </div>
 
+      <!-- Submit -->
       <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>Згенерувати ідеї</span>
+        <span class="btn-content"><i class="ti ti-sparkles"></i> Згенерувати ідеї</span>
       </button>
 
+      <!-- Result -->
       <div class="result" id="result">
         <div class="result-header">
-          <div class="result-icon" id="resultIcon"></div>
-          <h3 id="resultTitle"></h3>
+          <div class="result-badge" id="resultBadge"></div>
+          <div class="result-title" id="resultTitle"></div>
         </div>
-        <p id="resultMessage"></p>
+        <div class="result-body" id="resultMessage"></div>
         <div id="resultExtra"></div>
       </div>
 
+      <!-- Footer -->
       <div class="footer">
         <div class="footer-time">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <i class="ti ti-clock"></i>
           Час генерації: ~3-5 хв
         </div>
-        <div class="footer-brand"><span>WebPromo</span></div>
+        <div class="footer-brand">
+          <strong>WebPromo</strong>
+        </div>
       </div>
+
     </div>
   </div>
 
   <script>
+    // ══════════════════════════════════════════
+    // Navigation: build links dynamically
+    // ══════════════════════════════════════════
+    (function buildNav() {
+      var navData = [
+        { label: 'Аналіз',       page: 'audit' },
+        { label: 'Мастер',       page: 'master' },
+        { label: 'Wizard',        page: 'wizard' },
+        { label: 'GKP',           page: 'gkp' },
+        { label: 'Ідеї GKP',     page: 'gkp_ideas' },
+        { label: 'Метрики GKP',  page: 'gkp_metrics' },
+        { label: 'PageSpeed',     page: 'pagespeed' },
+        { label: 'AI Tools',      page: 'pdf_audit' }
+      ];
+
+      google.script.run
+        .withSuccessHandler(function(baseUrl) {
+          var container = document.getElementById('navLinks');
+          navData.forEach(function(item) {
+            var a = document.createElement('a');
+            a.className = 'nav-link' + (item.page === 'gkp_ideas' ? ' active' : '');
+            a.href = baseUrl + '?page=' + item.page;
+            a.textContent = item.label;
+            container.appendChild(a);
+          });
+        })
+        .getWebAppUrl();
+    })();
+
+    // ══════════════════════════════════════════
+    // Extract spreadsheet ID from URL
+    // ══════════════════════════════════════════
     function extractSpreadsheetId(url) {
       if (!url) return '';
       var match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
       return match ? match[1] : '';
     }
 
+    // ══════════════════════════════════════════
+    // Form submission
+    // ══════════════════════════════════════════
     function handleSubmit() {
       var submitBtn = document.getElementById('submitBtn');
       var resultDiv = document.getElementById('result');
@@ -334,34 +813,42 @@
         .submitGKPIdeas(formData);
     }
 
+    // ══════════════════════════════════════════
+    // Show success result
+    // ══════════════════════════════════════════
     function showSuccess(data) {
       var resultDiv = document.getElementById('result');
-      var resultIcon = document.getElementById('resultIcon');
+      var resultBadge = document.getElementById('resultBadge');
       var resultTitle = document.getElementById('resultTitle');
       var resultMessage = document.getElementById('resultMessage');
       var resultExtra = document.getElementById('resultExtra');
 
       resultDiv.className = 'result success';
-      resultIcon.textContent = '\u2713';
+      resultBadge.innerHTML = '<i class="ti ti-check"></i>';
       resultTitle.textContent = 'Ідеї згенеровано';
       resultMessage.innerHTML = data.message;
       resultExtra.innerHTML =
-        '<a href="' + data.spreadsheetUrl + '" target="_blank">Відкрити таблицю \u2192</a>' +
+        '<a href="' + data.spreadsheetUrl + '" target="_blank" class="result-link">' +
+          '<i class="ti ti-external-link"></i> Відкрити таблицю' +
+        '</a>' +
         '<div class="stats">' +
           '<div class="stat"><div class="stat-value">' + data.totalKeywords + '</div><div class="stat-label">ключових слів</div></div>' +
           '<div class="stat"><div class="stat-value">' + data.totalBatches + '</div><div class="stat-label">батчів оброблено</div></div>' +
         '</div>';
     }
 
+    // ══════════════════════════════════════════
+    // Show error result
+    // ══════════════════════════════════════════
     function showError(message) {
       var resultDiv = document.getElementById('result');
-      var resultIcon = document.getElementById('resultIcon');
+      var resultBadge = document.getElementById('resultBadge');
       var resultTitle = document.getElementById('resultTitle');
       var resultMessage = document.getElementById('resultMessage');
       var resultExtra = document.getElementById('resultExtra');
 
       resultDiv.className = 'result error';
-      resultIcon.textContent = '\u2715';
+      resultBadge.innerHTML = '<i class="ti ti-x"></i>';
       resultTitle.textContent = 'Помилка';
       resultMessage.textContent = message;
       resultExtra.innerHTML = '';

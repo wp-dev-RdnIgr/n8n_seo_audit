@@ -2,180 +2,296 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
   <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-border: #E0E7FF;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --error: #DC2626;
+      --error-light: #FEF2F2;
+      --error-border: #FECACA;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --nav-bg: #0F172A;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: var(--bg);
       min-height: 100vh;
-      padding: 24px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Navigation ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
     }
-    
-    .container {
-      width: 100%;
-      max-width: 440px;
+
+    .nav-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
     }
-    
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-link.active {
+      color: #fff;
+      background: rgba(79,70,229,0.45);
+    }
+
+    /* ── Main ── */
+    .main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Card ── */
     .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow: 
-        0 4px 24px rgba(0, 0, 0, 0.06),
-        0 1px 2px rgba(0, 0, 0, 0.04);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
-    
-    /* Header */
+
+    /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
-    
-    .logo {
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      border-radius: 14px;
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 18px;
-      font-size: 24px;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+      margin: 0 auto 16px;
     }
-    
+
+    .header-icon i {
+      font-size: 22px;
+      color: var(--primary);
+    }
+
     .header h1 {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
-      color: #1e293b;
+      color: var(--text);
       margin-bottom: 6px;
       letter-spacing: -0.3px;
     }
-    
+
     .header p {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
-    
-    /* Form */
+
+    /* ── Form ── */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    
-    label {
+
+    .form-label {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
-      margin-bottom: 8px;
+      color: var(--text);
+      margin-bottom: 6px;
     }
-    
+
     .input-wrapper {
       position: relative;
     }
-    
-    .input-icon {
+
+    .input-wrapper i {
       position: absolute;
-      left: 14px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 16px;
-      opacity: 0.4;
+      font-size: 18px;
+      color: var(--text-muted);
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: color 0.2s;
     }
-    
-    input[type="text"] {
+
+    .input-field {
       width: 100%;
-      padding: 14px 14px 14px 44px;
-      font-size: 15px;
+      padding: 11px 14px 11px 40px;
+      font-size: 14px;
       font-family: inherit;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
     }
-    
-    input[type="text"]::placeholder {
-      color: #94a3b8;
+
+    .input-field::placeholder {
+      color: var(--text-muted);
     }
-    
-    input[type="text"]:hover {
-      border-color: #cbd5e1;
-      background: #f1f5f9;
+
+    .input-field:hover {
+      border-color: #CBD5E1;
     }
-    
-    input[type="text"]:focus {
-      border-color: #6366f1;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
     }
-    
-    input[type="text"]:focus + .input-icon {
-      opacity: 0.7;
+
+    .input-field:focus ~ i {
+      color: var(--primary);
     }
-    
-    /* Button */
+
+    /* ── Buttons ── */
     .btn {
       width: 100%;
-      padding: 14px 24px;
+      padding: 12px 20px;
       font-size: 14px;
       font-weight: 600;
       font-family: inherit;
-      color: white;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
-      letter-spacing: 0.2px;
-    }
-    
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
-    }
-    
-    .btn:active {
-      transform: translateY(0);
-    }
-    
-    .btn span {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
-    
-    .btn:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-      transform: none;
+
+    .btn:hover {
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
       box-shadow: none;
     }
-    
-    /* Loading */
-    .btn-loading span {
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn-loading .btn-content {
       visibility: hidden;
     }
-    
+
     .btn-loading::after {
       content: "";
       position: absolute;
@@ -184,391 +300,472 @@
       width: 20px;
       height: 20px;
       margin: -10px 0 0 -10px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.65s linear infinite;
     }
-    
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
-    /* Result */
+
+    /* ── Result ── */
     .result {
-      margin-top: 20px;
-      padding: 16px 18px;
-      border-radius: 10px;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
       display: none;
-      animation: slideIn 0.25s ease;
+      animation: slideIn 0.3s ease;
     }
-    
+
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    
+
     .result.success {
       display: block;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
     }
-    
+
     .result.error {
       display: block;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
     }
-    
+
     .result-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    
-    .result-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
+
+    .result-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
+      flex-shrink: 0;
     }
-    
-    .result.success .result-icon {
-      background: #dcfce7;
-      color: #16a34a;
+
+    .result-badge i {
+      font-size: 14px;
+      color: #fff;
     }
-    
-    .result.error .result-icon {
-      background: #fee2e2;
-      color: #dc2626;
+
+    .result.success .result-badge {
+      background: var(--success);
     }
-    
-    .result h3 {
+
+    .result.error .result-badge {
+      background: var(--error);
+    }
+
+    .result-title {
       font-size: 14px;
       font-weight: 600;
     }
-    
-    .result.success h3 {
-      color: #15803d;
+
+    .result.success .result-title {
+      color: #065F46;
     }
-    
-    .result.error h3 {
-      color: #dc2626;
+
+    .result.error .result-title {
+      color: var(--error);
     }
-    
-    .result p {
+
+    .result-body {
       font-size: 13px;
-      color: #475569;
-      line-height: 1.5;
+      color: var(--text-secondary);
+      line-height: 1.55;
     }
-    
-    .result a {
+
+    .result-link {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-top: 12px;
-      padding: 9px 14px;
+      margin-top: 10px;
+      padding: 8px 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #15803d;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      border-radius: 7px;
+      border-radius: 6px;
       text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
-    
-    .result a:hover {
-      background: #bbf7d0;
+
+    .result-link i {
+      font-size: 16px;
     }
-    
-    /* Sheets List */
-    .sheets {
-      margin-top: 28px;
-      padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
+
+    .result.success .result-link {
+      color: #065F46;
+      background: #D1FAE5;
+      border: 1px solid var(--success-border);
     }
-    
-    .sheets-title {
+
+    .result.success .result-link:hover {
+      background: var(--success-border);
+    }
+
+    .result-link.ai-link {
+      color: var(--primary-hover);
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+    }
+
+    .result-link.ai-link:hover {
+      background: var(--primary-border);
+    }
+
+    /* ── Separator ── */
+    .separator {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── Section headers ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 11px;
       font-weight: 700;
-      color: #9ca3af;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 14px;
+      letter-spacing: 0.7px;
+      margin-bottom: 6px;
     }
-    
-    .sheets-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+
+    .section-label i {
+      font-size: 15px;
     }
-    
+
+    .section-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ── Sheets list ── */
+    .sheets-section {
+      margin-top: 28px;
+    }
+
+    .sheets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
     .sheet-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      background: #f9fafb;
-      border: 1px solid #f3f4f6;
-      border-radius: 8px;
-      transition: all 0.15s;
-    }
-    
-    .sheet-item:hover {
-      background: #f3f4f6;
-      border-color: #e5e7eb;
-    }
-    
-    .sheet-num {
-      width: 22px;
-      height: 22px;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid transparent;
       border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .sheet-item:hover {
+      border-color: var(--border);
+      background: var(--surface);
+    }
+
+    .sheet-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      color: white;
+      color: #fff;
       flex-shrink: 0;
     }
-    
-    .sheet-item:nth-child(1) .sheet-num { background: #3b82f6; }
-    .sheet-item:nth-child(2) .sheet-num { background: #8b5cf6; }
-    .sheet-item:nth-child(3) .sheet-num { background: #ec4899; }
-    .sheet-item:nth-child(4) .sheet-num { background: #f59e0b; }
-    .sheet-item:nth-child(5) .sheet-num { background: #10b981; }
-    .sheet-item:nth-child(6) .sheet-num { background: #06b6d4; }
-    .sheet-item:nth-child(7) .sheet-num { background: #6366f1; }
-    .sheet-item:nth-child(8) .sheet-num { background: #84cc16; }
-    
-    .sheet-info {
-      flex: 1;
-      min-width: 0;
-    }
-    
+
+    .sheet-item:nth-child(1) .sheet-num { background: #3B82F6; }
+    .sheet-item:nth-child(2) .sheet-num { background: #8B5CF6; }
+    .sheet-item:nth-child(3) .sheet-num { background: #EC4899; }
+    .sheet-item:nth-child(4) .sheet-num { background: #F59E0B; }
+    .sheet-item:nth-child(5) .sheet-num { background: #10B981; }
+    .sheet-item:nth-child(6) .sheet-num { background: #06B6D4; }
+    .sheet-item:nth-child(7) .sheet-num { background: #6366F1; }
+    .sheet-item:nth-child(8) .sheet-num { background: #84CC16; }
+
     .sheet-name {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
-      color: #1e293b;
-      margin-bottom: 2px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    
-    .sheet-desc {
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    
-    /* Footer */
+
+    /* ── Footer ── */
     .footer {
-      margin-top: 20px;
+      margin-top: 24px;
       padding-top: 16px;
-      border-top: 1px solid #f3f4f6;
+      border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    
+
     .footer-time {
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: #64748b;
+      color: var(--text-secondary);
     }
-    
-    .footer-time svg {
-      width: 14px;
-      height: 14px;
-      opacity: 0.6;
+
+    .footer-time i {
+      font-size: 15px;
+      color: var(--text-muted);
     }
-    
+
     .footer-brand {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--text-muted);
     }
-    
-    .footer-brand span {
-      color: #6366f1;
+
+    .footer-brand strong {
+      color: var(--primary);
       font-weight: 600;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
+      .card {
+        padding: 24px 18px;
+      }
+      .sheets-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        gap: 1px;
+      }
+      .nav-link {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      .nav-inner {
+        gap: 16px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- ── Navigation ── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">W</div>
+        <span class="nav-brand-text">SEO Hub</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Populated dynamically via getWebAppUrl() -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <div class="main">
     <div class="card">
+
+      <!-- Header -->
       <div class="header">
-        <div class="logo">📊</div>
+        <div class="header-icon">
+          <i class="ti ti-chart-bar"></i>
+        </div>
         <h1>Аналіз домену</h1>
         <p>Комплексний SEO-аналіз з Ahrefs, Serpstat та SimilarWeb</p>
       </div>
 
+      <!-- Domain Audit Form -->
       <div class="form-group">
-        <label>Домен для аналізу</label>
+        <label class="form-label" for="domain">Домен для аналізу</label>
         <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="domain" 
+          <input
+            type="text"
+            class="input-field"
+            id="domain"
             placeholder="example.com.ua"
             autocomplete="off"
             spellcheck="false"
           >
-          <span class="input-icon">🔗</span>
-        </div>
-      </div>
-      
-      <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>Запустити аналіз</span>
-      </button>
-      
-      <div class="result" id="result">
-        <div class="result-header">
-          <div class="result-icon" id="resultIcon"></div>
-          <h3 id="resultTitle"></h3>
-        </div>
-        <p id="resultMessage"></p>
-      </div>
-      
-      <div class="sheets">
-        <div class="sheets-title">Листи у звіті</div>
-        <div class="sheets-list">
-          <div class="sheet-item">
-            <div class="sheet-num">1</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Органічний трафік</div>
-              <div class="sheet-desc">Динаміка, гео, топ сторінки</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">2</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Ключові запити</div>
-              <div class="sheet-desc">Топ ключі з Ahrefs</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">3</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Посилальний профіль</div>
-              <div class="sheet-desc">DR, беклінки, анкори</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">4</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Всі беклінки</div>
-              <div class="sheet-desc">Топ-100 за DR джерела</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">5</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Топ сторінки за посиланнями</div>
-              <div class="sheet-desc">Сторінки з найбільшою кількістю ref domains</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">6</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Поведінкові метрики</div>
-              <div class="sheet-desc">SimilarWeb: канали, пристрої, соцмережі</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">7</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Ключові фрази</div>
-              <div class="sheet-desc">До 5000 ключів з Serpstat</div>
-            </div>
-          </div>
-          <div class="sheet-item">
-            <div class="sheet-num">8</div>
-            <div class="sheet-info">
-              <div class="sheet-name">Трафікогенеруючі сторінки</div>
-              <div class="sheet-desc">URL з найбільшим трафіком</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- AI Analysis Section -->
-      <div class="sheets" id="aiSection">
-        <div class="sheets-title">🤖 AI Аналіз таблиці</div>
-        <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
-          Вставте посилання на готову таблицю для генерації AI-звіту у Google Docs
-        </p>
-        <div class="form-group">
-          <label>Посилання на таблицю</label>
-          <div class="input-wrapper">
-            <input
-              type="text"
-              id="spreadsheetUrl"
-              placeholder="https://docs.google.com/spreadsheets/d/..."
-              autocomplete="off"
-              spellcheck="false"
-            >
-            <span class="input-icon">📋</span>
-          </div>
-        </div>
-        <button class="btn" id="aiSubmitBtn" onclick="handleAISubmit()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
-          <span>🤖 Згенерувати AI звіт</span>
-        </button>
-        <div class="result" id="aiResult">
-          <div class="result-header">
-            <div class="result-icon" id="aiResultIcon"></div>
-            <h3 id="aiResultTitle"></h3>
-          </div>
-          <p id="aiResultMessage"></p>
+          <i class="ti ti-link"></i>
         </div>
       </div>
 
+      <button class="btn" id="submitBtn" onclick="handleSubmit()">
+        <span class="btn-content"><i class="ti ti-player-play"></i> Запустити аналіз</span>
+      </button>
+
+      <div class="result" id="result">
+        <div class="result-header">
+          <div class="result-badge" id="resultBadge"><i id="resultIcon"></i></div>
+          <div class="result-title" id="resultTitle"></div>
+        </div>
+        <div class="result-body" id="resultMessage"></div>
+      </div>
+
+      <!-- Separator -->
+      <div class="separator"></div>
+
+      <!-- AI Analysis Section -->
+      <div class="section-label">
+        <i class="ti ti-sparkles"></i>
+        AI Аналіз таблиці
+      </div>
+      <p class="section-desc">
+        Вставте посилання на готову таблицю для генерації AI-звіту у Google Docs
+      </p>
+
+      <div class="form-group">
+        <label class="form-label" for="spreadsheetUrl">Посилання на таблицю</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            class="input-field"
+            id="spreadsheetUrl"
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <i class="ti ti-table"></i>
+        </div>
+      </div>
+
+      <button class="btn" id="aiSubmitBtn" onclick="handleAISubmit()">
+        <span class="btn-content"><i class="ti ti-sparkles"></i> Згенерувати AI звіт</span>
+      </button>
+
+      <div class="result" id="aiResult">
+        <div class="result-header">
+          <div class="result-badge" id="aiResultBadge"><i id="aiResultIcon"></i></div>
+          <div class="result-title" id="aiResultTitle"></div>
+        </div>
+        <div class="result-body" id="aiResultMessage"></div>
+      </div>
+
+      <!-- Report Sheets Info -->
+      <div class="sheets-section">
+        <div class="section-label">
+          <i class="ti ti-file-spreadsheet"></i>
+          Листи у звіті
+        </div>
+        <div class="sheets-grid">
+          <div class="sheet-item">
+            <div class="sheet-num">1</div>
+            <div class="sheet-name">Органічний трафік</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">2</div>
+            <div class="sheet-name">Ключові запити</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">3</div>
+            <div class="sheet-name">Посилальний профіль</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">4</div>
+            <div class="sheet-name">Всі беклінки</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">5</div>
+            <div class="sheet-name">Топ сторінки</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">6</div>
+            <div class="sheet-name">Поведінкові метрики</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">7</div>
+            <div class="sheet-name">Ключові фрази</div>
+          </div>
+          <div class="sheet-item">
+            <div class="sheet-num">8</div>
+            <div class="sheet-name">Трафік сторінок</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
       <div class="footer">
         <div class="footer-time">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <i class="ti ti-clock"></i>
           Час генерації: ~14 хв
         </div>
         <div class="footer-brand">
-          <span>WebPromo</span>
+          <strong>WebPromo</strong>
         </div>
       </div>
+
     </div>
   </div>
-  
+
   <script>
+    // ── Navigation: build links dynamically ──
+    (function buildNav() {
+      var navData = [
+        { label: 'Аналіз',       page: 'audit' },
+        { label: 'Мастер',       page: 'master' },
+        { label: 'Wizard',        page: 'wizard' },
+        { label: 'GKP',           page: 'gkp' },
+        { label: 'Ідеї GKP',     page: 'gkp_ideas' },
+        { label: 'Метрики GKP',  page: 'gkp_metrics' },
+        { label: 'PageSpeed',     page: 'pagespeed' },
+        { label: 'AI Tools',      page: 'pdf_audit' }
+      ];
+
+      google.script.run
+        .withSuccessHandler(function(baseUrl) {
+          var container = document.getElementById('navLinks');
+          navData.forEach(function(item) {
+            var a = document.createElement('a');
+            a.className = 'nav-link' + (item.page === 'audit' ? ' active' : '');
+            a.href = baseUrl + '?page=' + item.page;
+            a.textContent = item.label;
+            container.appendChild(a);
+          });
+        })
+        .getWebAppUrl();
+    })();
+
+    // ── Domain Audit ──
     function handleSubmit() {
-      const domainInput = document.getElementById('domain');
-      const submitBtn = document.getElementById('submitBtn');
-      const resultDiv = document.getElementById('result');
-      
-      const domain = domainInput.value.trim();
-      
+      var domainInput = document.getElementById('domain');
+      var submitBtn = document.getElementById('submitBtn');
+      var resultDiv = document.getElementById('result');
+
+      var domain = domainInput.value.trim();
+
       if (!domain) {
         showError('Введіть домен конкурента');
         return;
       }
-      
+
       submitBtn.disabled = true;
       submitBtn.classList.add('btn-loading');
       resultDiv.className = 'result';
-      
+
       google.script.run
         .withSuccessHandler(function(response) {
           submitBtn.disabled = false;
           submitBtn.classList.remove('btn-loading');
-          
+
           if (response.success) {
             showSuccess(response.spreadsheetUrl);
           } else {
@@ -582,52 +779,40 @@
         })
         .submitAudit(domain);
     }
-    
+
     function showSuccess(url) {
-      const resultDiv = document.getElementById('result');
-      const resultIcon = document.getElementById('resultIcon');
-      const resultTitle = document.getElementById('resultTitle');
-      const resultMessage = document.getElementById('resultMessage');
-      
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+
       resultDiv.className = 'result success';
-      resultIcon.textContent = '✓';
+      resultIcon.className = 'ti ti-check';
       resultTitle.textContent = 'Аналіз запущено';
-      resultMessage.innerHTML = 
+      resultMessage.innerHTML =
         'Google Таблиця створена. Дані з\'являться протягом 14 хвилин.' +
-        '<a href="' + url + '" target="_blank">Відкрити таблицю →</a>';
+        '<br><a class="result-link" href="' + url + '" target="_blank"><i class="ti ti-external-link"></i> Відкрити таблицю</a>';
     }
-    
+
     function showError(message) {
-      const resultDiv = document.getElementById('result');
-      const resultIcon = document.getElementById('resultIcon');
-      const resultTitle = document.getElementById('resultTitle');
-      const resultMessage = document.getElementById('resultMessage');
-      
+      var resultDiv = document.getElementById('result');
+      var resultIcon = document.getElementById('resultIcon');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultMessage = document.getElementById('resultMessage');
+
       resultDiv.className = 'result error';
-      resultIcon.textContent = '✕';
+      resultIcon.className = 'ti ti-x';
       resultTitle.textContent = 'Помилка';
       resultMessage.textContent = message;
     }
-    
-    document.getElementById('domain').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        handleSubmit();
-      }
-    });
 
-    document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        handleAISubmit();
-      }
-    });
-
-    // AI Analysis Submit
+    // ── AI Analysis ──
     function handleAISubmit() {
-      const urlInput = document.getElementById('spreadsheetUrl');
-      const submitBtn = document.getElementById('aiSubmitBtn');
-      const resultDiv = document.getElementById('aiResult');
+      var urlInput = document.getElementById('spreadsheetUrl');
+      var submitBtn = document.getElementById('aiSubmitBtn');
+      var resultDiv = document.getElementById('aiResult');
 
-      const url = urlInput.value.trim();
+      var url = urlInput.value.trim();
 
       if (!url) {
         showAIError('Вставте посилання на таблицю');
@@ -663,31 +848,45 @@
     }
 
     function showAISuccess(data) {
-      const resultDiv = document.getElementById('aiResult');
-      const resultIcon = document.getElementById('aiResultIcon');
-      const resultTitle = document.getElementById('aiResultTitle');
-      const resultMessage = document.getElementById('aiResultMessage');
+      var resultDiv = document.getElementById('aiResult');
+      var resultIcon = document.getElementById('aiResultIcon');
+      var resultTitle = document.getElementById('aiResultTitle');
+      var resultMessage = document.getElementById('aiResultMessage');
 
       resultDiv.className = 'result success';
-      resultIcon.textContent = '✓';
+      resultIcon.className = 'ti ti-check';
       resultTitle.textContent = 'AI звіт створено';
       resultMessage.innerHTML =
         data.message +
-        '<a href="' + data.docUrl + '" target="_blank" style="background: #e0e7ff; border-color: #c7d2fe; color: #4338ca;">Відкрити Google Doc →</a>';
+        '<br><a class="result-link ai-link" href="' + data.docUrl + '" target="_blank"><i class="ti ti-file-text"></i> Відкрити Google Doc</a>';
     }
 
     function showAIError(message) {
-      const resultDiv = document.getElementById('aiResult');
-      const resultIcon = document.getElementById('aiResultIcon');
-      const resultTitle = document.getElementById('aiResultTitle');
-      const resultMessage = document.getElementById('aiResultMessage');
+      var resultDiv = document.getElementById('aiResult');
+      var resultIcon = document.getElementById('aiResultIcon');
+      var resultTitle = document.getElementById('aiResultTitle');
+      var resultMessage = document.getElementById('aiResultMessage');
 
       resultDiv.className = 'result error';
-      resultIcon.textContent = '✕';
+      resultIcon.className = 'ti ti-x';
       resultTitle.textContent = 'Помилка';
       resultMessage.textContent = message;
     }
 
+    // ── Enter key handlers ──
+    document.getElementById('domain').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      }
+    });
+
+    document.getElementById('spreadsheetUrl').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleAISubmit();
+      }
+    });
+
+    // ── Auto-focus ──
     document.getElementById('domain').focus();
   </script>
 </body>
