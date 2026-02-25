@@ -260,6 +260,131 @@ function getErrorLogs(limit) {
 }
 
 // ============================================
+// BUILD FULL QUEUE (manual trigger for "Проверка полноты")
+// ============================================
+
+function buildFullQueue() {
+  // 1. Get all competitors with client info
+  var competitors = supabaseGet('/rest/v1/competitors?select=competitor_site,client_id,clients(id,client_site)');
+  if (!competitors || competitors.length === 0) {
+    return { success: false, error: 'No competitors found. Add clients and competitors first.' };
+  }
+
+  // 2. Get existing task queue (all statuses to prevent duplicates)
+  var existingQueue = [];
+  try {
+    existingQueue = supabaseGet('/rest/v1/task_queue?select=client_site,period,sites_list');
+  } catch (e) {
+    // Queue may be empty
+  }
+
+  // 3. Build set of existing queue keys
+  var existingKeys = {};
+  for (var eq = 0; eq < existingQueue.length; eq++) {
+    var eKey = existingQueue[eq].client_site + '_' + existingQueue[eq].period + '_' + existingQueue[eq].sites_list;
+    existingKeys[eKey] = true;
+  }
+
+  // 4. Generate last 10 months (skip 2 months lag for SimilarWeb)
+  var months = [];
+  var now = new Date();
+  for (var i = 3; i <= 12; i++) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    months.push(y + '.' + m);
+  }
+
+  // 5. Group competitors by client
+  var clientMap = {}; // clientSite -> { clientId, competitors[] }
+  for (var c = 0; c < competitors.length; c++) {
+    var row = competitors[c];
+    var clientSite = normalizeDomain_(row.clients ? row.clients.client_site : '');
+    var clientId = row.clients ? row.clients.id : row.client_id;
+    var compSite = normalizeDomain_(row.competitor_site);
+    if (!clientSite || !compSite) continue;
+
+    if (!clientMap[clientSite]) {
+      clientMap[clientSite] = { clientId: clientId, competitors: [] };
+    }
+    if (clientMap[clientSite].competitors.indexOf(compSite) === -1) {
+      clientMap[clientSite].competitors.push(compSite);
+    }
+  }
+
+  // 6. Create tasks: chunk competitors into groups of 4 (+1 client = 5 max per SimilarWeb request)
+  var MAX_COMPETITORS_PER_CHUNK = 4;
+  var tasks = [];
+
+  for (var clientSite in clientMap) {
+    var info = clientMap[clientSite];
+    var compList = info.competitors;
+
+    // Chunk competitors
+    var chunks = [];
+    for (var ci = 0; ci < compList.length; ci += MAX_COMPETITORS_PER_CHUNK) {
+      chunks.push(compList.slice(ci, ci + MAX_COMPETITORS_PER_CHUNK));
+    }
+
+    for (var chunkIdx = 0; chunkIdx < chunks.length; chunkIdx++) {
+      var sitesInRequest = [clientSite].concat(chunks[chunkIdx]);
+      var sitesList = sitesInRequest.join(',');
+
+      for (var pi = 0; pi < months.length; pi++) {
+        var period = months[pi];
+
+        // Check for duplicates
+        var qKey = clientSite + '_' + period + '_' + sitesList;
+        if (existingKeys[qKey]) continue;
+
+        var queueId = clientSite + '_' + period + '_chunk' + chunkIdx + '_' + Date.now();
+
+        tasks.push({
+          queue_id: queueId,
+          client_id: info.clientId,
+          client_site: clientSite,
+          sites_list: sitesList,
+          chunk_index: chunkIdx,
+          total_chunks: chunks.length,
+          period: period,
+          status: 'pending',
+          priority: pi
+        });
+      }
+    }
+  }
+
+  if (tasks.length === 0) {
+    return { success: true, tasksCreated: 0, message: 'All data is up to date. No new tasks needed.' };
+  }
+
+  // 7. Insert tasks in batches (Supabase has payload limits)
+  var BATCH_SIZE = 50;
+  for (var bi = 0; bi < tasks.length; bi += BATCH_SIZE) {
+    var batch = tasks.slice(bi, bi + BATCH_SIZE);
+    supabasePost('/rest/v1/task_queue', batch, { 'Prefer': 'return=minimal,resolution=ignore-duplicates' });
+  }
+
+  return {
+    success: true,
+    tasksCreated: tasks.length,
+    clients: Object.keys(clientMap).length,
+    periods: months.length,
+    message: 'Created ' + tasks.length + ' tasks for ' + Object.keys(clientMap).length + ' clients'
+  };
+}
+
+function normalizeDomain_(url) {
+  if (!url) return '';
+  return url
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+    .trim();
+}
+
+// ============================================
 // DASHBOARD STATS
 // ============================================
 
