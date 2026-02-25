@@ -1,0 +1,2837 @@
+{
+  "name": "Comparing SimilarWeb",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 7
+            }
+          ]
+        }
+      },
+      "id": "40dd118c-1f4e-42fa-b9ea-339fba641dc3",
+      "name": "Cron: Обработка очереди",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -400
+      ],
+      "notes": "Каждый час проверяет очередь и запускает до 9 задач"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "45296638-a836-4403-9968-a89325af2d24",
+      "name": "Cron: Проверка полноты (2x в день)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -912
+      ],
+      "notes": "2 раза в день (08:00 и 20:00) проверяет полноту данных за 10 месяцев"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 432048814,
+          "mode": "list",
+          "cachedResultName": "Конкуренты",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=432048814"
+        },
+        "options": {}
+      },
+      "id": "493653d6-3d0b-4f9e-bd9c-d68f6fb7b4c6",
+      "name": "Читаем всех конкурентов",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2080,
+        -976
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "09749d30-26a4-4df5-8a5f-665ffa6682bc",
+      "name": "Объединяем данные",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -1856,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 807869987,
+          "mode": "list",
+          "cachedResultName": "Очередь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=807869987"
+        },
+        "options": {}
+      },
+      "id": "69d9aca2-d250-4074-af12-8235e7e06525",
+      "name": "Читаем очередь (проверка)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2080,
+        -688
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Проверка полноты данных за последние 10 месяцев\n// ОПТИМИЗАЦИЯ: Разбиваем конкурентов на группы по 5 сайтов (ограничение SimilarWeb)\n// v3: Проверяем ВСЕ записи в очереди (любой статус) для предотвращения дубликатов\nconst competitors = $('Читаем всех конкурентов').all();\n\n// Читаем существующую очередь чтобы не дублировать задачи\nlet existingQueue = [];\ntry {\n  existingQueue = $('Читаем очередь (проверка)').all();\n} catch (e) {\n  // Очередь может быть пустой\n}\n\n// Максимум сайтов в одном запросе SimilarWeb (клиент + 4 конкурента)\nconst MAX_SITES_PER_REQUEST = 5;\n\n// Функция нормализации домена (убираем https://, www., trailing slash)\nfunction normalizeDomain(url) {\n  if (!url) return '';\n  return url\n    .replace(/^https?:\\/\\//i, '')\n    .replace(/^www\\./i, '')\n    .replace(/\\/+$/, '')\n    .toLowerCase()\n    .trim();\n}\n\n// Генерируем список последних 10 месяцев (с учётом задержки SimilarWeb в 2 месяца)\n// SimilarWeb не показывает данные за последние 2 месяца\nfunction getLast10Months() {\n  const months = [];\n  const now = new Date();\n  \n  // Начинаем с 3-го месяца назад (пропускаем текущий и предыдущий)\n  for (let i = 3; i <= 12; i++) {\n    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);\n    const year = d.getFullYear();\n    const month = String(d.getMonth() + 1).padStart(2, '0');\n    months.push(`${year}.${month}`);\n  }\n  \n  return months;\n}\n\nconst last10Months = getLast10Months();\n\n// Группируем конкурентов по клиентам (с нормализацией доменов)\nconst clientCompetitors = new Map();\n\ncompetitors.forEach(row => {\n  const client = normalizeDomain(row.json.client_site);\n  const competitor = normalizeDomain(row.json.competitors_site);\n  \n  if (client && competitor) {\n    if (!clientCompetitors.has(client)) {\n      clientCompetitors.set(client, []);\n    }\n    if (!clientCompetitors.get(client).includes(competitor)) {\n      clientCompetitors.get(client).push(competitor);\n    }\n  }\n});\n\n// v3: Собираем ВСЕ существующие задачи в очереди (любой статус)\n// Это предотвращает создание дубликатов для уже выполненных задач\nconst existingQueueKeys = new Set();\nexistingQueue.forEach(row => {\n  // Учитываем ВСЕ записи независимо от статуса\n  const key = `${row.json.client_site}_${row.json.period}_${row.json.sites_list}`;\n  existingQueueKeys.add(key);\n});\n\n// Функция для разбиения массива на чанки\nfunction chunkArray(array, chunkSize) {\n  const chunks = [];\n  for (let i = 0; i < array.length; i += chunkSize) {\n    chunks.push(array.slice(i, i + chunkSize));\n  }\n  return chunks;\n}\n\n// Создаём задачи с разбиением на группы\nconst queueTasks = [];\n\nclientCompetitors.forEach((competitorsList, clientSite) => {\n  const competitorChunks = chunkArray(competitorsList, MAX_SITES_PER_REQUEST - 1);\n  \n  competitorChunks.forEach((chunk, chunkIndex) => {\n    last10Months.forEach((period, periodIndex) => {\n      const sitesInRequest = [clientSite, ...chunk];\n      const sitesList = sitesInRequest.join(',');\n      \n      // Проверяем, есть ли уже такая задача в очереди (любой статус)\n      const queueKey = `${clientSite}_${period}_${sitesList}`;\n      if (existingQueueKeys.has(queueKey)) {\n        return; // Пропускаем - задача уже существует\n      }\n      \n      // Создаём новую задачу\n      const taskId = `${clientSite}_${period}_chunk${chunkIndex}_${Date.now()}`;\n      \n      queueTasks.push({\n        queue_id: taskId,\n        client_site: clientSite,\n        sites_list: sitesList,\n        chunk_index: chunkIndex,\n        total_chunks: competitorChunks.length,\n        period: period,\n        status: 'pending',\n        priority: periodIndex,\n        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),\n        task_id: '',\n        error_message: ''\n      });\n    });\n  });\n});\n\nqueueTasks.sort((a, b) => b.priority - a.priority);\n\nconst summary = {\n  totalClients: clientCompetitors.size,\n  totalTasks: queueTasks.length,\n  skippedExisting: existingQueueKeys.size,\n  periods: last10Months,\n  maxSitesPerRequest: MAX_SITES_PER_REQUEST\n};\n\nconsole.log('Queue tasks summary:', summary);\n\nif (queueTasks.length === 0) {\n  return [{ json: { noNewTasks: true, summary } }];\n}\n\nreturn queueTasks.map(task => ({ json: task }));"
+      },
+      "id": "ef85edbc-f878-4016-a7af-da5aa57fc71f",
+      "name": "Анализ полноты данных",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "filter-new-tasks",
+              "leftValue": "={{ $json.noNewTasks }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f4a7dc43-0d13-45c9-a33f-401a390b3468",
+      "name": "Есть новые задачи?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1424,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 807869987,
+          "mode": "list",
+          "cachedResultName": "Очередь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=807869987"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "queue_id",
+              "displayName": "queue_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_site",
+              "displayName": "client_site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sites_list",
+              "displayName": "sites_list",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "70c4381d-258d-493f-9609-6e8be02c62b5",
+      "name": "Добавляем в очередь",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1200,
+        -832
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=📋 <b>Проверка полноты данных</b>\n\nДобавлено задач в очередь: {{ $json.length || 1 }}\n\nПериоды: последние 10 месяцев\n\n⚡ Оптимизация: макс. 4 сайта на запрос",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "f70fbc06-1b2a-4604-b620-eadce3848fab",
+      "name": "Telegram: Задачи добавлены",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -944,
+        -832
+      ],
+      "webhookId": "14ccabb4-4ded-4a6c-a9e1-0c3bb571fb6a",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 807869987,
+          "mode": "list",
+          "cachedResultName": "Очередь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=807869987"
+        },
+        "options": {}
+      },
+      "id": "d244cfca-770b-4476-81c7-21662dbec7d2",
+      "name": "Читаем очередь",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2080,
+        -400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "filter-pending-queue",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "333edc40-2f72-4d97-b73d-6dc185019138",
+      "name": "Filter: Только pending",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Берём до 9 задач из очереди и добавляем рандомные задержки\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\n// Берём максимум 9 задач (лимит Browse AI в час)\nconst tasksToProcess = items.slice(0, 9);\n\n// Генерируем псевдо-рандомные задержки (3-7 минут между задачами)\nconst tasks = tasksToProcess.map((item, index) => {\n  // Базовая задержка 3-4 минуты + рандом 0-3 минуты\n  const baseDelay = 180 + Math.floor(Math.random() * 60); // 180-240 сек\n  const randomExtra = Math.floor(Math.random() * 180); // 0-180 сек\n  const delaySeconds = baseDelay + randomExtra; // 180-420 сек (3-7 мин)\n  \n  // Накопительная задержка для каждой задачи\n  const cumulativeDelay = index * delaySeconds;\n  \n  return {\n    json: {\n      ...item.json,\n      taskIndex: index,\n      delaySeconds: cumulativeDelay,\n      delayMinutes: Math.round(cumulativeDelay / 60),\n      scheduledAt: new Date(Date.now() + cumulativeDelay * 1000).toISOString()\n    }\n  };\n});\n\nconsole.log(`Processing ${tasks.length} tasks with random delays`);\n\nreturn tasks;"
+      },
+      "id": "c17f373d-186c-4486-8610-561db6e4b5dc",
+      "name": "Подготовка задач (макс 9)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Формируем URL для запуска роботов v4\n// v4: Добавлен Marketing Channels Robot\nconst input = $input.first().json;\n\nconst sites = input.sites_list.split(\",\");\n\nif (sites.length > 5) {\n  console.warn(`WARNING: Too many sites (${sites.length}), truncating to 5`);\n  sites.length = 5;\n}\n\nconst sitesParam = sites.map(s => s.trim()).join(\",\");\nconst queueId = input.queue_id;\n// Нормализуем период: 2025.2 -> 2025.02 (Google Sheets может убрать ведущий ноль)\nconst rawPeriod = String(input.period);\nconst [year, month] = rawPeriod.split('.');\nconst period = `${year}.${month.padStart(2, '0')}`;\n\n// URL для каждого робота\n// Performance - страница website-performance\nconst performanceUrl = `https://pro.similarweb.com/#/digitalsuite/websiteanalysis/overview/website-performance/*/804/${period}-${period}?webSource=Total&key=${sitesParam}&qid=${queueId}`;\n// Marketing Channels - страница traffic-overview (другой путь и формат URL!)\nconst marketingChannelsUrl = `https://pro.similarweb.com/?#/digitalsuite/websiteanalysis/traffic-overview/*/804/${period}-${period}/?webSource=Total&key=${sitesParam}`;\n// AI Traffic - страница ai-traffic\nconst aiTrafficUrl = `https://pro.similarweb.com/#/digitalsuite/ai-traffic/overview/*/804/${period}-${period}?webSource=Total&key=${sitesParam}&qid=${queueId}`;\n\nreturn [{\n  json: {\n    ...input,\n    performanceUrl,\n    marketingChannelsUrl,\n    aiTrafficUrl,\n    sites: sitesParam,\n    sitesCount: sites.length,\n    period,\n    queueId\n  }\n}];"
+      },
+      "id": "1be3d39d-2f5b-44e4-bbda-0a1d5741f8dd",
+      "name": "Подготовка URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.delaySeconds }}"
+      },
+      "id": "34da0e1e-5fc7-4e7f-9ff6-b14c90729cf7",
+      "name": "Рандомная пауза",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1424,
+        -400
+      ],
+      "webhookId": "b9f86f03-61de-46cd-a25e-ed2b0eefd1b5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 807869987,
+          "mode": "list",
+          "cachedResultName": "Очередь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=807869987"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "queue_id"
+          ],
+          "schema": [
+            {
+              "id": "queue_id",
+              "displayName": "queue_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "be142250-b0ea-4362-a5bd-e9128acc5294",
+      "name": "Статус: processing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -976,
+        -400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.browse.ai/v2/robots/019be626-b575-7d4b-a848-beee91c6d7aa/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputParameters\": {\n    \"originUrl\": \"{{ $('Подготовка URL').first().json.performanceUrl }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "fc6396d1-e473-4e9f-a4cf-425b852e9104",
+      "name": "Запуск Performance Robot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -752,
+        -400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4IkSClA1cWUZRGFP",
+          "name": "Browse AI 2.1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 40
+      },
+      "id": "0e5fc9ea-b1f7-4d10-999a-a358139028e1",
+      "name": "Ждём Performance",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        -400
+      ],
+      "webhookId": "c7dd6269-f291-40a4-a5fb-720e598e2f66"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.browse.ai/v2/robots/019bfb8d-58f6-7a2e-9b44-04e1fcf9fc26/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputParameters\": {\n    \"originUrl\": \"{{ $('Подготовка URL').first().json.marketingChannelsUrl }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "92fd9b18-aaf4-4b37-a92d-4aac5b2879bb",
+      "name": "Запуск Marketing Channels Robot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        -400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4IkSClA1cWUZRGFP",
+          "name": "Browse AI 2.1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 40
+      },
+      "id": "66afdbb4-ccbd-48e5-b46a-124cd79106ef",
+      "name": "Ждём Marketing Channels",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        -400
+      ],
+      "webhookId": "mc-wait-webhook-id"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.browse.ai/v2/robots/019be633-e05e-757a-aced-1cb415907f85/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputParameters\": {\n    \"originUrl\": \"{{ $('Подготовка URL').first().json.aiTrafficUrl }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "18d2febf-e540-46c8-bace-0af6987c403d",
+      "name": "Запуск AI Traffic Robot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        -400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4IkSClA1cWUZRGFP",
+          "name": "Browse AI 2.1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "browse-ai-performance",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "6aee9b1e-4cac-459b-8a66-a7c0105caf1c",
+      "name": "Webhook: Performance Results",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        0
+      ],
+      "webhookId": "browse-ai-performance"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "browse-ai-marketing-channels",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "52e24629-8ada-4392-b7d6-54b99b925abf",
+      "name": "Webhook: Marketing Channels Results",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        800
+      ],
+      "webhookId": "browse-ai-marketing-channels"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Парсер Marketing Channels v1.0\n// Извлекает данные каналов: Direct, Organic Search, Paid Search, Display Ads, Social, Email\nconst input = $input.first().json;\n\nconst body = input.body || input;\nconst taskStatus = body?.task?.status || input.taskStatus;\n\nif (taskStatus !== 'successful' && taskStatus !== 'completed') {\n  return [{ json: { error: 'Task not successful', taskStatus, sheetsRows: [] } }];\n}\n\nconst rawData = body?.task?.capturedTexts || {};\nconst taskId = body?.task?.id || input.taskId || 'unknown';\nconst originUrl = body?.task?.inputParameters?.originUrl || input.originUrl || '';\n\nconst keyMatch = originUrl.match(/key=([^&]+)/);\nlet sitesFromUrl = [];\nif (keyMatch) {\n  sitesFromUrl = decodeURIComponent(keyMatch[1]).split(',');\n}\nconst clientSite = sitesFromUrl[0] || '';\n\nconst qidMatch = originUrl.match(/qid=([^&]+)/);\nconst queueId = qidMatch ? qidMatch[1] : '';\n\nlet periodFormatted = '';\nconst periodUrlMatch = originUrl.match(/\\/804\\/(\\d{4}\\.\\d{1,2})-\\d{4}\\.\\d{1,2}/);\nif (periodUrlMatch) {\n  const [y, m] = periodUrlMatch[1].split('.');\n  periodFormatted = y + '.' + m.padStart(2, '0');\n}\nif (!periodFormatted && queueId) {\n  const queuePeriodMatch = queueId.match(/_(\\d{4}\\.\\d{1,2})_/);\n  if (queuePeriodMatch) {\n    const [y, m] = queuePeriodMatch[1].split('.');\n    periodFormatted = y + '.' + m.padStart(2, '0');\n  }\n}\nif (!periodFormatted) {\n  // Fallback: извлекаем из URL параметра key через sitesFromUrl\n  const now = new Date();\n  periodFormatted = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;\n}\n\nlet data = {};\nif (Array.isArray(rawData)) {\n  rawData.forEach(item => {\n    const key = item.name || item.key;\n    const value = item.newText || item.text || item.value;\n    if (key && value) data[key] = value;\n  });\n} else {\n  data = rawData;\n}\n\nfunction extractLegendData(html) {\n  if (!html) return {};\n  const sites = {};\n  const patterns = [\n    /data-automation-title=\"true\"[^>]*>([^<]+)<\\/label>[\\s\\S]*?data-automation-value=\"true\"[^>]*>([^<]+)<\\/label>/g,\n    /class=\"[^\"]*iUaIjL[^\"]*\">([^<]+)<\\/label>[\\s\\S]{0,300}?class=\"[^\"]*gzsEum[^\"]*\">([^<]+)<\\/label>/g\n  ];\n  patterns.forEach(pattern => {\n    let match;\n    while ((match = pattern.exec(html)) !== null) {\n      const site = match[1].trim();\n      const value = match[2].trim();\n      if (site && value && site.includes('.') && /^[a-zA-Z0-9]/.test(site)) {\n        if (!sites[site]) sites[site] = value;\n      }\n    }\n  });\n  return sites;\n}\n\nconst direct = extractLegendData(data['Direct']);\nconst organicSearch = extractLegendData(data['Organic Search']);\nconst paidSearch = extractLegendData(data['Paid Search']);\nconst displayAds = extractLegendData(data['Display Ads'] || data['Display Search']);\nconst social = extractLegendData(data['Social'] || data['Sosial']);\nconst email = extractLegendData(data['Email']);\n\nconst today = new Date().toISOString().split('T')[0];\n\nconst allSites = new Set();\n[direct, organicSearch, paidSearch, displayAds, social, email].forEach(channel => {\n  Object.keys(channel).forEach(site => allSites.add(site));\n});\nif (allSites.size === 0 && sitesFromUrl.length > 0) {\n  sitesFromUrl.forEach(site => allSites.add(site));\n}\n\nconst sitesArray = Array.from(allSites);\n\nconst sheetsRows = sitesArray.map((site) => ({\n  'date': today,\n  'period': periodFormatted,\n  'client_site': clientSite,\n  'site': site,\n  'type': site === clientSite ? 'client' : 'competitor',\n  'Monthly Visits': '',\n  'Unique Visitors': '',\n  'Visit Duration': '',\n  'Pages/Visit': '',\n  'Bounce Rate': '',\n  'Direct': direct[site] || '',\n  'Organic Search': organicSearch[site] || '',\n  'Paid Search': paidSearch[site] || '',\n  'Display Ads': displayAds[site] || '',\n  'Social': social[site] || '',\n  'Email': email[site] || '',\n  'AI Traffic': '',\n  'Task ID': taskId,\n  'Queue ID': queueId,\n  'key': `${periodFormatted}_${site}`\n}));\n\nreturn [{\n  json: {\n    taskId,\n    queueId,\n    type: 'marketing_channels',\n    periodFormatted,\n    clientSite,\n    channels: { direct, organicSearch, paidSearch, displayAds, social, email },\n    sheetsRows,\n    sitesCount: sitesArray.length,\n    raw: data\n  }\n}];\n"
+      },
+      "id": "caaf4bb5-7d40-446d-b1d5-42c18642dcd1",
+      "name": "Parse Marketing Channels Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sheetsRows",
+        "options": {}
+      },
+      "id": "ad87164a-b750-4c54-bad3-9a15dc0d28d4",
+      "name": "Split Out: Marketing Channels",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id",
+          "cachedResultName": "Клиенты"
+        },
+        "options": {}
+      },
+      "id": "704be477-555d-4f13-a61d-d9538666d469",
+      "name": "Читаем Клиенты для MC",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1632,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Маршрутизация Marketing Channels в таблицу клиента\nconst clients = $('Читаем Клиенты для MC').all();\nconst mcRows = $('Split Out: Marketing Channels').all();\n\nconst clientMap = new Map();\nclients.forEach(c => {\n  if (c.json.client_site && c.json.spreadsheet_id) {\n    clientMap.set(c.json.client_site, c.json.spreadsheet_id);\n  }\n});\n\nconst output = [];\nmcRows.forEach(row => {\n  const clientSite = row.json.client_site;\n  const spreadsheetId = clientMap.get(clientSite);\n  if (spreadsheetId) {\n    output.push({ json: { ...row.json, _spreadsheet_id: spreadsheetId } });\n  }\n});\n\nreturn output.length > 0 ? output : [{ json: { noClientData: true } }];"
+      },
+      "id": "7f549975-dcad-4b43-be80-cae8e4386a3e",
+      "name": "Маршрутизация MC по клиентам",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-mc-client-data",
+              "leftValue": "={{ $json.noClientData }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "96d0b7d2-a534-48a9-886f-e1c3b1451bbc",
+      "name": "Есть MC данные клиента?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1184,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json._spreadsheet_id }}/values/Данные!A:T",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "15538545-91bf-4d75-b866-90f656516e17",
+      "name": "Читаем таблицу для MC upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Upsert логика Marketing Channels\nconst inputData = $('Есть MC данные клиента?').all();\nconst sheetResponse = $input.first().json;\nconst sheetValues = sheetResponse.values || [];\nconst spreadsheetId = inputData[0]?.json._spreadsheet_id;\n\n// Нормализация периода: 2025.2 -> 2025.02\nfunction normPeriod(p) {\n  const s = String(p || '');\n  const parts = s.split('.');\n  if (parts.length === 2) return parts[0] + '.' + parts[1].padStart(2, '0');\n  return s;\n}\n\nconst existingRows = new Map();\nfor (let i = 1; i < sheetValues.length; i++) {\n  const row = sheetValues[i];\n  const period = normPeriod(row[1]);\n  const site = row[3] || '';\n  const key = `${period}_${site}`;\n  existingRows.set(key, { rowIndex: i + 1, rowData: row });\n}\n\nconst results = [];\nfor (const item of inputData) {\n  const row = item.json;\n  const key = `${normPeriod(row.period)}_${row.site}`;\n  const existing = existingRows.get(key);\n  \n  const newRowData = [\n    row.date || '', row.period || '', row.client_site || '', row.site || '', row.type || '',\n    row['Monthly Visits'] || '', row['Unique Visitors'] || '', row['Visit Duration'] || '',\n    row['Pages/Visit'] || '', row['Bounce Rate'] || '', row.Direct || '',\n    row['Organic Search'] || '', row['Paid Search'] || '', row['Display Ads'] || '',\n    row.Social || '', row.Email || '', row['AI Traffic'] || '',\n    row['Task ID'] || '', row['Queue ID'] || '', row.key || ''\n  ];\n  \n  if (existing) {\n    const mergedData = newRowData.map((newVal, idx) => {\n      if (newVal === '' && existing.rowData[idx]) return existing.rowData[idx];\n      return newVal;\n    });\n    results.push({ json: { action: 'update', spreadsheetId, rowIndex: existing.rowIndex, range: `Данные!A${existing.rowIndex}:T${existing.rowIndex}`, values: [mergedData] } });\n  } else {\n    results.push({ json: { action: 'append', spreadsheetId, values: [newRowData] } });\n  }\n}\n\nreturn results;\n"
+      },
+      "id": "36fca0c0-24db-4ad6-a7cd-2d967c893459",
+      "name": "Upsert логика MC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-mc-update",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "update",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8cc5a9fc-b187-4f09-92e0-b569f6795ba8",
+      "name": "MC Update или Append?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/{{ $json.range }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "77280964-9731-4fcc-b33a-6a32bf05bc6d",
+      "name": "MC Update строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        704
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Данные!A:T:append",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            },
+            {
+              "name": "insertDataOption",
+              "value": "INSERT_ROWS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "9053573e-4fa1-4a5e-a81c-bf0f3e93ef1c",
+      "name": "MC Append строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Формируем отчёт из Marketing Channels данных\nconst data = $('Parse Marketing Channels Data').first().json;\n\nlet report = '🚦 <b>Marketing Channels</b>\\n';\nreport += `📅 ${data.periodFormatted}\\n`;\nreport += `👤 Клиент: ${data.clientSite}\\n\\n`;\n\nconst channels = data.channels;\nconst channelConfig = [\n  { key: 'direct', name: 'Direct', emoji: '🔗' },\n  { key: 'organicSearch', name: 'Organic Search', emoji: '🔍' },\n  { key: 'paidSearch', name: 'Paid Search', emoji: '💰' },\n  { key: 'displayAds', name: 'Display Ads', emoji: '📺' },\n  { key: 'social', name: 'Social', emoji: '📱' },\n  { key: 'email', name: 'Email', emoji: '📧' }\n];\n\nchannelConfig.forEach(({ key, name, emoji }) => {\n  const channelData = channels[key];\n  if (channelData && Object.keys(channelData).length > 0) {\n    report += `${emoji} <b>${name}</b>\\n`;\n    Object.entries(channelData).forEach(([site, value]) => {\n      const siteEmoji = site === data.clientSite ? '🔵' : '🟠';\n      report += `   ${siteEmoji} ${site}: ${value}\\n`;\n    });\n    report += '\\n';\n  }\n});\n\nreport += '━━━━━━━━━━━━━━━━━━━━━\\n';\nreport += '✅ Каналы сохранены';\n\nreturn [{ json: { report, ...data } }];"
+      },
+      "id": "4b231e0a-54b7-458e-a34f-636628c6a76e",
+      "name": "Format MC Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "={{ $json.report }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "03ad95a0-7466-4a9f-a884-72965b39519c",
+      "name": "Telegram: Marketing Channels",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1632,
+        976
+      ],
+      "webhookId": "2ad7dc38-2692-4b5f-8778-b878fcfac1ff",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "browse-ai-aitraffic",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "9e29079f-ba0b-4440-ab45-02c8ac96397a",
+      "name": "Webhook: AI Traffic Results",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        400
+      ],
+      "webhookId": "browse-ai-aitraffic"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Проверяем статус задачи и направляем на обработку или логирование ошибки\nconst input = $input.first().json;\n\nconst taskStatus = input.body?.task?.status || input.status;\nconst taskId = input.body?.task?.id || 'unknown';\nconst finishedAt = input.body?.task?.finishedAt;\nconst robotId = input.body?.robot?.id || 'unknown';\nconst originUrl = input.body?.task?.inputParameters?.originUrl || '';\n\n// Определяем тип робота\nconst isPerformance = originUrl.includes('website-performance');\nconst robotType = isPerformance ? 'Performance' : 'AI Traffic';\n\n// Извлекаем информацию из URL\nconst keyMatch = originUrl.match(/key=([^&]+)/);\nlet sites = [];\nif (keyMatch) {\n  sites = decodeURIComponent(keyMatch[1]).split(',');\n}\n\nconst periodMatch = originUrl.match(/\\/804\\/(\\d{4}\\.\\d{2})-/);\nconst period = periodMatch ? periodMatch[1] : 'unknown';\n\n// Проверяем успешность\nconst isSuccess = (taskStatus === 'successful' || taskStatus === 'completed') && finishedAt;\n\nif (!isSuccess) {\n  // Задача провалилась - логируем ошибку\n  // Поля соответствуют колонкам в таблице \"Логи ошибок\"\n  return [{\n    json: {\n      isError: true,\n      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),\n      task_id: taskId,\n      robot_type: robotType,\n      period: period,\n      sites: sites.join(','),\n      status: taskStatus || 'failed',\n      error_message: input.body?.task?.failedReason || 'Unknown error',\n      url: originUrl,\n      // Дополнительные поля для обработки\n      taskId,\n      taskStatus,\n      robotType,\n      originUrl\n    }\n  }];\n}\n\n// Задача успешна - передаём на обработку\nreturn [{\n  json: {\n    isError: false,\n    taskId,\n    taskStatus,\n    robotType,\n    period,\n    sites,\n    originUrl,\n    body: input.body\n  }\n}];"
+      },
+      "id": "d85668bc-5d45-4d40-b54f-cde45aa3c443",
+      "name": "Проверка статуса задачи",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-error",
+              "leftValue": "={{ $json.isError }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5bf87ac6-a78d-4f32-852f-2aed9bedd9f9",
+      "name": "Ошибка или успех?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1263404191,
+          "mode": "list",
+          "cachedResultName": "Логи ошибок",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=1263404191"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "robot_type",
+              "displayName": "robot_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "period",
+              "displayName": "period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sites",
+              "displayName": "sites",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "42a7a89a-3505-45d4-8df8-858eac0b6150",
+      "name": "Логируем ошибку",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1632,
+        -128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=❌ <b>Ошибка робота</b>\n\n🤖 Робот: {{ $json.robotType }}\n📅 Период: {{ $json.period }}\n🌐 Сайты: {{ $json.sites }}\n\n⚠️ Статус: {{ $json.taskStatus }}\n📝 Ошибка: {{ $json.errorMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "aea5ae45-bf2d-4388-b722-e0678a2d3f1a",
+      "name": "Telegram: Ошибка",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1424,
+        -128
+      ],
+      "webhookId": "b91bfe06-5918-49cb-bcc5-ec2a0c38b614",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Парсер Performance данных v4.0\n// v4: Только Engagement данные (каналы перенесены в Marketing Channels Robot)\nconst input = $input.first().json;\n\nconst body = input.body || input;\nconst rawData = body?.task?.capturedTexts || {};\nconst taskId = body?.task?.id || input.taskId || 'unknown';\nconst originUrl = body?.task?.inputParameters?.originUrl || input.originUrl || '';\nconst inputSites = input.sites || [];\n\nconst keyMatch = originUrl.match(/key=([^&]+)/);\nlet sitesFromUrl = [];\nif (keyMatch) {\n  sitesFromUrl = decodeURIComponent(keyMatch[1]).split(',');\n}\nconst clientSite = sitesFromUrl[0] || '';\n\nconst qidMatch = originUrl.match(/qid=([^&]+)/);\nconst queueId = qidMatch ? qidMatch[1] : '';\n\n// Извлекаем период из разных источников\nlet periodFormatted = '';\nconst periodUrlMatch = originUrl.match(/\\/804\\/(\\d{4}\\.\\d{1,2})-\\d{4}\\.\\d{1,2}/);\nif (periodUrlMatch) {\n  const [y, m] = periodUrlMatch[1].split('.');\n  periodFormatted = y + '.' + m.padStart(2, '0');\n}\nif (!periodFormatted && queueId) {\n  const queuePeriodMatch = queueId.match(/_(\\d{4}\\.\\d{1,2})_/);\n  if (queuePeriodMatch) {\n    const [y, m] = queuePeriodMatch[1].split('.');\n    periodFormatted = y + '.' + m.padStart(2, '0');\n  }\n}\nif (!periodFormatted) {\n  const now = new Date();\n  periodFormatted = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;\n}\n\nlet data = {};\nif (Array.isArray(rawData)) {\n  rawData.forEach(item => {\n    const key = item.name || item.key;\n    const value = item.newText || item.text || item.value;\n    if (key && value) data[key] = value;\n  });\n} else {\n  data = rawData;\n}\n\nfunction isLoading(html) {\n  if (!html) return true;\n  return html.includes('LoadingContainer') || html.includes('linearGradient id=\"lineGray\"');\n}\n\nfunction extractEngagementData(html) {\n  if (!html || isLoading(html)) return null;\n  const result = {};\n  const domainPattern = /DomainWrapper[^>]*>\\s*([a-zA-Z0-9][a-zA-Z0-9.-]*\\.[a-zA-Z]{2,})\\s*<\\/span>/g;\n  const domains = [];\n  let match;\n  while ((match = domainPattern.exec(html)) !== null) {\n    domains.push(match[1].trim());\n  }\n  if (domains.length === 0) return null;\n  domains.forEach(domain => {\n    const cellRegex = new RegExp(\n      'data-automation=\"MiniFlexTable-cell ' + domain.replace(/\\./g, '\\\\.') + '\"[\\\\s\\\\S]*?<span[^>]*class=\"[^\"]*value[^\"]*\"[^>]*>([\\\\s\\\\S]*?)</span>',\n      'g'\n    );\n    const values = [];\n    let cellMatch;\n    while ((cellMatch = cellRegex.exec(html)) !== null) {\n      let val = cellMatch[1].replace(/<svg[\\s\\S]*?<\\/svg>/g, '').replace(/<div[\\s\\S]*?<\\/div>/g, '').replace(/<[^>]+>/g, '').trim();\n      if (val) values.push(val);\n    }\n    if (values.length >= 5) {\n      result[domain] = {\n        monthlyVisits: values[0] || '',\n        uniqueVisitors: values[1] || '',\n        visitsPerVisitor: values[2] || '',\n        deduplicatedAudience: values[3] || '',\n        visitDuration: values[4] || '',\n        pagesPerVisit: values[5] || '',\n        bounceRate: values[6] || '',\n        pageViews: values[7] || ''\n      };\n    }\n  });\n  return Object.keys(result).length > 0 ? result : null;\n}\n\n// Извлекаем Engagement из обоих источников и объединяем\nlet engagement = {};\nif (!isLoading(data['Engagement'])) {\n  const eng1 = extractEngagementData(data['Engagement']);\n  if (eng1) Object.assign(engagement, eng1);\n}\nif (data['Engagement 2'] && !isLoading(data['Engagement 2'])) {\n  const eng2 = extractEngagementData(data['Engagement 2']);\n  if (eng2) {\n    // Добавляем только те домены, которых ещё нет\n    Object.keys(eng2).forEach(domain => {\n      if (!engagement[domain]) engagement[domain] = eng2[domain];\n    });\n  }\n}\nif (Object.keys(engagement).length === 0) engagement = null;\n\nconst today = new Date().toISOString().split('T')[0];\n\n// Собираем сайты только из Engagement\nconst allSites = new Set();\nif (engagement) {\n  Object.keys(engagement).forEach(site => allSites.add(site));\n}\nif (allSites.size === 0 && sitesFromUrl.length > 0) {\n  sitesFromUrl.forEach(site => allSites.add(site));\n}\nif (allSites.size === 0 && inputSites.length > 0) {\n  inputSites.forEach(site => allSites.add(site));\n}\n\nconst sitesArray = Array.from(allSites);\n\n// v4: Только Engagement метрики (каналы пустые - заполнятся из Marketing Channels)\nconst sheetsRows = sitesArray.map((site) => {\n  const eng = engagement?.[site] || {};\n  return {\n    'date': today,\n    'period': periodFormatted,\n    'client_site': clientSite,\n    'site': site,\n    'type': site === clientSite ? 'client' : 'competitor',\n    'Monthly Visits': eng.monthlyVisits || '',\n    'Unique Visitors': eng.uniqueVisitors || '',\n    'Visit Duration': eng.visitDuration || '',\n    'Pages/Visit': eng.pagesPerVisit || '',\n    'Bounce Rate': eng.bounceRate || '',\n    'Direct': '',\n    'Organic Search': '',\n    'Paid Search': '',\n    'Display Ads': '',\n    'Social': '',\n    'Email': '',\n    'Task ID': taskId,\n    'Queue ID': queueId,\n    'key': `${periodFormatted}_${site}`\n  };\n});\n\nreturn [{\n  json: {\n    taskId,\n    queueId,\n    type: 'performance',\n    periodFormatted,\n    clientSite,\n    engagement,\n    sheetsRows,\n    sitesCount: sitesArray.length,\n    raw: data\n  }\n}];\n"
+      },
+      "id": "32ae507d-8ec7-493b-9c57-6f80b2634583",
+      "name": "Parse Performance Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sheetsRows",
+        "options": {}
+      },
+      "id": "58f03b7d-956b-4269-adc6-e79b17615ff5",
+      "name": "Split Out: Performance",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id",
+          "cachedResultName": "Клиенты"
+        },
+        "options": {}
+      },
+      "id": "e2434623-8261-4e63-a721-9afa1953fe2e",
+      "name": "Читаем Клиенты",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1200,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Маршрутизация данных в таблицу клиента\nconst clients = $('Читаем Клиенты').all();\nconst performanceRows = $('Split Out: Performance').all();\n\n// Создаём мапу client_site -> spreadsheet_id\nconst clientMap = new Map();\nclients.forEach(c => {\n  if (c.json.client_site && c.json.spreadsheet_id) {\n    clientMap.set(c.json.client_site, c.json.spreadsheet_id);\n  }\n});\n\n// Группируем данные по клиентам\nconst resultsByClient = new Map();\n\nperformanceRows.forEach(row => {\n  const clientSite = row.json.client_site;\n  const spreadsheetId = clientMap.get(clientSite);\n  \n  if (spreadsheetId) {\n    if (!resultsByClient.has(clientSite)) {\n      resultsByClient.set(clientSite, {\n        spreadsheet_id: spreadsheetId,\n        rows: []\n      });\n    }\n    resultsByClient.get(clientSite).rows.push(row.json);\n  }\n});\n\n// Возвращаем данные для записи в таблицы клиентов\nconst output = [];\nresultsByClient.forEach((data, clientSite) => {\n  data.rows.forEach(row => {\n    output.push({\n      json: {\n        ...row,\n        _spreadsheet_id: data.spreadsheet_id\n      }\n    });\n  });\n});\n\nreturn output.length > 0 ? output : [{ json: { noClientData: true } }];"
+      },
+      "id": "21e8d9ae-63dc-4f15-9fa1-2f329e02c690",
+      "name": "Маршрутизация по клиентам",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-client-data",
+              "leftValue": "={{ $json.noClientData }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a0594906-8022-47c3-bcd5-1d2b6ea0a40b",
+      "name": "Есть данные клиента?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -752,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Обновляем статус в очереди после успешного сохранения\nconst performanceData = $('Parse Performance Data').first().json;\nconst originUrl = $('Проверка статуса задачи').first().json.originUrl || '';\n\n// Извлекаем queue_id из URL\nconst qidMatch = originUrl.match(/qid=([^&]+)/);\nconst queueId = qidMatch ? decodeURIComponent(qidMatch[1]) : '';\n\nconst now = new Date().toISOString().replace('T', ' ').substring(0, 19);\n\nreturn [{\n  json: {\n    queue_id: queueId,\n    status: 'done',\n    task_id: performanceData.taskId\n  }\n}];"
+      },
+      "id": "136194de-6ef5-4fba-ac02-d013adc3ff8e",
+      "name": "Подготовка обновления очереди",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Формируем отчёт из Performance данных v4.0\n// v4: Только Engagement (каналы в отдельном роботе)\nconst data = $('Parse Performance Data').first().json;\n\nlet report = '📊 <b>SimilarWeb Engagement</b>\\n';\nreport += `📅 ${data.periodFormatted}\\n`;\nreport += `👤 Клиент: ${data.clientSite}\\n\\n`;\n\nconst engagement = data.engagement;\nif (engagement && Object.keys(engagement).length > 0) {\n  report += '━━━━━━━━━━━━━━━━━━━━━\\n';\n  report += '📈 <b>ENGAGEMENT</b>\\n';\n  report += '━━━━━━━━━━━━━━━━━━━━━\\n\\n';\n  \n  Object.entries(engagement).forEach(([site, metrics], idx) => {\n    const siteEmoji = site === data.clientSite ? '🔵' : '🟠';\n    report += `${siteEmoji} <b>${site}</b>\\n`;\n    if (metrics.monthlyVisits) report += `   📊 Monthly Visits: ${metrics.monthlyVisits}\\n`;\n    if (metrics.uniqueVisitors) report += `   👥 Unique Visitors: ${metrics.uniqueVisitors}\\n`;\n    if (metrics.visitDuration) report += `   ⏱ Visit Duration: ${metrics.visitDuration}\\n`;\n    if (metrics.pagesPerVisit) report += `   📄 Pages/Visit: ${metrics.pagesPerVisit}\\n`;\n    if (metrics.bounceRate) report += `   📉 Bounce Rate: ${metrics.bounceRate}\\n`;\n    report += '\\n';\n  });\n} else {\n  report += '⚠️ Нет данных Engagement\\n';\n}\n\nreport += '━━━━━━━━━━━━━━━━━━━━━\\n';\nreport += '✅ Engagement сохранён';\n\nreturn [{\n  json: {\n    report,\n    ...data\n  }\n}];"
+      },
+      "id": "9bb69b53-0465-4490-acac-d58d360da25c",
+      "name": "Format Performance Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "={{ $json.report }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "08c55fdc-1366-4ad4-a690-73b5c33c38e0",
+      "name": "Telegram: Performance",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        288
+      ],
+      "webhookId": "d95e8d2d-b66c-4ced-a7fc-c90b43ce5a46",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Парсер AI Traffic данных v2.3\n// Исправлено извлечение периода из разных источников\nconst input = $input.first().json;\n\nconst body = input.body || input;\nconst taskStatus = body?.task?.status || input.taskStatus;\nconst inputSites = input.sites || [];\n\n// Early return with proper format if not successful\nif (taskStatus !== 'successful' && taskStatus !== 'completed') {\n  return [{\n    json: {\n      error: 'Task not successful',\n      taskStatus,\n      sheetsRows: []\n    }\n  }];\n}\n\nconst rawData = body?.task?.capturedTexts || {};\nconst taskId = body?.task?.id || input.taskId || 'unknown';\nconst originUrl = body?.task?.inputParameters?.originUrl || input.originUrl || '';\n\nconst keyMatch = originUrl.match(/key=([^&]+)/);\nlet sitesFromUrl = [];\nif (keyMatch) {\n  sitesFromUrl = decodeURIComponent(keyMatch[1]).split(',');\n}\nconst clientSite = sitesFromUrl[0] || '';\n\n// Извлекаем queueId для связки с очередью\nconst qidMatch = originUrl.match(/qid=([^&]+)/);\nconst queueId = qidMatch ? qidMatch[1] : '';\n\n// Извлекаем период из разных источников\nlet periodFormatted = '';\n// 1. Из URL формата /804/2025.01- (поддержка 1 и 2 цифр месяца)\nconst periodUrlMatch = originUrl.match(/\\/804\\/(\\d{4}\\.\\d{1,2})-/);\nif (periodUrlMatch) {\n  const [y, m] = periodUrlMatch[1].split('.');\n  periodFormatted = y + '.' + m.padStart(2, '0');\n}\n// 2. Из queueId формата site_2025.01_chunk\nif (!periodFormatted && queueId) {\n  const queuePeriodMatch = queueId.match(/_(\\d{4}\\.\\d{1,2})_/);\n  if (queuePeriodMatch) {\n    const [y, m] = queuePeriodMatch[1].split('.');\n    periodFormatted = y + '.' + m.padStart(2, '0');\n  }\n}\n// 3. Текущий месяц как fallback\nif (!periodFormatted) {\n  const now = new Date();\n  periodFormatted = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;\n}\n\nlet data = {};\nif (Array.isArray(rawData)) {\n  rawData.forEach(item => {\n    const key = item.name || item.key;\n    const value = item.newText || item.text || item.value;\n    if (key && value) data[key] = value;\n  });\n} else {\n  data = rawData;\n}\n\n// Универсальная функция извлечения данных AI Traffic\nfunction extractLegendData(html) {\n  if (!html) return {};\n  const sites = {};\n\n  const patterns = [\n    // data-automation атрибуты (стабильные)\n    /data-automation-title=\"true\"[^>]*>([^<]+)<\\/label>[\\s\\S]*?data-automation-value=\"true\"[^>]*>([^<]+)<\\/label>/gs,\n    // Динамические классы SimilarWeb\n    /class=\"[^\"]*\"[^>]*>([a-zA-Z0-9][a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})<\\/label>[\\s\\S]{0,200}?<label[^>]*class=\"[^\"]*\"[^>]*>([\\d,]+|N\\/A)<\\/label>/g,\n    // Fallback: label пары с доменами\n    /<label[^>]*>([a-zA-Z0-9][a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})<\\/label>[\\s\\S]{0,200}?<label[^>]*>([\\d,]+|N\\/A)<\\/label>/g\n  ];\n\n  patterns.forEach(pattern => {\n    let match;\n    while ((match = pattern.exec(html)) !== null) {\n      const site = match[1].trim();\n      const value = match[2].trim();\n      if (site && value && site.includes('.') && /^[a-zA-Z0-9]/.test(site)) {\n        if (!sites[site]) sites[site] = value;\n      }\n    }\n  });\n  return sites;\n}\n\nconst aiTraffic = extractLegendData(data['Avg Traffic']);\nconst today = new Date().toISOString().split('T')[0];\n\n// Собираем сайты с fallback\nconst allSites = Object.keys(aiTraffic);\nif (allSites.length === 0 && sitesFromUrl.length > 0) {\n  sitesFromUrl.forEach(site => allSites.push(site));\n}\nif (allSites.length === 0 && inputSites.length > 0) {\n  inputSites.forEach(site => allSites.push(site));\n}\n\n// Полная структура строки (20 колонок) - как в Performance парсере\nconst sheetsRows = allSites.map((site) => ({\n  'date': today,\n  'period': periodFormatted,\n  'client_site': clientSite,\n  'site': site,\n  'type': site === clientSite ? 'client' : 'competitor',\n  'Monthly Visits': '',\n  'Unique Visitors': '',\n  'Visit Duration': '',\n  'Pages/Visit': '',\n  'Bounce Rate': '',\n  'Direct': '',\n  'Organic Search': '',\n  'Paid Search': '',\n  'Display Ads': '',\n  'Social': '',\n  'Email': '',\n  'AI Traffic': aiTraffic[site] || 'N/A',\n  'Task ID': taskId,\n  'Queue ID': queueId,\n  'key': `${periodFormatted}_${site}`\n}));\n\nreturn [{\n  json: {\n    taskId,\n    queueId,\n    type: 'aitraffic',\n    clientSite,\n    periodFormatted,\n    aiTraffic,\n    sheetsRows,\n    sitesCount: allSites.length,\n    raw: data\n  }\n}];\n"
+      },
+      "id": "94a09be5-80e2-4b46-b149-fea4e2f07d51",
+      "name": "Parse AI Traffic Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sheetsRows",
+        "options": {}
+      },
+      "id": "29a84f35-e825-4980-beff-f1813757d4ce",
+      "name": "Split Out: AI Traffic",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id",
+          "cachedResultName": "Клиенты"
+        },
+        "options": {}
+      },
+      "id": "de1410ac-ff65-4c33-8d70-daf3bd1ae0ef",
+      "name": "Читаем Клиенты для AI",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1408,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Маршрутизация AI Traffic данных в таблицу клиента\nconst clients = $('Читаем Клиенты для AI').all();\nconst aiRows = $('Split Out: AI Traffic').all();\n\n// Создаём мапу client_site -> spreadsheet_id\nconst clientMap = new Map();\nclients.forEach(c => {\n  if (c.json.client_site && c.json.spreadsheet_id) {\n    clientMap.set(c.json.client_site, c.json.spreadsheet_id);\n  }\n});\n\n// Группируем данные по клиентам\nconst output = [];\n\naiRows.forEach(row => {\n  const clientSite = row.json.client_site;\n  const spreadsheetId = clientMap.get(clientSite);\n  \n  if (spreadsheetId) {\n    output.push({\n      json: {\n        ...row.json,\n        _spreadsheet_id: spreadsheetId\n      }\n    });\n  }\n});\n\nreturn output.length > 0 ? output : [{ json: { noClientData: true } }];"
+      },
+      "id": "0efca318-405d-48f0-a070-4bb042642b3f",
+      "name": "Маршрутизация AI по клиентам",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-ai-client-data",
+              "leftValue": "={{ $json.noClientData }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4d21bfea-09cd-4c75-9bc9-622a6f87215e",
+      "name": "Есть AI данные клиента?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -960,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Формируем отчёт из AI Traffic данных\nconst data = $('Parse AI Traffic Data').first().json;\n\nlet report = '🤖 <b>AI TRAFFIC</b>\\n';\nreport += `📅 ${data.periodFormatted}\\n`;\nreport += '━━━━━━━━━━━━━━━━━━━━━\\n\\n';\n\nconst aiTraffic = data.aiTraffic || {};\n\nif (Object.keys(aiTraffic).length > 0) {\n  Object.entries(aiTraffic).forEach(([site, value], idx) => {\n    const emoji = idx === 0 ? '🔵' : idx === 1 ? '🟠' : idx === 2 ? '🟢' : '🟡';\n    report += `${emoji} ${site}: <b>${value}</b>\\n`;\n  });\n} else {\n  report += 'Нет данных по AI Traffic\\n';\n}\n\nreport += '\\n━━━━━━━━━━━━━━━━━━━━━\\n';\nreport += '✅ AI Traffic сохранён';\n\nreturn [{\n  json: {\n    report,\n    ...data\n  }\n}];"
+      },
+      "id": "ebd85901-8c86-4913-b698-0a32ba872c5d",
+      "name": "Format AI Traffic Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "={{ $json.report }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "2828e0c2-4aa7-4035-b319-6823b2f6d5c3",
+      "name": "Telegram: AI Traffic",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1424,
+        576
+      ],
+      "webhookId": "47978784-7cd7-48fd-a4a1-b564e65c92ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 807869987,
+          "mode": "list",
+          "cachedResultName": "Очередь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU/edit#gid=807869987"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "queue_id"
+          ],
+          "schema": [
+            {
+              "id": "queue_id",
+              "displayName": "queue_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "893956ee-a964-4d91-b717-c50457a3f8a5",
+      "name": "Обновляем статус очереди: done",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -752,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ЗАДАЧА №1: Проверка и создание папок клиентов на Google Drive\n// Извлекаем уникальных клиентов из списка конкурентов\nconst competitors = $('Читаем всех конкурентов').all();\n\n// Собираем уникальных клиентов\nconst uniqueClients = new Set();\ncompetitors.forEach(row => {\n  const client = row.json.client_site;\n  if (client) {\n    uniqueClients.add(client);\n  }\n});\n\n// Возвращаем список клиентов для проверки папок\nconst clients = Array.from(uniqueClients).map(client => ({\n  json: {\n    client_site: client,\n    folder_name: client // Имя папки = имя сайта клиента\n  }\n}));\n\nconsole.log(`Found ${clients.length} unique clients`);\nreturn clients;"
+      },
+      "id": "1f1ec437-5c01-4edb-b7b6-813bc852f5a8",
+      "name": "Извлекаем уникальных клиентов",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Проверяем папку клиента через Google Drive API\n// Обрабатываем текущий элемент из списка клиентов\nconst clientSite = $input.item.json.client_site;\nconst parentFolderId = '1Z069NZFgLq1zBS9EM3fKLFfkyq8BO1h9';\n\n// Передаём данные для HTTP Request и сохраняем client_site в output\nreturn {\n  client_site: clientSite,\n  folder_name: clientSite,\n  parent_folder_id: parentFolderId,\n  query: `mimeType='application/vnd.google-apps.folder' and name='${clientSite}' and '${parentFolderId}' in parents and trashed=false`\n};"
+      },
+      "id": "9bbecbeb-02dd-4f0a-bebc-491cc611f95f",
+      "name": "Подготовка запроса Drive",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d4c3a1b-bd9d-461d-a894-1d5375628d26",
+      "name": "Поиск папки клиента",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1632,
+        -1200
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Nl36H51nJBoCaf67",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Анализируем результат поиска папки\nconst files = $input.item.json.files || [];\nconst clientSite = $('Подготовка запроса Drive').item.json.client_site;\n\nconst folderExists = files.length > 0;\nconst folderId = folderExists ? files[0].id : null;\n\nreturn {\n  client_site: clientSite,\n  folder_exists: folderExists,\n  folder_id: folderId,\n  folder_name: clientSite\n};"
+      },
+      "id": "f23945eb-c450-4046-85e8-c1924af7e8c5",
+      "name": "Анализ результата поиска",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "folder-exists-check",
+              "leftValue": "={{ $json.folder_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5f026d40-d05f-4784-a696-1a1dca70d4bf",
+      "name": "Папка существует?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1424,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.folder_name }}\",\n  \"mimeType\": \"application/vnd.google-apps.folder\",\n  \"parents\": [\"1Z069NZFgLq1zBS9EM3fKLFfkyq8BO1h9\"]\n}",
+        "options": {}
+      },
+      "id": "ae81c3fa-5627-469e-ab9c-3c70afd79c4a",
+      "name": "Создаём папку клиента",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1200,
+        -1280
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Nl36H51nJBoCaf67",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"SimilarWeb Data - {{ $('Папка существует?').item.json.client_site }}\",\n  \"mimeType\": \"application/vnd.google-apps.spreadsheet\",\n  \"parents\": [\"{{ $json.id }}\"]\n}",
+        "options": {}
+      },
+      "id": "396b089a-2c99-42b1-be19-ab970023eb3e",
+      "name": "Создаём таблицу клиента",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -976,
+        -1280
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Nl36H51nJBoCaf67",
+          "name": "Google Drive for n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"addSheet\": {\n        \"properties\": {\n          \"title\": \"Данные\"\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "d5ab5235-7024-4238-9c47-91b28d37373a",
+      "name": "Создаём лист Данные",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -800,
+        -1328
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Создаём таблицу клиента\").item.json.id }}/values/Данные!A1:T1?valueInputOption=USER_ENTERED",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"values\": [[\n    \"date\",\n    \"period\",\n    \"client_site\",\n    \"site\",\n    \"type\",\n    \"Monthly Visits\",\n    \"Unique Visitors\",\n    \"Visit Duration\",\n    \"Pages/Visit\",\n    \"Bounce Rate\",\n    \"Direct\",\n    \"Organic Search\",\n    \"Paid Search\",\n    \"Display Ads\",\n    \"Social\",\n    \"Email\",\n    \"AI Traffic\",\n    \"Task ID\",\n    \"Queue ID\",\n    \"key\"\n  ]]\n}",
+        "options": {}
+      },
+      "id": "2da7845a-2b5e-46d7-ad7b-07d996d4d564",
+      "name": "Записываем заголовки",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -688,
+        -1200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ftyhDQ0px7gI1mjbZB-lFY8hyTQeM4Gy1mlHHnXoNPU",
+          "mode": "list",
+          "cachedResultName": "Comparing SimilarWeb"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id",
+          "cachedResultName": "Клиенты"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "client_site": "={{ $('Папка существует?').item.json.client_site }}",
+            "folder_id": "={{ $('Создаём папку клиента').item.json.id }}",
+            "spreadsheet_id": "={{ $('Создаём таблицу клиента').item.json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_site",
+              "displayName": "client_site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_email",
+              "displayName": "employee_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_status",
+              "displayName": "client_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "folder_id",
+              "displayName": "folder_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "spreadsheet_id",
+              "displayName": "spreadsheet_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c579df43-35a1-43d8-85cf-06f068852140",
+      "name": "Сохраняем клиента",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -448,
+        -1296
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=📁 <b>Новый клиент</b>\n\n🌐 Сайт: {{ $('Папка существует?').item.json.client_site }}\n✅ Создана папка на Google Drive\n📊 Создана таблица: {{ $('Создаём таблицу клиента').item.json.id }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "b9b24e55-a9c8-4965-b9ef-f25b7a0773ef",
+      "name": "Telegram: Новый клиент",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -1152
+      ],
+      "webhookId": "eb54ce77-5fc9-41ba-adad-5a89b2ca09f4",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json._spreadsheet_id }}/values/Данные!A:T",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "bf7186a4-16ac-4b08-a530-f8cabf1f5087",
+      "name": "Читаем таблицу для upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -528,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Upsert логика: найти строку по period+site и обновить, или добавить новую\nconst inputData = $('Есть данные клиента?').all();\nconst sheetResponse = $input.first().json;\nconst sheetValues = sheetResponse.values || [];\n\n// Получаем spreadsheet_id из первого item\nconst spreadsheetId = inputData[0]?.json._spreadsheet_id;\n\n// Нормализация периода: 2025.2 -> 2025.02\nfunction normPeriod(p) {\n  const s = String(p || '');\n  const parts = s.split('.');\n  if (parts.length === 2) return parts[0] + '.' + parts[1].padStart(2, '0');\n  return s;\n}\n\n// Создаём индекс существующих строк: \"period_site\" -> rowIndex\nconst existingRows = new Map();\nfor (let i = 1; i < sheetValues.length; i++) { // Skip header row\n  const row = sheetValues[i];\n  const period = normPeriod(row[1]); // Column B = period\n  const site = row[3] || '';   // Column D = site\n  const key = `${period}_${site}`;\n  existingRows.set(key, {\n    rowIndex: i + 1, // 1-based for Sheets API\n    rowData: row\n  });\n}\n\nconst results = [];\n\nfor (const item of inputData) {\n  const row = item.json;\n  const key = `${normPeriod(row.period)}_${row.site}`;\n  const existing = existingRows.get(key);\n  \n  // Подготавливаем данные строки\n  const newRowData = [\n    row.date || '',\n    row.period || '',\n    row.client_site || '',\n    row.site || '',\n    row.type || '',\n    row['Monthly Visits'] || '',\n    row['Unique Visitors'] || '',\n    row['Visit Duration'] || '',\n    row['Pages/Visit'] || '',\n    row['Bounce Rate'] || '',\n    row.Direct || '',\n    row['Organic Search'] || '',\n    row['Paid Search'] || '',\n    row['Display Ads'] || '',\n    row.Social || '',\n    row.Email || '',\n    row['AI Traffic'] || '',\n    row['Task ID'] || '',\n    row['Queue ID'] || '',\n    row.key || ''\n  ];\n  \n  if (existing) {\n    // Merge: сохраняем существующие данные где новые пустые\n    const mergedData = newRowData.map((newVal, idx) => {\n      if (newVal === '' && existing.rowData[idx]) {\n        return existing.rowData[idx];\n      }\n      return newVal;\n    });\n    \n    results.push({\n      json: {\n        action: 'update',\n        spreadsheetId,\n        rowIndex: existing.rowIndex,\n        range: `Данные!A${existing.rowIndex}:T${existing.rowIndex}`,\n        values: [mergedData]\n      }\n    });\n  } else {\n    results.push({\n      json: {\n        action: 'append',\n        spreadsheetId,\n        values: [newRowData]\n      }\n    });\n  }\n}\n\nreturn results;\n"
+      },
+      "id": "28f4b91f-6797-49bc-8c2d-6e5ccc564fa3",
+      "name": "Upsert логика Performance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-update",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "update",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "27aec078-ae4b-4261-80e2-0bad30d4d606",
+      "name": "Update или Append?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/{{ $json.range }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "b13c00c8-3d3e-47f9-9d13-4b6d294e0f4f",
+      "name": "Update строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Данные!A:T:append",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            },
+            {
+              "name": "insertDataOption",
+              "value": "INSERT_ROWS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "aeaf00b1-707f-430f-942d-d8ebbf8a4c3f",
+      "name": "Append строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        496
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json._spreadsheet_id }}/values/Данные!A:T",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "a13d465a-5cc4-4371-b1c0-a992131c9913",
+      "name": "Читаем таблицу для AI upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -736,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Upsert логика AI Traffic: найти строку по period+site и обновить AI Traffic\nconst inputData = $('Есть AI данные клиента?').all();\nconst sheetResponse = $input.first().json;\nconst sheetValues = sheetResponse.values || [];\n\nconst spreadsheetId = inputData[0]?.json._spreadsheet_id;\n\n// Нормализация периода: 2025.2 -> 2025.02\nfunction normPeriod(p) {\n  const s = String(p || '');\n  const parts = s.split('.');\n  if (parts.length === 2) return parts[0] + '.' + parts[1].padStart(2, '0');\n  return s;\n}\n\n// Создаём индекс существующих строк\nconst existingRows = new Map();\nfor (let i = 1; i < sheetValues.length; i++) {\n  const row = sheetValues[i];\n  const period = normPeriod(row[1]);\n  const site = row[3] || '';\n  const key = `${period}_${site}`;\n  existingRows.set(key, {\n    rowIndex: i + 1,\n    rowData: row\n  });\n}\n\nconst results = [];\n\nfor (const item of inputData) {\n  const row = item.json;\n  const key = `${normPeriod(row.period)}_${row.site}`;\n  const existing = existingRows.get(key);\n  \n  const newRowData = [\n    row.date || '',\n    row.period || '',\n    row.client_site || '',\n    row.site || '',\n    row.type || '',\n    row['Monthly Visits'] || '',\n    row['Unique Visitors'] || '',\n    row['Visit Duration'] || '',\n    row['Pages/Visit'] || '',\n    row['Bounce Rate'] || '',\n    row.Direct || '',\n    row['Organic Search'] || '',\n    row['Paid Search'] || '',\n    row['Display Ads'] || '',\n    row.Social || '',\n    row.Email || '',\n    row['AI Traffic'] || '',\n    row['Task ID'] || '',\n    row['Queue ID'] || '',\n    row.key || ''\n  ];\n  \n  if (existing) {\n    const mergedData = newRowData.map((newVal, idx) => {\n      if (newVal === '' && existing.rowData[idx]) {\n        return existing.rowData[idx];\n      }\n      return newVal;\n    });\n    \n    results.push({\n      json: {\n        action: 'update',\n        spreadsheetId,\n        rowIndex: existing.rowIndex,\n        range: `Данные!A${existing.rowIndex}:T${existing.rowIndex}`,\n        values: [mergedData]\n      }\n    });\n  } else {\n    results.push({\n      json: {\n        action: 'append',\n        spreadsheetId,\n        values: [newRowData]\n      }\n    });\n  }\n}\n\nreturn results;\n"
+      },
+      "id": "6f2bfcc5-0710-4076-b9fd-563b9cfe9b79",
+      "name": "Upsert логика AI Traffic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-update-ai",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "update",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6a02a288-519c-4d43-ac44-dad202a8c7b3",
+      "name": "AI Update или Append?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/{{ $json.range }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "bacb0aa5-513f-4316-963c-3db6777ba9c6",
+      "name": "AI Update строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/Данные!A:T:append",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueInputOption",
+              "value": "USER_ENTERED"
+            },
+            {
+              "name": "insertDataOption",
+              "value": "INSERT_ROWS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "options": {}
+      },
+      "id": "5574f705-6123-46c7-a894-62c1d0377fa7",
+      "name": "AI Append строку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        512
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hMp9ISVYVcdpImYl",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron: Проверка полноты (2x в день)": {
+      "main": [
+        [
+          {
+            "node": "Читаем всех конкурентов",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Читаем очередь (проверка)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем всех конкурентов": {
+      "main": [
+        [
+          {
+            "node": "Объединяем данные",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Извлекаем уникальных клиентов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Объединяем данные": {
+      "main": [
+        [
+          {
+            "node": "Анализ полноты данных",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализ полноты данных": {
+      "main": [
+        [
+          {
+            "node": "Есть новые задачи?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть новые задачи?": {
+      "main": [
+        [
+          {
+            "node": "Добавляем в очередь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Добавляем в очередь": {
+      "main": [
+        []
+      ]
+    },
+    "Cron: Обработка очереди": {
+      "main": [
+        [
+          {
+            "node": "Читаем очередь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем очередь": {
+      "main": [
+        [
+          {
+            "node": "Filter: Только pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем очередь (проверка)": {
+      "main": [
+        [
+          {
+            "node": "Объединяем данные",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Filter: Только pending": {
+      "main": [
+        [
+          {
+            "node": "Подготовка задач (макс 9)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка задач (макс 9)": {
+      "main": [
+        [
+          {
+            "node": "Рандомная пауза",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Рандомная пауза": {
+      "main": [
+        [
+          {
+            "node": "Подготовка URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка URL": {
+      "main": [
+        [
+          {
+            "node": "Статус: processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Статус: processing": {
+      "main": [
+        [
+          {
+            "node": "Запуск Performance Robot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запуск Performance Robot": {
+      "main": [
+        [
+          {
+            "node": "Ждём Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ждём Performance": {
+      "main": [
+        [
+          {
+            "node": "Запуск Marketing Channels Robot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запуск Marketing Channels Robot": {
+      "main": [
+        [
+          {
+            "node": "Ждём Marketing Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ждём Marketing Channels": {
+      "main": [
+        [
+          {
+            "node": "Запуск AI Traffic Robot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Performance Results": {
+      "main": [
+        [
+          {
+            "node": "Проверка статуса задачи",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка статуса задачи": {
+      "main": [
+        [
+          {
+            "node": "Ошибка или успех?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ошибка или успех?": {
+      "main": [
+        [
+          {
+            "node": "Логируем ошибку",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Performance Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Логируем ошибку": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Performance Data": {
+      "main": [
+        [
+          {
+            "node": "Split Out: Performance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format Performance Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out: Performance": {
+      "main": [
+        [
+          {
+            "node": "Подготовка обновления очереди",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Читаем Клиенты",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем Клиенты": {
+      "main": [
+        [
+          {
+            "node": "Маршрутизация по клиентам",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрутизация по клиентам": {
+      "main": [
+        [
+          {
+            "node": "Есть данные клиента?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть данные клиента?": {
+      "main": [
+        [
+          {
+            "node": "Читаем таблицу для upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Performance Report": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: AI Traffic Results": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Traffic Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Traffic Data": {
+      "main": [
+        [
+          {
+            "node": "Split Out: AI Traffic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format AI Traffic Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out: AI Traffic": {
+      "main": [
+        [
+          {
+            "node": "Читаем Клиенты для AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем Клиенты для AI": {
+      "main": [
+        [
+          {
+            "node": "Маршрутизация AI по клиентам",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрутизация AI по клиентам": {
+      "main": [
+        [
+          {
+            "node": "Есть AI данные клиента?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть AI данные клиента?": {
+      "main": [
+        [
+          {
+            "node": "Читаем таблицу для AI upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Traffic Report": {
+      "main": [
+        [
+          {
+            "node": "Telegram: AI Traffic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка обновления очереди": {
+      "main": [
+        [
+          {
+            "node": "Обновляем статус очереди: done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Извлекаем уникальных клиентов": {
+      "main": [
+        [
+          {
+            "node": "Подготовка запроса Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовка запроса Drive": {
+      "main": [
+        [
+          {
+            "node": "Поиск папки клиента",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Поиск папки клиента": {
+      "main": [
+        [
+          {
+            "node": "Анализ результата поиска",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализ результата поиска": {
+      "main": [
+        [
+          {
+            "node": "Папка существует?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Папка существует?": {
+      "main": [
+        [
+          {
+            "node": "Создаём папку клиента",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Создаём папку клиента": {
+      "main": [
+        [
+          {
+            "node": "Создаём таблицу клиента",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Создаём таблицу клиента": {
+      "main": [
+        [
+          {
+            "node": "Создаём лист Данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Создаём лист Данные": {
+      "main": [
+        [
+          {
+            "node": "Записываем заголовки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Записываем заголовки": {
+      "main": [
+        [
+          {
+            "node": "Сохраняем клиента",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохраняем клиента": {
+      "main": [
+        []
+      ]
+    },
+    "Читаем таблицу для upsert": {
+      "main": [
+        [
+          {
+            "node": "Upsert логика Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert логика Performance": {
+      "main": [
+        [
+          {
+            "node": "Update или Append?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update или Append?": {
+      "main": [
+        [
+          {
+            "node": "Update строку",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append строку",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем таблицу для AI upsert": {
+      "main": [
+        [
+          {
+            "node": "Upsert логика AI Traffic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert логика AI Traffic": {
+      "main": [
+        [
+          {
+            "node": "AI Update или Append?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Update или Append?": {
+      "main": [
+        [
+          {
+            "node": "AI Update строку",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Append строку",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Marketing Channels Results": {
+      "main": [
+        [
+          {
+            "node": "Parse Marketing Channels Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Marketing Channels Data": {
+      "main": [
+        [
+          {
+            "node": "Split Out: Marketing Channels",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format MC Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out: Marketing Channels": {
+      "main": [
+        [
+          {
+            "node": "Читаем Клиенты для MC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем Клиенты для MC": {
+      "main": [
+        [
+          {
+            "node": "Маршрутизация MC по клиентам",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрутизация MC по клиентам": {
+      "main": [
+        [
+          {
+            "node": "Есть MC данные клиента?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть MC данные клиента?": {
+      "main": [
+        [
+          {
+            "node": "Читаем таблицу для MC upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем таблицу для MC upsert": {
+      "main": [
+        [
+          {
+            "node": "Upsert логика MC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert логика MC": {
+      "main": [
+        [
+          {
+            "node": "MC Update или Append?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MC Update или Append?": {
+      "main": [
+        [
+          {
+            "node": "MC Update строку",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MC Append строку",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format MC Report": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Marketing Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "QQu2DVSfdVpU9Rhw",
+    "timeSavedPerExecution": 500
+  },
+  "versionId": "e9d0289d-30c9-452c-af9c-bbc8523ca562",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
+  },
+  "id": "C5gcCnSahblLUIjZ",
+  "tags": []
+}
