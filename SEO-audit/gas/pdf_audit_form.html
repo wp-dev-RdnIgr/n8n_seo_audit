@@ -118,6 +118,63 @@
       margin: 20px 0;
     }
 
+    /* Competitor list */
+    .competitor-list { display: flex; flex-direction: column; gap: 12px; }
+    .competitor-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .competitor-num {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: #ede9fe;
+      color: #7c3aed;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .competitor-row .input-wrapper { flex: 1; }
+    .competitor-row input[type="text"] {
+      padding: 12px 12px 12px 40px;
+      font-size: 13px;
+    }
+    .btn-remove {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1.5px solid #fecaca;
+      background: #fff;
+      color: #dc2626;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .btn-remove:hover { background: #fee2e2; }
+    .btn-remove.hidden { visibility: hidden; pointer-events: none; }
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #7c3aed;
+      background: #f5f3ff;
+      border: 1.5px dashed #c4b5fd;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+    .btn-add:hover { background: #ede9fe; border-color: #a78bfa; }
+
     .btn {
       width: 100%;
       padding: 15px;
@@ -306,42 +363,40 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECTION 1: AI Domain Analysis                -->
+    <!-- SECTION 1: AI Competitor Analysis             -->
     <!-- ============================================ -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon ai">&#129302;</div>
         <div>
-          <div class="card-title">AI аналіз домену</div>
-          <div class="card-desc">Згенерувати AI-звіт з рекомендаціями на основі таблиці аналізу домену</div>
+          <div class="card-title">AI аналіз конкурентів</div>
+          <div class="card-desc">Згенерувати зведений AI-звіт по всіх конкурентах в один Google-документ</div>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Посилання на таблицю з аналізом домену</label>
-        <div class="input-wrapper">
-          <span class="input-icon">&#128279;</span>
-          <input
-            type="text"
-            id="aiSpreadsheetUrl"
-            placeholder="https://docs.google.com/spreadsheets/d/..."
-          >
+        <label>Таблиці з аналізом конкурентів</label>
+        <div class="competitor-list" id="competitorList">
+          <div class="competitor-row" data-index="0">
+            <div class="competitor-num">1</div>
+            <div class="input-wrapper">
+              <span class="input-icon">&#128279;</span>
+              <input type="text" class="competitor-url" placeholder="https://docs.google.com/spreadsheets/d/...">
+            </div>
+            <button class="btn-remove hidden" onclick="removeCompetitor(this)" title="Видалити">&#10005;</button>
+          </div>
         </div>
-        <p class="input-hint">Google Sheets таблиця з результатами аналізу домену</p>
+        <button class="btn-add" id="addCompetitorBtn" onclick="addCompetitor()">+ Додати конкурента</button>
+        <p class="input-hint">Google Sheets таблиця з результатами аналізу кожного конкурента</p>
       </div>
 
       <button class="btn btn-ai" id="aiSubmitBtn" onclick="handleAiSubmit()">
         <span>&#129302; Запустити AI аналіз</span>
       </button>
 
-      <div class="time-note">&#9203; Орієнтовний час: 2-4 хв</div>
+      <div class="time-note">&#9203; ~3-5 хв на кожного конкурента</div>
 
-      <div class="progress-steps" id="aiProgress">
-        <div class="progress-step" id="aiStep1">
-          <div class="step-icon"></div>
-          <span>Генерація AI-звіту по домену...</span>
-        </div>
-      </div>
+      <div class="progress-steps" id="aiProgress"></div>
 
       <div class="result" id="aiResult"></div>
     </div>
@@ -394,33 +449,100 @@
 
   <script>
     // ============================================
-    // SECTION 1: AI Domain Analysis
+    // SECTION 1: AI Competitor Analysis
     // ============================================
 
+    var competitorCounter = 1;
+
+    function addCompetitor() {
+      competitorCounter++;
+      var list = document.getElementById('competitorList');
+      var row = document.createElement('div');
+      row.className = 'competitor-row';
+      row.dataset.index = competitorCounter - 1;
+      row.innerHTML =
+        '<div class="competitor-num">' + competitorCounter + '</div>' +
+        '<div class="input-wrapper">' +
+          '<span class="input-icon">&#128279;</span>' +
+          '<input type="text" class="competitor-url" placeholder="https://docs.google.com/spreadsheets/d/...">' +
+        '</div>' +
+        '<button class="btn-remove" onclick="removeCompetitor(this)" title="Видалити">&#10005;</button>';
+      list.appendChild(row);
+      row.querySelector('input').focus();
+      renumberCompetitors();
+    }
+
+    function removeCompetitor(btn) {
+      var row = btn.closest('.competitor-row');
+      row.remove();
+      renumberCompetitors();
+    }
+
+    function renumberCompetitors() {
+      var rows = document.querySelectorAll('.competitor-row');
+      competitorCounter = rows.length;
+      rows.forEach(function(row, i) {
+        row.querySelector('.competitor-num').textContent = i + 1;
+        var removeBtn = row.querySelector('.btn-remove');
+        if (rows.length <= 1) {
+          removeBtn.classList.add('hidden');
+        } else {
+          removeBtn.classList.remove('hidden');
+        }
+      });
+    }
+
+    function getCompetitorUrls() {
+      var inputs = document.querySelectorAll('.competitor-url');
+      var urls = [];
+      for (var i = 0; i < inputs.length; i++) {
+        var val = inputs[i].value.trim();
+        if (val) urls.push(val);
+      }
+      return urls;
+    }
+
+    function buildProgressSteps(count) {
+      var html = '';
+      for (var i = 0; i < count; i++) {
+        html += '<div class="progress-step" id="aiStepComp' + i + '">' +
+          '<div class="step-icon"></div>' +
+          '<span>Конкурент ' + (i + 1) + ': аналіз...</span>' +
+        '</div>';
+      }
+      html += '<div class="progress-step" id="aiStepDoc">' +
+        '<div class="step-icon"></div>' +
+        '<span>Формування зведеного документа...</span>' +
+      '</div>';
+      return html;
+    }
+
     function handleAiSubmit() {
-      var urlInput = document.getElementById('aiSpreadsheetUrl');
       var submitBtn = document.getElementById('aiSubmitBtn');
       var resultDiv = document.getElementById('aiResult');
+      var progressEl = document.getElementById('aiProgress');
 
-      var spreadsheetUrl = urlInput.value.trim();
+      var urls = getCompetitorUrls();
 
-      if (!spreadsheetUrl) {
-        showAiError('Вставте посилання на таблицю з аналізом домену');
+      if (urls.length === 0) {
+        showAiError('Додайте хоча б одне посилання на таблицю конкурента');
         return;
       }
 
-      if (!spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
-        showAiError('Невірний формат. Має бути Google Sheets URL');
-        return;
+      for (var i = 0; i < urls.length; i++) {
+        if (!urls[i].includes('docs.google.com/spreadsheets')) {
+          showAiError('Конкурент ' + (i + 1) + ': невірний формат. Має бути Google Sheets URL');
+          return;
+        }
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner"></span><span>Обробка...</span>';
+      submitBtn.innerHTML = '<span class="spinner"></span><span>Обробка ' + urls.length + ' конкурент(ів)...</span>';
       resultDiv.style.display = 'none';
 
-      var progressEl = document.getElementById('aiProgress');
+      progressEl.innerHTML = buildProgressSteps(urls.length);
       progressEl.classList.add('visible');
-      setStepState('aiStep1', 'active');
+      setStepState('aiStepComp0', 'active');
 
       google.script.run
         .withSuccessHandler(function(response) {
@@ -428,20 +550,22 @@
           submitBtn.innerHTML = '<span>&#129302; Запустити AI аналіз</span>';
 
           if (response.success) {
-            setStepState('aiStep1', 'done');
+            // Mark all steps done
+            for (var i = 0; i < urls.length; i++) {
+              setStepState('aiStepComp' + i, 'done');
+            }
+            setStepState('aiStepDoc', 'done');
             showAiSuccess(response);
           } else {
-            setStepState('aiStep1', 'error');
             showAiError(response.error || 'Невідома помилка');
           }
         })
         .withFailureHandler(function(error) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>&#129302; Запустити AI аналіз</span>';
-          setStepState('aiStep1', 'error');
           showAiError('Помилка: ' + error.message);
         })
-        .submitAIAnalysis(spreadsheetUrl);
+        .submitAIAnalysis({ urls: urls });
     }
 
     function showAiSuccess(data) {
@@ -457,15 +581,19 @@
             '</a>' +
           '</div>';
       }
+      var domainsText = data.domains && data.domains.length > 0
+        ? ' для <strong>' + data.domains.join(', ') + '</strong>'
+        : (data.domain ? ' для <strong>' + data.domain + '</strong>' : '');
+      var statsHtml = data.competitorsCount
+        ? '<div class="result-stats"><div class="stat">&#127942; <strong>' + data.competitorsCount + '</strong> конкурент(ів)</div></div>'
+        : '';
       resultDiv.innerHTML =
         '<div class="result-header">' +
           '<div class="result-icon">&#10003;</div>' +
           '<div class="result-title">AI-звіт створено!</div>' +
         '</div>' +
-        '<p class="result-text">' +
-          'AI-звіт успішно згенеровано' +
-          (data.domain ? ' для домену <strong>' + data.domain + '</strong>' : '') + '.' +
-        '</p>' + linkHtml;
+        '<p class="result-text">Зведений AI-звіт успішно згенеровано' + domainsText + '.</p>' +
+        statsHtml + linkHtml;
       resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -598,10 +726,7 @@
       }
     }
 
-    // Enter key handlers
-    document.getElementById('aiSpreadsheetUrl').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') handleAiSubmit();
-    });
+    // Enter key handler for PDF input
     document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') handlePdfSubmit();
     });

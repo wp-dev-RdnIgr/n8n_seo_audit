@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-25T19:32:22.175Z",
+  "updatedAt": "2026-02-25T20:41:43.123Z",
   "createdAt": "2026-02-10T15:04:53.522Z",
   "id": "BAekxapYobfgHYTt",
   "name": "SEO Audit AI Report Generator",
@@ -31,7 +31,7 @@
             {
               "id": "spreadsheetId",
               "name": "spreadsheetId",
-              "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}",
+              "value": "={{ $json.spreadsheetId }}",
               "type": "string"
             },
             {
@@ -43,7 +43,7 @@
             {
               "id": "manager_email",
               "name": "manager_email",
-              "value": "={{ $json.body.manager_email || '' }}",
+              "value": "={{ $json.manager_email || '' }}",
               "type": "string"
             }
           ]
@@ -55,7 +55,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -560,
+        -420,
         304
       ]
     },
@@ -71,7 +71,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -400,
+        -260,
         304
       ],
       "credentials": {
@@ -90,7 +90,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -240,
+        -100,
         176
       ]
     },
@@ -106,7 +106,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -64,
+        76,
         304
       ],
       "credentials": {
@@ -125,7 +125,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -64,
+        76,
         144
       ]
     },
@@ -381,14 +381,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday || $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1 || '';\nconst section2 = $('Collect Sections').first().json.section2 || '';\nconst section3 = $('Collect Sections').first().json.section3 || '';\nconst section4 = $('Collect Sections').first().json.section4 || '';\nconst section5 = $('Collect Sections').first().json.section5 || '';\nconst section6 = $('Collect Sections').first().json.section6 || '';\nconst finalSummary = $json.message?.content || $json.content || $json.text || '';\n\nfunction cleanMarkdown(text) {\n  return text\n    .replace(/^#{1,4}\\s*/gm, '')\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')\n    .replace(/\\*([^*]+)\\*/g, '$1')\n    .replace(/^---+$/gm, '')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\n// ── TABLE EXTRACTION ──\n// Global table counter across all sections\nlet tableCounter = 0;\nconst allTables = [];\n\nfunction extractTables(text) {\n  const tableRegex = /<<<\\s*TABLE\\s*>>>\\s*([\\s\\S]*?)\\s*<<<\\s*TABLE_?END\\s*>>[>\\s})\\].]*/ gi;\n  const result = text.replace(tableRegex, (match, jsonStr) => {\n    try {\n      // Clean the JSON string (remove potential markdown artifacts)\n      let cleaned = jsonStr.trim();\n      // Remove markdown code fences if present\n      cleaned = cleaned.replace(/^\\`\\`\\`json?\\s*/i, '').replace(/\\s*\\`\\`\\`$/, '');\n      // Try to fix common JSON issues from LLM output\n      if (!cleaned.startsWith('{')) {\n        const braceStart = cleaned.indexOf('{');\n        if (braceStart >= 0) cleaned = cleaned.substring(braceStart);\n      }\n      const lastBrace = cleaned.lastIndexOf('}');\n      if (lastBrace >= 0) cleaned = cleaned.substring(0, lastBrace + 1);\n\n      // Fix common LLM JSON issues\n      cleaned = cleaned.replace(/,\\s*}/g, '}').replace(/,\\s*]/g, ']');\n      const tableData = JSON.parse(cleaned);\n      const headers = tableData.headers || [];\n      const rows = tableData.rows || [];\n\n      if (headers.length === 0) return match; // Invalid table\n\n      const idx = tableCounter++;\n      const placeholder = '{{TBL:' + idx + '}}';\n      allTables.push({\n        index: idx,\n        placeholder: placeholder,\n        headers: headers,\n        rows: rows\n      });\n      return '\\n' + placeholder + '\\n';\n    } catch(e) {\n      // If JSON parsing fails, also try to catch markdown tables that slipped through\n      return match;\n    }\n  });\n\n  // Also catch markdown tables (|---|) and convert them\n  const mdTableRegex = /(?:^|\\n)((?:\\|[^\\n]+\\|\\n)+)/g;\n  const result2 = result.replace(mdTableRegex, (match, tableBlock) => {\n    const lines = tableBlock.trim().split('\\n').filter(l => l.trim());\n    if (lines.length < 2) return match;\n\n    // Check if second line is a separator (|---|---|)\n    const sepIdx = lines.findIndex(l => /^\\|[\\s\\-:|]+\\|$/.test(l.trim()));\n    if (sepIdx < 0) return match;\n\n    const headerLine = lines[sepIdx - 1] || lines[0];\n    const headers = headerLine.split('|').filter(c => c.trim()).map(c => c.trim());\n    const dataLines = lines.slice(sepIdx + 1);\n    const rows = dataLines.map(l =>\n      l.split('|').filter(c => c.trim()).map(c => c.trim())\n    ).filter(r => r.length > 0);\n\n    if (headers.length === 0 || rows.length === 0) return match;\n\n    const idx = tableCounter++;\n    const placeholder = '{{TBL:' + idx + '}}';\n    allTables.push({\n      index: idx,\n      placeholder: placeholder,\n      headers: headers,\n      rows: rows\n    });\n    return '\\n' + placeholder + '\\n';\n  });\n\n  // Phase 4: Clean up any remaining broken table markers\n  let resultClean = result2;\n  resultClean = resultClean.replace(/<<<\\s*TABLE\\s*>>>/gi, '');\n  resultClean = resultClean.replace(/<<<\\s*TABLE_?END\\s*>>[>}\\]).]*/gi, '');\n  return resultClean;\n}\n\n// ── SUBHEADING DETECTION ──\nfunction findSubheadings(text, startPos) {\n  const ranges = [];\n  const lines = text.split('\\n');\n  let currentPos = startPos;\n\n  for (const line of lines) {\n    const trimmed = line.trim();\n    if (trimmed.length >= 3 &&\n        /[А-ЯЇІЄҐA-Z]/.test(trimmed) &&\n        !/[а-яїієґa-z]/.test(trimmed) &&\n        !trimmed.startsWith('━') &&\n        !trimmed.match(/^\\d+\\.$/) &&\n        !trimmed.startsWith('{{TBL:') &&\n        trimmed.length < 60) {\n      ranges.push({\n        start: currentPos,\n        end: currentPos + line.length,\n        type: 'subheading',\n        text: trimmed\n      });\n    }\n    currentPos += line.length + 1;\n  }\n  return ranges;\n}\n\n// ── PROCESS SECTIONS — extract tables BEFORE cleaning markdown ──\nconst rawSections = [finalSummary, section1, section2, section3, section4, section5, section6];\nconst processedSections = rawSections.map(s => cleanMarkdown(extractTables(s)));\n\nconst formatRanges = [];\nlet content = '';\nlet pos = 1;\n\n// ══════════════════════════════════════════════════════════════\n// TITLE PAGE\n// ══════════════════════════════════════════════════════════════\n\nconst spacer1 = '\\n\\n\\n\\n\\n';\ncontent += spacer1; pos += spacer1.length;\n\nconst mainTitle = 'SEO АУДИТ';\nformatRanges.push({ start: pos, end: pos + mainTitle.length, type: 'mainTitle' });\ncontent += mainTitle + '\\n\\n'; pos += mainTitle.length + 2;\n\nconst domainTitle = domain.toUpperCase();\nformatRanges.push({ start: pos, end: pos + domainTitle.length, type: 'domainTitle' });\ncontent += domainTitle + '\\n\\n\\n'; pos += domainTitle.length + 3;\n\nconst dateStr = dateToday;\nformatRanges.push({ start: pos, end: pos + dateStr.length, type: 'dateText' });\ncontent += dateStr + '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += dateStr.length + 15;\n\n// ══════════════════════════════════════════════════════════════\n// TABLE OF CONTENTS\n// ══════════════════════════════════════════════════════════════\n\nconst tocHeader = 'ЗМІСТ';\nformatRanges.push({ start: pos, end: pos + tocHeader.length, type: 'tocHeader' });\ncontent += tocHeader + '\\n\\n'; pos += tocHeader.length + 2;\n\nconst tocLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + tocLine.length, type: 'tocLine' });\ncontent += tocLine + '\\n\\n'; pos += tocLine.length + 2;\n\nconst tocItems = [\n  { num: '01', title: 'Executive Summary' },\n  { num: '02', title: 'Органічний трафік' },\n  { num: '03', title: 'Посилальний профіль' },\n  { num: '04', title: 'Топ сторінки за посиланнями' },\n  { num: '05', title: 'Поведінкові метрики' },\n  { num: '06', title: 'Ключові фрази' },\n  { num: '07', title: 'Трафікогенеруючі сторінки' }\n];\n\nfor (const item of tocItems) {\n  const tocItemText = `     ${item.num}     ${item.title}`;\n  formatRanges.push({ start: pos, end: pos + 7, type: 'tocNum' });\n  content += tocItemText + '\\n\\n'; pos += tocItemText.length + 2;\n}\n\ncontent += '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += 12;\n\n// ══════════════════════════════════════════════════════════════\n// SECTIONS\n// ══════════════════════════════════════════════════════════════\n\nconst sections = [\n  { num: '01', title: 'EXECUTIVE SUMMARY', content: processedSections[0], isExec: true },\n  { num: '02', title: 'ОРГАНІЧНИЙ ТРАФІК', content: processedSections[1] },\n  { num: '03', title: 'ПОСИЛАЛЬНИЙ ПРОФІЛЬ', content: processedSections[2] },\n  { num: '04', title: 'ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', content: processedSections[3] },\n  { num: '05', title: 'ПОВЕДІНКОВІ МЕТРИКИ', content: processedSections[4] },\n  { num: '06', title: 'КЛЮЧОВІ ФРАЗИ', content: processedSections[5] },\n  { num: '07', title: 'ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ', content: processedSections[6] }\n];\n\nfor (const section of sections) {\n  const numText = section.num;\n  formatRanges.push({ start: pos, end: pos + numText.length, type: 'sectionNum' });\n  content += numText + '\\n'; pos += numText.length + 1;\n\n  const titleText = section.title;\n  formatRanges.push({ start: pos, end: pos + titleText.length, type: section.isExec ? 'execTitle' : 'sectionTitle' });\n  content += titleText + '\\n'; pos += titleText.length + 1;\n\n  const underline = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n  formatRanges.push({ start: pos, end: pos + underline.length, type: 'sectionLine' });\n  content += underline + '\\n\\n'; pos += underline.length + 2;\n\n  const sectionContent = section.content + '\\n\\n\\n\\n';\n  const subheadings = findSubheadings(sectionContent, pos);\n  formatRanges.push(...subheadings);\n\n  content += sectionContent; pos += sectionContent.length;\n}\n\n// ══════════════════════════════════════════════════════════════\n// FOOTER\n// ══════════════════════════════════════════════════════════════\n\nconst footerLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + footerLine.length, type: 'footerLine' });\ncontent += footerLine + '\\n\\n'; pos += footerLine.length + 2;\n\nconst footerText = `Конфіденційний документ  •  ${domain}  •  ${dateToday}`;\nformatRanges.push({ start: pos, end: pos + footerText.length, type: 'footerText' });\ncontent += footerText + '\\n';\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит │ ${domain} │ ${dateToday}`,\n    docContent: content,\n    formatRanges,\n    tables: allTables\n  }\n}];"
+        "jsCode": "// Read accumulated competitor data from static data\nconst staticData = $getWorkflowStaticData('global');\nconst competitors = staticData.competitors || [];\n\nif (competitors.length === 0) {\n  throw new Error('No competitor data found in static data');\n}\n\n// Clean up static data for next run\nstaticData.competitors = [];\n\nconst dateToday = competitors[0].dateToday;\nconst folderId = competitors[0].folderId;\nconst managerEmail = competitors[0].managerEmail || '';\nconst domains = competitors.map(c => c.domain);\nconst isMulti = competitors.length > 1;\n\n// ── HELPERS ──\n\nfunction cleanMarkdown(text) {\n  return text\n    .replace(/^#{1,4}\\s*/gm, '')\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')\n    .replace(/\\*([^*]+)\\*/g, '$1')\n    .replace(/^---+$/gm, '')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nlet tableCounter = 0;\nconst allTables = [];\n\nfunction extractTables(text) {\n  const tableRegex = /<<<\\s*TABLE\\s*>>>\\s*([\\s\\S]*?)\\s*<<<\\s*TABLE_?END\\s*>>[>\\s})\\].]*?/gi;\n  const result = text.replace(tableRegex, (match, jsonStr) => {\n    try {\n      let cleaned = jsonStr.trim();\n      cleaned = cleaned.replace(/^```json?\\s*/i, '').replace(/\\s*```$/, '');\n      if (!cleaned.startsWith('{')) {\n        const braceStart = cleaned.indexOf('{');\n        if (braceStart >= 0) cleaned = cleaned.substring(braceStart);\n      }\n      const lastBrace = cleaned.lastIndexOf('}');\n      if (lastBrace >= 0) cleaned = cleaned.substring(0, lastBrace + 1);\n      cleaned = cleaned.replace(/,\\s*}/g, '}').replace(/,\\s*]/g, ']');\n      const tableData = JSON.parse(cleaned);\n      const headers = tableData.headers || [];\n      const rows = tableData.rows || [];\n      if (headers.length === 0) return match;\n      const idx = tableCounter++;\n      const placeholder = '{{TBL:' + idx + '}}';\n      allTables.push({ index: idx, placeholder, headers, rows });\n      return '\\n' + placeholder + '\\n';\n    } catch(e) {\n      return match;\n    }\n  });\n\n  const mdTableRegex = /(?:^|\\n)((?:\\|[^\\n]+\\|\\n)+)/g;\n  const result2 = result.replace(mdTableRegex, (match, tableBlock) => {\n    const lines = tableBlock.trim().split('\\n').filter(l => l.trim());\n    if (lines.length < 2) return match;\n    const sepIdx = lines.findIndex(l => /^\\|[\\s\\-:|]+\\|$/.test(l.trim()));\n    if (sepIdx < 0) return match;\n    const headerLine = lines[sepIdx - 1] || lines[0];\n    const headers = headerLine.split('|').filter(c => c.trim()).map(c => c.trim());\n    const dataLines = lines.slice(sepIdx + 1);\n    const rows = dataLines.map(l => l.split('|').filter(c => c.trim()).map(c => c.trim())).filter(r => r.length > 0);\n    if (headers.length === 0 || rows.length === 0) return match;\n    const idx = tableCounter++;\n    const placeholder = '{{TBL:' + idx + '}}';\n    allTables.push({ index: idx, placeholder, headers, rows });\n    return '\\n' + placeholder + '\\n';\n  });\n\n  let resultClean = result2;\n  resultClean = resultClean.replace(/<<<\\s*TABLE\\s*>>>/gi, '');\n  resultClean = resultClean.replace(/<<<\\s*TABLE_?END\\s*>>[>}\\]).]*/gi, '');\n  return resultClean;\n}\n\nfunction findSubheadings(text, startPos) {\n  const ranges = [];\n  const lines = text.split('\\n');\n  let currentPos = startPos;\n  for (const line of lines) {\n    const trimmed = line.trim();\n    if (trimmed.length >= 3 &&\n        /[А-ЯЇІЄҐA-Z]/.test(trimmed) &&\n        !/[а-яїієґa-z]/.test(trimmed) &&\n        !trimmed.startsWith('━') &&\n        !trimmed.match(/^\\d+\\.$/) &&\n        !trimmed.startsWith('{{TBL:') &&\n        trimmed.length < 60) {\n      ranges.push({ start: currentPos, end: currentPos + line.length, type: 'subheading', text: trimmed });\n    }\n    currentPos += line.length + 1;\n  }\n  return ranges;\n}\n\n// ── PROCESS ALL COMPETITORS ──\n\nconst allCompetitorData = competitors.map(comp => {\n  const rawSections = [\n    comp.finalSummary,\n    comp.sections.section1,\n    comp.sections.section2,\n    comp.sections.section3,\n    comp.sections.section4,\n    comp.sections.section5,\n    comp.sections.section6\n  ];\n  return {\n    domain: comp.domain,\n    processedSections: rawSections.map(s => cleanMarkdown(extractTables(s)))\n  };\n});\n\nconst formatRanges = [];\nlet content = '';\nlet pos = 1;\n\n// ═══════════════ TITLE PAGE ═══════════════\n\nconst spacer1 = '\\n\\n\\n\\n\\n';\ncontent += spacer1; pos += spacer1.length;\n\nconst mainTitle = 'SEO АУДИТ';\nformatRanges.push({ start: pos, end: pos + mainTitle.length, type: 'mainTitle' });\ncontent += mainTitle + '\\n\\n'; pos += mainTitle.length + 2;\n\nif (isMulti) {\n  const subtitle = 'КОНКУРЕНТНЕ СЕРЕДОВИЩЕ';\n  formatRanges.push({ start: pos, end: pos + subtitle.length, type: 'domainTitle' });\n  content += subtitle + '\\n\\n\\n'; pos += subtitle.length + 3;\n\n  for (const d of domains) {\n    const domainLine = d.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + domainLine.length, type: 'competitorDomain' });\n    content += domainLine + '\\n'; pos += domainLine.length + 1;\n  }\n  content += '\\n'; pos += 1;\n} else {\n  const domainTitle = domains[0].toUpperCase();\n  formatRanges.push({ start: pos, end: pos + domainTitle.length, type: 'domainTitle' });\n  content += domainTitle + '\\n\\n\\n'; pos += domainTitle.length + 3;\n}\n\nconst dateStr = dateToday;\nformatRanges.push({ start: pos, end: pos + dateStr.length, type: 'dateText' });\ncontent += dateStr + '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += dateStr.length + 15;\n\n// ═══════════════ TABLE OF CONTENTS ═══════════════\n\nconst tocHeader = 'ЗМІСТ';\nformatRanges.push({ start: pos, end: pos + tocHeader.length, type: 'tocHeader' });\ncontent += tocHeader + '\\n\\n'; pos += tocHeader.length + 2;\n\nconst tocLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + tocLine.length, type: 'tocLine' });\ncontent += tocLine + '\\n\\n'; pos += tocLine.length + 2;\n\nconst sectionTitles = [\n  'Executive Summary', 'Органічний трафік', 'Посилальний профіль',\n  'Топ сторінки за посиланнями', 'Поведінкові метрики',\n  'Ключові фрази', 'Трафікогенеруючі сторінки'\n];\n\nfor (let ci = 0; ci < allCompetitorData.length; ci++) {\n  if (isMulti) {\n    const compTocLabel = allCompetitorData[ci].domain.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + compTocLabel.length, type: 'tocCompetitor' });\n    content += compTocLabel + '\\n'; pos += compTocLabel.length + 1;\n  }\n  for (let si = 0; si < sectionTitles.length; si++) {\n    const num = String(si + 1).padStart(2, '0');\n    const tocItemText = '     ' + num + '     ' + sectionTitles[si];\n    formatRanges.push({ start: pos, end: pos + 7, type: 'tocNum' });\n    content += tocItemText + '\\n\\n'; pos += tocItemText.length + 2;\n  }\n  if (isMulti && ci < allCompetitorData.length - 1) {\n    content += '\\n'; pos += 1;\n  }\n}\n\ncontent += '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += 12;\n\n// ═══════════════ CONTENT SECTIONS ═══════════════\n\nconst sectionUpperTitles = [\n  'EXECUTIVE SUMMARY', 'ОРГАНІЧНИЙ ТРАФІК', 'ПОСИЛАЛЬНИЙ ПРОФІЛЬ',\n  'ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', 'ПОВЕДІНКОВІ МЕТРИКИ',\n  'КЛЮЧОВІ ФРАЗИ', 'ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ'\n];\n\nfor (let ci = 0; ci < allCompetitorData.length; ci++) {\n  const comp = allCompetitorData[ci];\n\n  if (isMulti) {\n    const sepLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + sepLine.length, type: 'competitorSepLine' });\n    content += sepLine + '\\n\\n'; pos += sepLine.length + 2;\n\n    const compHeader = comp.domain.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + compHeader.length, type: 'competitorHeader' });\n    content += compHeader + '\\n\\n'; pos += compHeader.length + 2;\n\n    const sepLine2 = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + sepLine2.length, type: 'competitorSepLine' });\n    content += sepLine2 + '\\n\\n\\n'; pos += sepLine2.length + 3;\n  }\n\n  for (let si = 0; si < sectionUpperTitles.length; si++) {\n    const numText = String(si + 1).padStart(2, '0');\n    formatRanges.push({ start: pos, end: pos + numText.length, type: 'sectionNum' });\n    content += numText + '\\n'; pos += numText.length + 1;\n\n    const titleText = sectionUpperTitles[si];\n    formatRanges.push({ start: pos, end: pos + titleText.length, type: si === 0 ? 'execTitle' : 'sectionTitle' });\n    content += titleText + '\\n'; pos += titleText.length + 1;\n\n    const underline = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + underline.length, type: 'sectionLine' });\n    content += underline + '\\n\\n'; pos += underline.length + 2;\n\n    const sectionContent = comp.processedSections[si] + '\\n\\n\\n\\n';\n    const subheadings = findSubheadings(sectionContent, pos);\n    formatRanges.push(...subheadings);\n    content += sectionContent; pos += sectionContent.length;\n  }\n}\n\n// ═══════════════ FOOTER ═══════════════\n\nconst footerLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + footerLine.length, type: 'footerLine' });\ncontent += footerLine + '\\n\\n'; pos += footerLine.length + 2;\n\nconst footerDomains = domains.join('  •  ');\nconst footerText = 'Конфіденційний документ  •  ' + footerDomains + '  •  ' + dateToday;\nformatRanges.push({ start: pos, end: pos + footerText.length, type: 'footerText' });\ncontent += footerText + '\\n';\n\nconst docTitle = isMulti\n  ? 'SEO Аудит Конкурентів │ ' + dateToday\n  : 'SEO Аудит │ ' + domains[0] + ' │ ' + dateToday;\n\nreturn [{\n  json: {\n    domain: domains[0],\n    domains,\n    competitorsCount: competitors.length,\n    dateToday,\n    folderId,\n    managerEmail,\n    docTitle,\n    docContent: content,\n    formatRanges,\n    tables: allTables\n  }\n}];"
       },
       "id": "c3e891ac-b0f5-4e1f-bfa7-83aba8efb952",
       "name": "Prepare Document",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
+        1200,
         304
       ]
     },
@@ -446,7 +446,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\nconst docContent = $('Prepare Document').first().json.docContent || '';\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 },\n  bodyText: { red: 0.15, green: 0.15, blue: 0.15 }\n};\n\nconst requests = [];\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 1: Apply PROFESSIONAL body text style to ENTIRE document\n// ═══════════════════════════════════════════════════════════════\nconst docLength = docContent.length;\nif (docLength > 1) {\n  // Body text style - professional and readable\n  requests.push({\n    updateTextStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      textStyle: {\n        fontSize: { magnitude: 11, unit: 'PT' },\n        foregroundColor: { color: { rgbColor: colors.bodyText } },\n        weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n      },\n      fields: 'fontSize,foregroundColor,weightedFontFamily'\n    }\n  });\n  \n  // Paragraph style - professional spacing and alignment\n  requests.push({\n    updateParagraphStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      paragraphStyle: {\n        lineSpacing: 135,\n        spaceAbove: { magnitude: 4, unit: 'PT' },\n        spaceBelow: { magnitude: 8, unit: 'PT' },\n        alignment: 'START',\n        indentFirstLine: { magnitude: 0, unit: 'PT' },\n        indentStart: { magnitude: 0, unit: 'PT' }\n      },\n      fields: 'lineSpacing,spaceAbove,spaceBelow,alignment,indentFirstLine,indentStart'\n    }\n  });\n}\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 2: Apply specific formatting for headers, titles, etc.\n// ═══════════════════════════════════════════════════════════════\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER', \n            spaceAbove: { magnitude: 0, unit: 'PT' }, \n            spaceBelow: { magnitude: 12, unit: 'PT' },\n            lineSpacing: 100\n          },\n          fields: 'alignment,spaceAbove,spaceBelow,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'START', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            lineSpacing: 100,\n            spaceAbove: { magnitude: 0, unit: 'PT' },\n            spaceBelow: { magnitude: 12, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'subheading':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 12, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 18, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 20, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
+        "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\nconst docContent = $('Prepare Document').first().json.docContent || '';\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 },\n  bodyText: { red: 0.15, green: 0.15, blue: 0.15 }\n};\n\nconst requests = [];\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 1: Apply PROFESSIONAL body text style to ENTIRE document\n// ═══════════════════════════════════════════════════════════════\nconst docLength = docContent.length;\nif (docLength > 1) {\n  // Body text style - professional and readable\n  requests.push({\n    updateTextStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      textStyle: {\n        fontSize: { magnitude: 11, unit: 'PT' },\n        foregroundColor: { color: { rgbColor: colors.bodyText } },\n        weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n      },\n      fields: 'fontSize,foregroundColor,weightedFontFamily'\n    }\n  });\n  \n  // Paragraph style - professional spacing and alignment\n  requests.push({\n    updateParagraphStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      paragraphStyle: {\n        lineSpacing: 135,\n        spaceAbove: { magnitude: 4, unit: 'PT' },\n        spaceBelow: { magnitude: 8, unit: 'PT' },\n        alignment: 'START',\n        indentFirstLine: { magnitude: 0, unit: 'PT' },\n        indentStart: { magnitude: 0, unit: 'PT' }\n      },\n      fields: 'lineSpacing,spaceAbove,spaceBelow,alignment,indentFirstLine,indentStart'\n    }\n  });\n}\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 2: Apply specific formatting for headers, titles, etc.\n// ═══════════════════════════════════════════════════════════════\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER', \n            spaceAbove: { magnitude: 0, unit: 'PT' }, \n            spaceBelow: { magnitude: 12, unit: 'PT' },\n            lineSpacing: 100\n          },\n          fields: 'alignment,spaceAbove,spaceBelow,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'START', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            lineSpacing: 100,\n            spaceAbove: { magnitude: 0, unit: 'PT' },\n            spaceBelow: { magnitude: 12, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'subheading':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 12, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 18, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n\n    case 'competitorDomain':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 16, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 130 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n\n    case 'tocCompetitor':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 13, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { spaceAbove: { magnitude: 12, unit: 'PT' }, lineSpacing: 100 },\n          fields: 'spaceAbove,lineSpacing'\n        }\n      });\n      break;\n\n    case 'competitorSepLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n\n    case 'competitorHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 24, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 8, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n\n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 20, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
       },
       "id": "7dd19aa8-6cd5-4a29-91b5-308ee422321f",
       "name": "Build Format Requests",
@@ -509,7 +509,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Prepare Document').first().json.domain }}\",\n  \"docUrl\": \"https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.documentId }}/edit\",\n  \"docId\": \"{{ $('Create Google Doc').first().json.documentId }}\",\n  \"folderId\": \"{{ $('Prepare Document').first().json.folderId }}\"\n}",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Prepare Document').first().json.domain }}\",\n  \"domains\": {{ JSON.stringify($('Prepare Document').first().json.domains || []) }},\n  \"competitorsCount\": {{ $('Prepare Document').first().json.competitorsCount || 1 }},\n  \"docUrl\": \"https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.documentId }}/edit\",\n  \"docId\": \"{{ $('Create Google Doc').first().json.documentId }}\",\n  \"folderId\": \"{{ $('Prepare Document').first().json.folderId }}\"\n}",
         "options": {}
       },
       "id": "d2e16a0a-9dff-428f-a516-3a4f4cbbc2ea",
@@ -745,20 +745,49 @@
           "name": "N8N_Google Docs account"
         }
       }
+    },
+    {
+      "id": "d481bc4d-e4f6-463c-aefc-bdaaee07e588",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        304
+      ],
+      "parameters": {
+        "jsCode": "// Support old format (single url) and new format (urls array)\nconst body = $json.body || $json;\nconst staticData = $getWorkflowStaticData('global');\nstaticData.competitors = []; // Reset for new run\n\nlet urls = [];\nif (body.urls && Array.isArray(body.urls)) {\n  urls = body.urls;\n} else if (body.url) {\n  urls = [body.url];\n} else if (body.spreadsheetId) {\n  urls = ['spreadsheet://' + body.spreadsheetId]; // placeholder\n}\n\nconst managerEmail = body.manager_email || '';\n\nconst items = urls.map((url, index) => {\n  // Extract spreadsheetId from Google Sheets URL\n  let spreadsheetId = '';\n  if (url.startsWith('spreadsheet://')) {\n    spreadsheetId = url.replace('spreadsheet://', '');\n  } else {\n    const match = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\n    spreadsheetId = match ? match[1] : url;\n  }\n  return {\n    json: {\n      spreadsheetId,\n      url,\n      manager_email: managerEmail,\n      competitorIndex: index,\n      totalCompetitors: urls.length\n    }\n  };\n});\n\nreturn items;"
+      }
+    },
+    {
+      "id": "678a9269-13b5-4dad-877a-afc304bfe576",
+      "name": "SplitInBatches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -560,
+        304
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "6290c708-be07-4f1e-ad6f-e4cdc17018d1",
+      "name": "Store Competitor Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        304
+      ],
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.competitors) {\n  staticData.competitors = [];\n}\n\nconst domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst managerEmail = $('Extract Domain & Folder').first().json.managerEmail || '';\nconst sections = $('Collect Sections').first().json;\nconst finalSummary = $json.message?.content || $json.content || $json.text || '';\n\nstaticData.competitors.push({\n  domain,\n  dateToday,\n  folderId,\n  managerEmail,\n  finalSummary,\n  sections: {\n    section1: sections.section1 || '',\n    section2: sections.section2 || '',\n    section3: sections.section3 || '',\n    section4: sections.section4 || '',\n    section5: sections.section5 || '',\n    section6: sections.section6 || ''\n  }\n});\n\nreturn [{ json: { stored: true, competitorIndex: staticData.competitors.length - 1, domain } }];"
+      }
     }
   ],
   "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Set Variables",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Set Variables": {
       "main": [
         [
@@ -921,17 +950,6 @@
         [
           {
             "node": "Final Summary Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Final Summary Agent": {
-      "main": [
-        [
-          {
-            "node": "Prepare Document",
             "type": "main",
             "index": 0
           }
@@ -1131,6 +1149,68 @@
           }
         ]
       ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitInBatches": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Summary Agent": {
+      "main": [
+        [
+          {
+            "node": "Store Competitor Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Competitor Result": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1144,69 +1224,15 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "45502dd5-30e2-46be-acc9-8a793a182de0",
-  "activeVersionId": "45502dd5-30e2-46be-acc9-8a793a182de0",
-  "versionCounter": 137,
+  "versionId": "d6aa943f-7e89-42e8-b775-d357723d19ac",
+  "activeVersionId": "d6aa943f-7e89-42e8-b775-d357723d19ac",
+  "versionCounter": 143,
   "triggerCount": 1,
-  "shared": [
-    {
-      "updatedAt": "2026-02-10T15:04:53.522Z",
-      "createdAt": "2026-02-10T15:04:53.522Z",
-      "role": "workflow:owner",
-      "workflowId": "BAekxapYobfgHYTt",
-      "projectId": "LmhOD4aQjDc8j54F",
-      "project": {
-        "updatedAt": "2025-08-01T12:06:15.569Z",
-        "createdAt": "2025-07-31T12:25:48.704Z",
-        "id": "LmhOD4aQjDc8j54F",
-        "name": "OLEKSANDR Polischuk <ap@web-promo.com.ua>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "6f7766c1-8e6d-478f-a667-93619ba35dbe",
-        "projectRelations": [
-          {
-            "updatedAt": "2025-07-31T12:25:48.704Z",
-            "createdAt": "2025-07-31T12:25:48.704Z",
-            "userId": "6f7766c1-8e6d-478f-a667-93619ba35dbe",
-            "projectId": "LmhOD4aQjDc8j54F",
-            "user": {
-              "updatedAt": "2026-02-24T23:52:43.387Z",
-              "createdAt": "2025-07-31T12:25:47.251Z",
-              "id": "6f7766c1-8e6d-478f-a667-93619ba35dbe",
-              "email": "ap@web-promo.com.ua",
-              "firstName": "OLEKSANDR",
-              "lastName": "Polischuk",
-              "personalizationAnswers": {
-                "version": "v4",
-                "personalization_survey_submitted_at": "2025-08-01T12:06:26.310Z",
-                "personalization_survey_n8n_version": "1.104.1"
-              },
-              "settings": {
-                "userActivated": true,
-                "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "i6feMHLya6oSMXYC",
-                "userActivatedAt": 1759166190434,
-                "npsSurvey": {
-                  "responded": true,
-                  "lastShownAt": 1761673568422
-                }
-              },
-              "disabled": false,
-              "mfaEnabled": false,
-              "lastActiveAt": "2026-02-24",
-              "isPending": false
-            }
-          }
-        ]
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-25T19:32:22.177Z",
-    "createdAt": "2026-02-25T19:32:22.177Z",
-    "versionId": "45502dd5-30e2-46be-acc9-8a793a182de0",
+    "updatedAt": "2026-02-25T20:41:43.126Z",
+    "createdAt": "2026-02-25T20:41:43.126Z",
+    "versionId": "d6aa943f-7e89-42e8-b775-d357723d19ac",
     "workflowId": "BAekxapYobfgHYTt",
     "nodes": [
       {
@@ -1233,7 +1259,7 @@
               {
                 "id": "spreadsheetId",
                 "name": "spreadsheetId",
-                "value": "={{ $json.body.spreadsheetId || $json.body.url?.match(/\\/d\\/([a-zA-Z0-9_-]+)/)?.[1] || '' }}",
+                "value": "={{ $json.spreadsheetId }}",
                 "type": "string"
               },
               {
@@ -1245,7 +1271,7 @@
               {
                 "id": "manager_email",
                 "name": "manager_email",
-                "value": "={{ $json.body.manager_email || '' }}",
+                "value": "={{ $json.manager_email || '' }}",
                 "type": "string"
               }
             ]
@@ -1257,7 +1283,7 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.4,
         "position": [
-          -560,
+          -420,
           304
         ]
       },
@@ -1273,7 +1299,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -400,
+          -260,
           304
         ],
         "credentials": {
@@ -1292,7 +1318,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -240,
+          -100,
           176
         ]
       },
@@ -1308,7 +1334,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -64,
+          76,
           304
         ],
         "credentials": {
@@ -1327,7 +1353,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -64,
+          76,
           144
         ]
       },
@@ -1583,14 +1609,14 @@
       },
       {
         "parameters": {
-          "jsCode": "const domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday || $('Extract Domain & Folder').first().json.date_today;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\n\nconst section1 = $('Collect Sections').first().json.section1 || '';\nconst section2 = $('Collect Sections').first().json.section2 || '';\nconst section3 = $('Collect Sections').first().json.section3 || '';\nconst section4 = $('Collect Sections').first().json.section4 || '';\nconst section5 = $('Collect Sections').first().json.section5 || '';\nconst section6 = $('Collect Sections').first().json.section6 || '';\nconst finalSummary = $json.message?.content || $json.content || $json.text || '';\n\nfunction cleanMarkdown(text) {\n  return text\n    .replace(/^#{1,4}\\s*/gm, '')\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')\n    .replace(/\\*([^*]+)\\*/g, '$1')\n    .replace(/^---+$/gm, '')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\n// ── TABLE EXTRACTION ──\n// Global table counter across all sections\nlet tableCounter = 0;\nconst allTables = [];\n\nfunction extractTables(text) {\n  const tableRegex = /<<<\\s*TABLE\\s*>>>\\s*([\\s\\S]*?)\\s*<<<\\s*TABLE_?END\\s*>>[>\\s})\\].]*/ gi;\n  const result = text.replace(tableRegex, (match, jsonStr) => {\n    try {\n      // Clean the JSON string (remove potential markdown artifacts)\n      let cleaned = jsonStr.trim();\n      // Remove markdown code fences if present\n      cleaned = cleaned.replace(/^\\`\\`\\`json?\\s*/i, '').replace(/\\s*\\`\\`\\`$/, '');\n      // Try to fix common JSON issues from LLM output\n      if (!cleaned.startsWith('{')) {\n        const braceStart = cleaned.indexOf('{');\n        if (braceStart >= 0) cleaned = cleaned.substring(braceStart);\n      }\n      const lastBrace = cleaned.lastIndexOf('}');\n      if (lastBrace >= 0) cleaned = cleaned.substring(0, lastBrace + 1);\n\n      // Fix common LLM JSON issues\n      cleaned = cleaned.replace(/,\\s*}/g, '}').replace(/,\\s*]/g, ']');\n      const tableData = JSON.parse(cleaned);\n      const headers = tableData.headers || [];\n      const rows = tableData.rows || [];\n\n      if (headers.length === 0) return match; // Invalid table\n\n      const idx = tableCounter++;\n      const placeholder = '{{TBL:' + idx + '}}';\n      allTables.push({\n        index: idx,\n        placeholder: placeholder,\n        headers: headers,\n        rows: rows\n      });\n      return '\\n' + placeholder + '\\n';\n    } catch(e) {\n      // If JSON parsing fails, also try to catch markdown tables that slipped through\n      return match;\n    }\n  });\n\n  // Also catch markdown tables (|---|) and convert them\n  const mdTableRegex = /(?:^|\\n)((?:\\|[^\\n]+\\|\\n)+)/g;\n  const result2 = result.replace(mdTableRegex, (match, tableBlock) => {\n    const lines = tableBlock.trim().split('\\n').filter(l => l.trim());\n    if (lines.length < 2) return match;\n\n    // Check if second line is a separator (|---|---|)\n    const sepIdx = lines.findIndex(l => /^\\|[\\s\\-:|]+\\|$/.test(l.trim()));\n    if (sepIdx < 0) return match;\n\n    const headerLine = lines[sepIdx - 1] || lines[0];\n    const headers = headerLine.split('|').filter(c => c.trim()).map(c => c.trim());\n    const dataLines = lines.slice(sepIdx + 1);\n    const rows = dataLines.map(l =>\n      l.split('|').filter(c => c.trim()).map(c => c.trim())\n    ).filter(r => r.length > 0);\n\n    if (headers.length === 0 || rows.length === 0) return match;\n\n    const idx = tableCounter++;\n    const placeholder = '{{TBL:' + idx + '}}';\n    allTables.push({\n      index: idx,\n      placeholder: placeholder,\n      headers: headers,\n      rows: rows\n    });\n    return '\\n' + placeholder + '\\n';\n  });\n\n  // Phase 4: Clean up any remaining broken table markers\n  let resultClean = result2;\n  resultClean = resultClean.replace(/<<<\\s*TABLE\\s*>>>/gi, '');\n  resultClean = resultClean.replace(/<<<\\s*TABLE_?END\\s*>>[>}\\]).]*/gi, '');\n  return resultClean;\n}\n\n// ── SUBHEADING DETECTION ──\nfunction findSubheadings(text, startPos) {\n  const ranges = [];\n  const lines = text.split('\\n');\n  let currentPos = startPos;\n\n  for (const line of lines) {\n    const trimmed = line.trim();\n    if (trimmed.length >= 3 &&\n        /[А-ЯЇІЄҐA-Z]/.test(trimmed) &&\n        !/[а-яїієґa-z]/.test(trimmed) &&\n        !trimmed.startsWith('━') &&\n        !trimmed.match(/^\\d+\\.$/) &&\n        !trimmed.startsWith('{{TBL:') &&\n        trimmed.length < 60) {\n      ranges.push({\n        start: currentPos,\n        end: currentPos + line.length,\n        type: 'subheading',\n        text: trimmed\n      });\n    }\n    currentPos += line.length + 1;\n  }\n  return ranges;\n}\n\n// ── PROCESS SECTIONS — extract tables BEFORE cleaning markdown ──\nconst rawSections = [finalSummary, section1, section2, section3, section4, section5, section6];\nconst processedSections = rawSections.map(s => cleanMarkdown(extractTables(s)));\n\nconst formatRanges = [];\nlet content = '';\nlet pos = 1;\n\n// ══════════════════════════════════════════════════════════════\n// TITLE PAGE\n// ══════════════════════════════════════════════════════════════\n\nconst spacer1 = '\\n\\n\\n\\n\\n';\ncontent += spacer1; pos += spacer1.length;\n\nconst mainTitle = 'SEO АУДИТ';\nformatRanges.push({ start: pos, end: pos + mainTitle.length, type: 'mainTitle' });\ncontent += mainTitle + '\\n\\n'; pos += mainTitle.length + 2;\n\nconst domainTitle = domain.toUpperCase();\nformatRanges.push({ start: pos, end: pos + domainTitle.length, type: 'domainTitle' });\ncontent += domainTitle + '\\n\\n\\n'; pos += domainTitle.length + 3;\n\nconst dateStr = dateToday;\nformatRanges.push({ start: pos, end: pos + dateStr.length, type: 'dateText' });\ncontent += dateStr + '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += dateStr.length + 15;\n\n// ══════════════════════════════════════════════════════════════\n// TABLE OF CONTENTS\n// ══════════════════════════════════════════════════════════════\n\nconst tocHeader = 'ЗМІСТ';\nformatRanges.push({ start: pos, end: pos + tocHeader.length, type: 'tocHeader' });\ncontent += tocHeader + '\\n\\n'; pos += tocHeader.length + 2;\n\nconst tocLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + tocLine.length, type: 'tocLine' });\ncontent += tocLine + '\\n\\n'; pos += tocLine.length + 2;\n\nconst tocItems = [\n  { num: '01', title: 'Executive Summary' },\n  { num: '02', title: 'Органічний трафік' },\n  { num: '03', title: 'Посилальний профіль' },\n  { num: '04', title: 'Топ сторінки за посиланнями' },\n  { num: '05', title: 'Поведінкові метрики' },\n  { num: '06', title: 'Ключові фрази' },\n  { num: '07', title: 'Трафікогенеруючі сторінки' }\n];\n\nfor (const item of tocItems) {\n  const tocItemText = `     ${item.num}     ${item.title}`;\n  formatRanges.push({ start: pos, end: pos + 7, type: 'tocNum' });\n  content += tocItemText + '\\n\\n'; pos += tocItemText.length + 2;\n}\n\ncontent += '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += 12;\n\n// ══════════════════════════════════════════════════════════════\n// SECTIONS\n// ══════════════════════════════════════════════════════════════\n\nconst sections = [\n  { num: '01', title: 'EXECUTIVE SUMMARY', content: processedSections[0], isExec: true },\n  { num: '02', title: 'ОРГАНІЧНИЙ ТРАФІК', content: processedSections[1] },\n  { num: '03', title: 'ПОСИЛАЛЬНИЙ ПРОФІЛЬ', content: processedSections[2] },\n  { num: '04', title: 'ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', content: processedSections[3] },\n  { num: '05', title: 'ПОВЕДІНКОВІ МЕТРИКИ', content: processedSections[4] },\n  { num: '06', title: 'КЛЮЧОВІ ФРАЗИ', content: processedSections[5] },\n  { num: '07', title: 'ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ', content: processedSections[6] }\n];\n\nfor (const section of sections) {\n  const numText = section.num;\n  formatRanges.push({ start: pos, end: pos + numText.length, type: 'sectionNum' });\n  content += numText + '\\n'; pos += numText.length + 1;\n\n  const titleText = section.title;\n  formatRanges.push({ start: pos, end: pos + titleText.length, type: section.isExec ? 'execTitle' : 'sectionTitle' });\n  content += titleText + '\\n'; pos += titleText.length + 1;\n\n  const underline = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n  formatRanges.push({ start: pos, end: pos + underline.length, type: 'sectionLine' });\n  content += underline + '\\n\\n'; pos += underline.length + 2;\n\n  const sectionContent = section.content + '\\n\\n\\n\\n';\n  const subheadings = findSubheadings(sectionContent, pos);\n  formatRanges.push(...subheadings);\n\n  content += sectionContent; pos += sectionContent.length;\n}\n\n// ══════════════════════════════════════════════════════════════\n// FOOTER\n// ══════════════════════════════════════════════════════════════\n\nconst footerLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + footerLine.length, type: 'footerLine' });\ncontent += footerLine + '\\n\\n'; pos += footerLine.length + 2;\n\nconst footerText = `Конфіденційний документ  •  ${domain}  •  ${dateToday}`;\nformatRanges.push({ start: pos, end: pos + footerText.length, type: 'footerText' });\ncontent += footerText + '\\n';\n\nreturn [{\n  json: {\n    domain,\n    dateToday,\n    folderId,\n    docTitle: `SEO Аудит │ ${domain} │ ${dateToday}`,\n    docContent: content,\n    formatRanges,\n    tables: allTables\n  }\n}];"
+          "jsCode": "// Read accumulated competitor data from static data\nconst staticData = $getWorkflowStaticData('global');\nconst competitors = staticData.competitors || [];\n\nif (competitors.length === 0) {\n  throw new Error('No competitor data found in static data');\n}\n\n// Clean up static data for next run\nstaticData.competitors = [];\n\nconst dateToday = competitors[0].dateToday;\nconst folderId = competitors[0].folderId;\nconst managerEmail = competitors[0].managerEmail || '';\nconst domains = competitors.map(c => c.domain);\nconst isMulti = competitors.length > 1;\n\n// ── HELPERS ──\n\nfunction cleanMarkdown(text) {\n  return text\n    .replace(/^#{1,4}\\s*/gm, '')\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')\n    .replace(/\\*([^*]+)\\*/g, '$1')\n    .replace(/^---+$/gm, '')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nlet tableCounter = 0;\nconst allTables = [];\n\nfunction extractTables(text) {\n  const tableRegex = /<<<\\s*TABLE\\s*>>>\\s*([\\s\\S]*?)\\s*<<<\\s*TABLE_?END\\s*>>[>\\s})\\].]*?/gi;\n  const result = text.replace(tableRegex, (match, jsonStr) => {\n    try {\n      let cleaned = jsonStr.trim();\n      cleaned = cleaned.replace(/^```json?\\s*/i, '').replace(/\\s*```$/, '');\n      if (!cleaned.startsWith('{')) {\n        const braceStart = cleaned.indexOf('{');\n        if (braceStart >= 0) cleaned = cleaned.substring(braceStart);\n      }\n      const lastBrace = cleaned.lastIndexOf('}');\n      if (lastBrace >= 0) cleaned = cleaned.substring(0, lastBrace + 1);\n      cleaned = cleaned.replace(/,\\s*}/g, '}').replace(/,\\s*]/g, ']');\n      const tableData = JSON.parse(cleaned);\n      const headers = tableData.headers || [];\n      const rows = tableData.rows || [];\n      if (headers.length === 0) return match;\n      const idx = tableCounter++;\n      const placeholder = '{{TBL:' + idx + '}}';\n      allTables.push({ index: idx, placeholder, headers, rows });\n      return '\\n' + placeholder + '\\n';\n    } catch(e) {\n      return match;\n    }\n  });\n\n  const mdTableRegex = /(?:^|\\n)((?:\\|[^\\n]+\\|\\n)+)/g;\n  const result2 = result.replace(mdTableRegex, (match, tableBlock) => {\n    const lines = tableBlock.trim().split('\\n').filter(l => l.trim());\n    if (lines.length < 2) return match;\n    const sepIdx = lines.findIndex(l => /^\\|[\\s\\-:|]+\\|$/.test(l.trim()));\n    if (sepIdx < 0) return match;\n    const headerLine = lines[sepIdx - 1] || lines[0];\n    const headers = headerLine.split('|').filter(c => c.trim()).map(c => c.trim());\n    const dataLines = lines.slice(sepIdx + 1);\n    const rows = dataLines.map(l => l.split('|').filter(c => c.trim()).map(c => c.trim())).filter(r => r.length > 0);\n    if (headers.length === 0 || rows.length === 0) return match;\n    const idx = tableCounter++;\n    const placeholder = '{{TBL:' + idx + '}}';\n    allTables.push({ index: idx, placeholder, headers, rows });\n    return '\\n' + placeholder + '\\n';\n  });\n\n  let resultClean = result2;\n  resultClean = resultClean.replace(/<<<\\s*TABLE\\s*>>>/gi, '');\n  resultClean = resultClean.replace(/<<<\\s*TABLE_?END\\s*>>[>}\\]).]*/gi, '');\n  return resultClean;\n}\n\nfunction findSubheadings(text, startPos) {\n  const ranges = [];\n  const lines = text.split('\\n');\n  let currentPos = startPos;\n  for (const line of lines) {\n    const trimmed = line.trim();\n    if (trimmed.length >= 3 &&\n        /[А-ЯЇІЄҐA-Z]/.test(trimmed) &&\n        !/[а-яїієґa-z]/.test(trimmed) &&\n        !trimmed.startsWith('━') &&\n        !trimmed.match(/^\\d+\\.$/) &&\n        !trimmed.startsWith('{{TBL:') &&\n        trimmed.length < 60) {\n      ranges.push({ start: currentPos, end: currentPos + line.length, type: 'subheading', text: trimmed });\n    }\n    currentPos += line.length + 1;\n  }\n  return ranges;\n}\n\n// ── PROCESS ALL COMPETITORS ──\n\nconst allCompetitorData = competitors.map(comp => {\n  const rawSections = [\n    comp.finalSummary,\n    comp.sections.section1,\n    comp.sections.section2,\n    comp.sections.section3,\n    comp.sections.section4,\n    comp.sections.section5,\n    comp.sections.section6\n  ];\n  return {\n    domain: comp.domain,\n    processedSections: rawSections.map(s => cleanMarkdown(extractTables(s)))\n  };\n});\n\nconst formatRanges = [];\nlet content = '';\nlet pos = 1;\n\n// ═══════════════ TITLE PAGE ═══════════════\n\nconst spacer1 = '\\n\\n\\n\\n\\n';\ncontent += spacer1; pos += spacer1.length;\n\nconst mainTitle = 'SEO АУДИТ';\nformatRanges.push({ start: pos, end: pos + mainTitle.length, type: 'mainTitle' });\ncontent += mainTitle + '\\n\\n'; pos += mainTitle.length + 2;\n\nif (isMulti) {\n  const subtitle = 'КОНКУРЕНТНЕ СЕРЕДОВИЩЕ';\n  formatRanges.push({ start: pos, end: pos + subtitle.length, type: 'domainTitle' });\n  content += subtitle + '\\n\\n\\n'; pos += subtitle.length + 3;\n\n  for (const d of domains) {\n    const domainLine = d.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + domainLine.length, type: 'competitorDomain' });\n    content += domainLine + '\\n'; pos += domainLine.length + 1;\n  }\n  content += '\\n'; pos += 1;\n} else {\n  const domainTitle = domains[0].toUpperCase();\n  formatRanges.push({ start: pos, end: pos + domainTitle.length, type: 'domainTitle' });\n  content += domainTitle + '\\n\\n\\n'; pos += domainTitle.length + 3;\n}\n\nconst dateStr = dateToday;\nformatRanges.push({ start: pos, end: pos + dateStr.length, type: 'dateText' });\ncontent += dateStr + '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += dateStr.length + 15;\n\n// ═══════════════ TABLE OF CONTENTS ═══════════════\n\nconst tocHeader = 'ЗМІСТ';\nformatRanges.push({ start: pos, end: pos + tocHeader.length, type: 'tocHeader' });\ncontent += tocHeader + '\\n\\n'; pos += tocHeader.length + 2;\n\nconst tocLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + tocLine.length, type: 'tocLine' });\ncontent += tocLine + '\\n\\n'; pos += tocLine.length + 2;\n\nconst sectionTitles = [\n  'Executive Summary', 'Органічний трафік', 'Посилальний профіль',\n  'Топ сторінки за посиланнями', 'Поведінкові метрики',\n  'Ключові фрази', 'Трафікогенеруючі сторінки'\n];\n\nfor (let ci = 0; ci < allCompetitorData.length; ci++) {\n  if (isMulti) {\n    const compTocLabel = allCompetitorData[ci].domain.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + compTocLabel.length, type: 'tocCompetitor' });\n    content += compTocLabel + '\\n'; pos += compTocLabel.length + 1;\n  }\n  for (let si = 0; si < sectionTitles.length; si++) {\n    const num = String(si + 1).padStart(2, '0');\n    const tocItemText = '     ' + num + '     ' + sectionTitles[si];\n    formatRanges.push({ start: pos, end: pos + 7, type: 'tocNum' });\n    content += tocItemText + '\\n\\n'; pos += tocItemText.length + 2;\n  }\n  if (isMulti && ci < allCompetitorData.length - 1) {\n    content += '\\n'; pos += 1;\n  }\n}\n\ncontent += '\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n'; pos += 12;\n\n// ═══════════════ CONTENT SECTIONS ═══════════════\n\nconst sectionUpperTitles = [\n  'EXECUTIVE SUMMARY', 'ОРГАНІЧНИЙ ТРАФІК', 'ПОСИЛАЛЬНИЙ ПРОФІЛЬ',\n  'ТОП СТОРІНКИ ЗА ПОСИЛАННЯМИ', 'ПОВЕДІНКОВІ МЕТРИКИ',\n  'КЛЮЧОВІ ФРАЗИ', 'ТРАФІКОГЕНЕРУЮЧІ СТОРІНКИ'\n];\n\nfor (let ci = 0; ci < allCompetitorData.length; ci++) {\n  const comp = allCompetitorData[ci];\n\n  if (isMulti) {\n    const sepLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + sepLine.length, type: 'competitorSepLine' });\n    content += sepLine + '\\n\\n'; pos += sepLine.length + 2;\n\n    const compHeader = comp.domain.toUpperCase();\n    formatRanges.push({ start: pos, end: pos + compHeader.length, type: 'competitorHeader' });\n    content += compHeader + '\\n\\n'; pos += compHeader.length + 2;\n\n    const sepLine2 = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + sepLine2.length, type: 'competitorSepLine' });\n    content += sepLine2 + '\\n\\n\\n'; pos += sepLine2.length + 3;\n  }\n\n  for (let si = 0; si < sectionUpperTitles.length; si++) {\n    const numText = String(si + 1).padStart(2, '0');\n    formatRanges.push({ start: pos, end: pos + numText.length, type: 'sectionNum' });\n    content += numText + '\\n'; pos += numText.length + 1;\n\n    const titleText = sectionUpperTitles[si];\n    formatRanges.push({ start: pos, end: pos + titleText.length, type: si === 0 ? 'execTitle' : 'sectionTitle' });\n    content += titleText + '\\n'; pos += titleText.length + 1;\n\n    const underline = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\n    formatRanges.push({ start: pos, end: pos + underline.length, type: 'sectionLine' });\n    content += underline + '\\n\\n'; pos += underline.length + 2;\n\n    const sectionContent = comp.processedSections[si] + '\\n\\n\\n\\n';\n    const subheadings = findSubheadings(sectionContent, pos);\n    formatRanges.push(...subheadings);\n    content += sectionContent; pos += sectionContent.length;\n  }\n}\n\n// ═══════════════ FOOTER ═══════════════\n\nconst footerLine = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';\nformatRanges.push({ start: pos, end: pos + footerLine.length, type: 'footerLine' });\ncontent += footerLine + '\\n\\n'; pos += footerLine.length + 2;\n\nconst footerDomains = domains.join('  •  ');\nconst footerText = 'Конфіденційний документ  •  ' + footerDomains + '  •  ' + dateToday;\nformatRanges.push({ start: pos, end: pos + footerText.length, type: 'footerText' });\ncontent += footerText + '\\n';\n\nconst docTitle = isMulti\n  ? 'SEO Аудит Конкурентів │ ' + dateToday\n  : 'SEO Аудит │ ' + domains[0] + ' │ ' + dateToday;\n\nreturn [{\n  json: {\n    domain: domains[0],\n    domains,\n    competitorsCount: competitors.length,\n    dateToday,\n    folderId,\n    managerEmail,\n    docTitle,\n    docContent: content,\n    formatRanges,\n    tables: allTables\n  }\n}];"
         },
         "id": "c3e891ac-b0f5-4e1f-bfa7-83aba8efb952",
         "name": "Prepare Document",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1184,
+          1200,
           304
         ]
       },
@@ -1648,7 +1674,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\nconst docContent = $('Prepare Document').first().json.docContent || '';\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 },\n  bodyText: { red: 0.15, green: 0.15, blue: 0.15 }\n};\n\nconst requests = [];\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 1: Apply PROFESSIONAL body text style to ENTIRE document\n// ═══════════════════════════════════════════════════════════════\nconst docLength = docContent.length;\nif (docLength > 1) {\n  // Body text style - professional and readable\n  requests.push({\n    updateTextStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      textStyle: {\n        fontSize: { magnitude: 11, unit: 'PT' },\n        foregroundColor: { color: { rgbColor: colors.bodyText } },\n        weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n      },\n      fields: 'fontSize,foregroundColor,weightedFontFamily'\n    }\n  });\n  \n  // Paragraph style - professional spacing and alignment\n  requests.push({\n    updateParagraphStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      paragraphStyle: {\n        lineSpacing: 135,\n        spaceAbove: { magnitude: 4, unit: 'PT' },\n        spaceBelow: { magnitude: 8, unit: 'PT' },\n        alignment: 'START',\n        indentFirstLine: { magnitude: 0, unit: 'PT' },\n        indentStart: { magnitude: 0, unit: 'PT' }\n      },\n      fields: 'lineSpacing,spaceAbove,spaceBelow,alignment,indentFirstLine,indentStart'\n    }\n  });\n}\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 2: Apply specific formatting for headers, titles, etc.\n// ═══════════════════════════════════════════════════════════════\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER', \n            spaceAbove: { magnitude: 0, unit: 'PT' }, \n            spaceBelow: { magnitude: 12, unit: 'PT' },\n            lineSpacing: 100\n          },\n          fields: 'alignment,spaceAbove,spaceBelow,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'START', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            lineSpacing: 100,\n            spaceAbove: { magnitude: 0, unit: 'PT' },\n            spaceBelow: { magnitude: 12, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'subheading':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 12, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 18, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 20, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
+          "jsCode": "const docId = $('Create Google Doc').first().json.documentId;\nconst formatRanges = $('Prepare Document').first().json.formatRanges || [];\nconst docContent = $('Prepare Document').first().json.docContent || '';\n\n// Premium color palette\nconst colors = {\n  navy: { red: 0.1, green: 0.15, blue: 0.3 },\n  darkBlue: { red: 0.15, green: 0.25, blue: 0.45 },\n  gold: { red: 0.75, green: 0.6, blue: 0.2 },\n  gray: { red: 0.4, green: 0.4, blue: 0.4 },\n  lightGray: { red: 0.6, green: 0.6, blue: 0.6 },\n  bodyText: { red: 0.15, green: 0.15, blue: 0.15 }\n};\n\nconst requests = [];\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 1: Apply PROFESSIONAL body text style to ENTIRE document\n// ═══════════════════════════════════════════════════════════════\nconst docLength = docContent.length;\nif (docLength > 1) {\n  // Body text style - professional and readable\n  requests.push({\n    updateTextStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      textStyle: {\n        fontSize: { magnitude: 11, unit: 'PT' },\n        foregroundColor: { color: { rgbColor: colors.bodyText } },\n        weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n      },\n      fields: 'fontSize,foregroundColor,weightedFontFamily'\n    }\n  });\n  \n  // Paragraph style - professional spacing and alignment\n  requests.push({\n    updateParagraphStyle: {\n      range: { startIndex: 1, endIndex: docLength },\n      paragraphStyle: {\n        lineSpacing: 135,\n        spaceAbove: { magnitude: 4, unit: 'PT' },\n        spaceBelow: { magnitude: 8, unit: 'PT' },\n        alignment: 'START',\n        indentFirstLine: { magnitude: 0, unit: 'PT' },\n        indentStart: { magnitude: 0, unit: 'PT' }\n      },\n      fields: 'lineSpacing,spaceAbove,spaceBelow,alignment,indentFirstLine,indentStart'\n    }\n  });\n}\n\n// ═══════════════════════════════════════════════════════════════\n// STEP 2: Apply specific formatting for headers, titles, etc.\n// ═══════════════════════════════════════════════════════════════\nfor (const range of formatRanges) {\n  const r = { startIndex: range.start, endIndex: range.end };\n  \n  switch (range.type) {\n    case 'mainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 36, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER', \n            spaceAbove: { magnitude: 0, unit: 'PT' }, \n            spaceBelow: { magnitude: 12, unit: 'PT' },\n            lineSpacing: 100\n          },\n          fields: 'alignment,spaceAbove,spaceBelow,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'domainTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 28, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'dateText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 14, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'START', lineSpacing: 100 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n      \n    case 'tocLine':\n    case 'sectionLine':\n    case 'footerLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            lineSpacing: 100,\n            spaceAbove: { magnitude: 0, unit: 'PT' },\n            spaceBelow: { magnitude: 12, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'tocNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 11, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      break;\n      \n    case 'sectionNum':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 48, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'execTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 22, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'sectionTitle':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 18, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'START',\n            lineSpacing: 100,\n            spaceBelow: { magnitude: 4, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceBelow'\n        }\n      });\n      break;\n      \n    case 'subheading':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 12, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'START',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 18, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n      \n\n    case 'competitorDomain':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 16, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.darkBlue } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 600 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { alignment: 'CENTER', lineSpacing: 130 },\n          fields: 'alignment,lineSpacing'\n        }\n      });\n      break;\n\n    case 'tocCompetitor':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 13, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { spaceAbove: { magnitude: 12, unit: 'PT' }, lineSpacing: 100 },\n          fields: 'spaceAbove,lineSpacing'\n        }\n      });\n      break;\n\n    case 'competitorSepLine':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            foregroundColor: { color: { rgbColor: colors.gold } },\n            fontSize: { magnitude: 10, unit: 'PT' }\n          },\n          fields: 'foregroundColor,fontSize'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 24, unit: 'PT' },\n            spaceBelow: { magnitude: 0, unit: 'PT' }\n          },\n          fields: 'lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n\n    case 'competitorHeader':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            bold: true,\n            fontSize: { magnitude: 24, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.navy } },\n            weightedFontFamily: { fontFamily: 'Montserrat', weight: 700 }\n          },\n          fields: 'bold,fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: {\n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 8, unit: 'PT' },\n            spaceBelow: { magnitude: 8, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove,spaceBelow'\n        }\n      });\n      break;\n\n    case 'footerText':\n      requests.push({\n        updateTextStyle: {\n          range: r,\n          textStyle: {\n            fontSize: { magnitude: 10, unit: 'PT' },\n            foregroundColor: { color: { rgbColor: colors.lightGray } },\n            weightedFontFamily: { fontFamily: 'Open Sans', weight: 400 }\n          },\n          fields: 'fontSize,foregroundColor,weightedFontFamily'\n        }\n      });\n      requests.push({\n        updateParagraphStyle: {\n          range: r,\n          paragraphStyle: { \n            alignment: 'CENTER',\n            lineSpacing: 100,\n            spaceAbove: { magnitude: 20, unit: 'PT' }\n          },\n          fields: 'alignment,lineSpacing,spaceAbove'\n        }\n      });\n      break;\n  }\n}\n\nreturn [{ json: { docId, requests } }];"
         },
         "id": "7dd19aa8-6cd5-4a29-91b5-308ee422321f",
         "name": "Build Format Requests",
@@ -1711,7 +1737,7 @@
       {
         "parameters": {
           "respondWith": "json",
-          "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Prepare Document').first().json.domain }}\",\n  \"docUrl\": \"https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.documentId }}/edit\",\n  \"docId\": \"{{ $('Create Google Doc').first().json.documentId }}\",\n  \"folderId\": \"{{ $('Prepare Document').first().json.folderId }}\"\n}",
+          "responseBody": "={\n  \"status\": \"success\",\n  \"domain\": \"{{ $('Prepare Document').first().json.domain }}\",\n  \"domains\": {{ JSON.stringify($('Prepare Document').first().json.domains || []) }},\n  \"competitorsCount\": {{ $('Prepare Document').first().json.competitorsCount || 1 }},\n  \"docUrl\": \"https://docs.google.com/document/d/{{ $('Create Google Doc').first().json.documentId }}/edit\",\n  \"docId\": \"{{ $('Create Google Doc').first().json.documentId }}\",\n  \"folderId\": \"{{ $('Prepare Document').first().json.folderId }}\"\n}",
           "options": {}
         },
         "id": "d2e16a0a-9dff-428f-a516-3a4f4cbbc2ea",
@@ -1947,20 +1973,49 @@
             "name": "N8N_Google Docs account"
           }
         }
+      },
+      {
+        "id": "d481bc4d-e4f6-463c-aefc-bdaaee07e588",
+        "name": "Parse Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -700,
+          304
+        ],
+        "parameters": {
+          "jsCode": "// Support old format (single url) and new format (urls array)\nconst body = $json.body || $json;\nconst staticData = $getWorkflowStaticData('global');\nstaticData.competitors = []; // Reset for new run\n\nlet urls = [];\nif (body.urls && Array.isArray(body.urls)) {\n  urls = body.urls;\n} else if (body.url) {\n  urls = [body.url];\n} else if (body.spreadsheetId) {\n  urls = ['spreadsheet://' + body.spreadsheetId]; // placeholder\n}\n\nconst managerEmail = body.manager_email || '';\n\nconst items = urls.map((url, index) => {\n  // Extract spreadsheetId from Google Sheets URL\n  let spreadsheetId = '';\n  if (url.startsWith('spreadsheet://')) {\n    spreadsheetId = url.replace('spreadsheet://', '');\n  } else {\n    const match = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\n    spreadsheetId = match ? match[1] : url;\n  }\n  return {\n    json: {\n      spreadsheetId,\n      url,\n      manager_email: managerEmail,\n      competitorIndex: index,\n      totalCompetitors: urls.length\n    }\n  };\n});\n\nreturn items;"
+        }
+      },
+      {
+        "id": "678a9269-13b5-4dad-877a-afc304bfe576",
+        "name": "SplitInBatches",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -560,
+          304
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "6290c708-be07-4f1e-ad6f-e4cdc17018d1",
+        "name": "Store Competitor Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1060,
+          304
+        ],
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.competitors) {\n  staticData.competitors = [];\n}\n\nconst domain = $('Extract Domain & Folder').first().json.domain;\nconst dateToday = $('Extract Domain & Folder').first().json.dateToday;\nconst folderId = $('Extract Domain & Folder').first().json.folderId;\nconst managerEmail = $('Extract Domain & Folder').first().json.managerEmail || '';\nconst sections = $('Collect Sections').first().json;\nconst finalSummary = $json.message?.content || $json.content || $json.text || '';\n\nstaticData.competitors.push({\n  domain,\n  dateToday,\n  folderId,\n  managerEmail,\n  finalSummary,\n  sections: {\n    section1: sections.section1 || '',\n    section2: sections.section2 || '',\n    section3: sections.section3 || '',\n    section4: sections.section4 || '',\n    section5: sections.section5 || '',\n    section6: sections.section6 || ''\n  }\n});\n\nreturn [{ json: { stored: true, competitorIndex: staticData.competitors.length - 1, domain } }];"
+        }
       }
     ],
     "connections": {
-      "Webhook": {
-        "main": [
-          [
-            {
-              "node": "Set Variables",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "Set Variables": {
         "main": [
           [
@@ -2123,17 +2178,6 @@
           [
             {
               "node": "Final Summary Agent",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Final Summary Agent": {
-        "main": [
-          [
-            {
-              "node": "Prepare Document",
               "type": "main",
               "index": 0
             }
@@ -2333,29 +2377,73 @@
             }
           ]
         ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Parse Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Input": {
+        "main": [
+          [
+            {
+              "node": "SplitInBatches",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SplitInBatches": {
+        "main": [
+          [
+            {
+              "node": "Set Variables",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Final Summary Agent": {
+        "main": [
+          [
+            {
+              "node": "Store Competitor Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Store Competitor Result": {
+        "main": [
+          [
+            {
+              "node": "SplitInBatches",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "OLEKSANDR Polischuk",
     "name": null,
     "description": null,
-    "autosaved": false,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-02-25T19:32:22.278Z",
-        "id": 736,
-        "workflowId": "BAekxapYobfgHYTt",
-        "versionId": "45502dd5-30e2-46be-acc9-8a793a182de0",
-        "event": "activated",
-        "userId": "6f7766c1-8e6d-478f-a667-93619ba35dbe"
-      },
-      {
-        "createdAt": "2026-02-25T19:32:23.292Z",
-        "id": 737,
-        "workflowId": "BAekxapYobfgHYTt",
-        "versionId": "45502dd5-30e2-46be-acc9-8a793a182de0",
-        "event": "activated",
-        "userId": "6f7766c1-8e6d-478f-a667-93619ba35dbe"
-      }
-    ]
+    "autosaved": false
   }
 }
