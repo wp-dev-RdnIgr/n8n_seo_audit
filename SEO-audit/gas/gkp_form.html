@@ -2,10 +2,45 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <style>
+    /* ==========================================
+       CSS CUSTOM PROPERTIES
+       ========================================== */
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-light: #EEF2FF;
+      --primary-border: #E0E7FF;
+      --success: #059669;
+      --success-light: #ECFDF5;
+      --success-border: #A7F3D0;
+      --error: #DC2626;
+      --error-light: #FEF2F2;
+      --error-border: #FECACA;
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --nav-bg: #0F172A;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    /* ==========================================
+       RESET & BASE
+       ========================================== */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -14,76 +49,177 @@
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: var(--bg);
       min-height: 100vh;
-      padding: 24px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--primary);
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
     }
 
-    .container {
-      width: 100%;
+    .nav-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .nav-links::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-link.active {
+      color: #fff;
+      background: rgba(79,70,229,0.45);
+    }
+
+    /* ==========================================
+       MAIN CONTENT
+       ========================================== */
+    .main {
       max-width: 520px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
     }
 
+    /* ==========================================
+       CARD
+       ========================================== */
     .card {
-      background: #ffffff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      border-radius: 20px;
-      padding: 36px 32px;
-      box-shadow:
-        0 4px 24px rgba(0, 0, 0, 0.06),
-        0 1px 2px rgba(0, 0, 0, 0.04);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
 
+    /* ==========================================
+       HEADER
+       ========================================== */
     .header {
       text-align: center;
       margin-bottom: 28px;
     }
 
-    .logo {
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border-radius: 14px;
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 18px;
-      font-size: 24px;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+      margin: 0 auto 16px;
+    }
+
+    .header-icon i {
+      font-size: 22px;
+      color: var(--primary);
     }
 
     .header h1 {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
-      color: #1e293b;
+      color: var(--text);
       margin-bottom: 6px;
       letter-spacing: -0.3px;
     }
 
     .header p {
       font-size: 13px;
-      color: #64748b;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
+    /* ==========================================
+       FORM ELEMENTS
+       ========================================== */
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
-    label {
+    .form-label {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: var(--text);
       margin-bottom: 6px;
     }
 
-    .label-hint {
+    .form-label-hint {
       font-weight: 400;
-      color: #94a3b8;
+      color: var(--text-muted);
       font-size: 11px;
     }
 
@@ -91,61 +227,111 @@
       position: relative;
     }
 
-    .input-icon {
+    .input-wrapper i {
       position: absolute;
-      left: 14px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 16px;
-      opacity: 0.4;
+      font-size: 18px;
+      color: var(--text-muted);
       pointer-events: none;
+      transition: color 0.2s;
     }
 
-    input[type="text"],
-    input[type="number"] {
+    .input-field {
       width: 100%;
-      padding: 12px 14px 12px 44px;
+      padding: 11px 14px 11px 40px;
       font-size: 14px;
       font-family: inherit;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
     }
 
-    input[type="number"] {
-      padding-left: 14px;
+    .input-field::placeholder {
+      color: var(--text-muted);
     }
 
-    select {
+    .input-field:hover {
+      border-color: #CBD5E1;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    .input-field:focus ~ i {
+      color: var(--primary);
+    }
+
+    .input-field-plain {
       width: 100%;
-      padding: 12px 14px;
+      padding: 11px 14px;
       font-size: 14px;
       font-family: inherit;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
+    }
+
+    .input-field-plain::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-field-plain:hover {
+      border-color: #CBD5E1;
+    }
+
+    .input-field-plain:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    /* Select */
+    .select-field {
+      width: 100%;
+      padding: 11px 36px 11px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
       cursor: pointer;
       appearance: none;
+      transition: all 0.2s ease;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 14px center;
+      background-position: right 12px center;
     }
 
-    textarea {
+    .select-field:hover {
+      border-color: #CBD5E1;
+    }
+
+    .select-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    /* Textarea */
+    .textarea-field {
       width: 100%;
-      padding: 12px 14px;
+      padding: 11px 14px;
       font-size: 13px;
       font-family: 'Inter', monospace;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       outline: none;
       transition: all 0.2s ease;
       resize: vertical;
@@ -153,21 +339,20 @@
       line-height: 1.6;
     }
 
-    input:hover, select:hover, textarea:hover {
-      border-color: #cbd5e1;
-      background: #f1f5f9;
+    .textarea-field::placeholder {
+      color: var(--text-muted);
     }
 
-    input:focus, select:focus, textarea:focus {
-      border-color: #10b981;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    .textarea-field:hover {
+      border-color: #CBD5E1;
     }
 
-    input::placeholder, textarea::placeholder {
-      color: #94a3b8;
+    .textarea-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
     }
 
+    /* Row */
     .row {
       display: flex;
       gap: 12px;
@@ -177,11 +362,13 @@
       flex: 1;
     }
 
-    /* Tags input */
+    /* ==========================================
+       TAGS INPUT
+       ========================================== */
     .tags-container {
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
       padding: 8px 10px;
       display: flex;
       flex-wrap: wrap;
@@ -192,28 +379,28 @@
     }
 
     .tags-container:hover {
-      border-color: #cbd5e1;
-      background: #f1f5f9;
+      border-color: #CBD5E1;
     }
 
     .tags-container:focus-within {
-      border-color: #10b981;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
     }
 
     .tag {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 10px;
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
+      padding: 4px 8px 4px 10px;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
-      color: #065f46;
+      color: var(--primary);
       animation: tagIn 0.15s ease;
+      line-height: 1;
     }
 
     @keyframes tagIn {
@@ -223,17 +410,23 @@
 
     .tag-remove {
       cursor: pointer;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
       font-size: 14px;
-      color: #6ee7b7;
-      line-height: 1;
-      padding: 0 2px;
-      border-radius: 3px;
+      color: var(--primary);
+      opacity: 0.5;
       transition: all 0.15s;
+      line-height: 1;
     }
 
     .tag-remove:hover {
-      color: #dc2626;
-      background: #fee2e2;
+      opacity: 1;
+      color: var(--error);
+      background: var(--error-light);
     }
 
     .tags-input {
@@ -242,43 +435,66 @@
       background: transparent;
       font-size: 13px;
       font-family: inherit;
-      color: #1e293b;
+      color: var(--text);
       flex: 1;
       min-width: 120px;
       padding: 4px 2px;
     }
 
     .tags-input::placeholder {
-      color: #94a3b8;
+      color: var(--text-muted);
     }
 
     .tag-count {
       font-size: 11px;
-      color: #94a3b8;
-      margin-top: 4px;
+      color: var(--text-muted);
+      margin-top: 6px;
     }
 
-    /* Collapsible */
+    /* ==========================================
+       COLLAPSIBLE
+       ========================================== */
     .collapsible-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      padding: 10px 0;
+      padding: 12px 0 8px;
       user-select: none;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
     }
 
-    .collapsible-header label {
+    .collapsible-header:hover .collapsible-label {
+      color: var(--text);
+    }
+
+    .collapsible-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
       cursor: pointer;
-      margin-bottom: 0;
-      color: #64748b;
-      font-size: 12px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .collapsible-label i {
+      font-size: 16px;
+      color: var(--text-muted);
     }
 
     .collapsible-arrow {
-      font-size: 10px;
-      color: #94a3b8;
-      transition: transform 0.2s;
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: transform 0.25s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .collapsible-arrow.open {
+      transform: rotate(180deg);
     }
 
     .collapsible-body {
@@ -291,46 +507,52 @@
       max-height: 400px;
     }
 
-    .collapsible-arrow.open {
-      transform: rotate(180deg);
-    }
-
-    /* Button */
+    /* ==========================================
+       BUTTON
+       ========================================== */
     .btn {
       width: 100%;
-      padding: 14px 24px;
+      padding: 12px 20px;
       font-size: 14px;
       font-weight: 600;
       font-family: inherit;
-      color: white;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
-      letter-spacing: 0.2px;
-      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     .btn:hover {
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
     }
 
     .btn:active {
       transform: translateY(0);
-    }
-
-    .btn:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-      transform: none;
       box-shadow: none;
     }
 
-    .btn-loading span {
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn-loading .btn-content {
       visibility: hidden;
     }
 
@@ -342,110 +564,120 @@
       width: 20px;
       height: 20px;
       margin: -10px 0 0 -10px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.65s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Result */
+    /* ==========================================
+       RESULT
+       ========================================== */
     .result {
-      margin-top: 20px;
-      padding: 16px 18px;
-      border-radius: 10px;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
       display: none;
-      animation: slideIn 0.25s ease;
+      animation: slideIn 0.3s ease;
     }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .result.success {
       display: block;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: var(--success-light);
+      border: 1px solid var(--success-border);
     }
 
     .result.error {
       display: block;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: var(--error-light);
+      border: 1px solid var(--error-border);
     }
 
     .result-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .result-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
+    .result-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
     }
 
-    .result.success .result-icon {
-      background: #dcfce7;
-      color: #16a34a;
+    .result.success .result-badge {
+      background: #D1FAE5;
+      color: var(--success);
     }
 
-    .result.error .result-icon {
-      background: #fee2e2;
-      color: #dc2626;
+    .result.error .result-badge {
+      background: #FEE2E2;
+      color: var(--error);
     }
 
-    .result h3 {
+    .result-title {
       font-size: 14px;
       font-weight: 600;
     }
 
-    .result.success h3 { color: #15803d; }
-    .result.error h3 { color: #dc2626; }
+    .result.success .result-title {
+      color: #065F46;
+    }
 
-    .result p {
+    .result.error .result-title {
+      color: var(--error);
+    }
+
+    .result-body {
       font-size: 13px;
-      color: #475569;
+      color: var(--text-secondary);
       line-height: 1.5;
     }
 
-    .result a {
+    .result-link {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-top: 12px;
-      padding: 9px 14px;
+      margin-top: 10px;
+      padding: 8px 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #15803d;
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      border-radius: 7px;
+      color: #065F46;
+      background: #D1FAE5;
+      border: 1px solid var(--success-border);
+      border-radius: 6px;
       text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
 
-    .result a:hover {
-      background: #bbf7d0;
+    .result-link:hover {
+      background: #A7F3D0;
     }
 
-    .result .stats {
+    .result-link i {
+      font-size: 16px;
+    }
+
+    .result-stats {
       display: flex;
-      gap: 16px;
+      gap: 20px;
       margin-top: 12px;
       padding-top: 12px;
-      border-top: 1px solid #bbf7d0;
+      border-top: 1px solid var(--success-border);
     }
 
     .stat {
@@ -455,20 +687,22 @@
     .stat-value {
       font-size: 20px;
       font-weight: 700;
-      color: #15803d;
+      color: #065F46;
     }
 
     .stat-label {
       font-size: 11px;
-      color: #64748b;
+      color: var(--text-secondary);
       margin-top: 2px;
     }
 
-    /* Footer */
+    /* ==========================================
+       FOOTER
+       ========================================== */
     .footer {
       margin-top: 20px;
       padding-top: 16px;
-      border-top: 1px solid #f3f4f6;
+      border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -479,47 +713,98 @@
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: #64748b;
+      color: var(--text-secondary);
     }
 
-    .footer-time svg {
-      width: 14px;
-      height: 14px;
-      opacity: 0.6;
+    .footer-time i {
+      font-size: 16px;
+      color: var(--text-muted);
     }
 
     .footer-brand {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--text-muted);
     }
 
-    .footer-brand span {
-      color: #10b981;
+    .footer-brand strong {
+      color: var(--primary);
       font-weight: 600;
+    }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+    @media (max-width: 600px) {
+      .nav-inner {
+        gap: 16px;
+      }
+      .nav-links {
+        gap: 1px;
+      }
+      .nav-link {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      .main {
+        padding: 24px 16px 48px;
+      }
+      .card {
+        padding: 24px 20px;
+      }
+      .row {
+        flex-direction: column;
+        gap: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- ── Navigation ── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">W</div>
+        <span class="nav-brand-text">SEO Hub</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Populated dynamically via getWebAppUrl() -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <div class="main">
     <div class="card">
+
+      <!-- Header -->
       <div class="header">
-        <div class="logo">🔑</div>
+        <div class="header-icon">
+          <i class="ti ti-key"></i>
+        </div>
         <h1>Семантичне ядро</h1>
         <p>Збір даних з Google Keyword Planner</p>
       </div>
 
-      <!-- Назва документа -->
+      <!-- Report Name -->
       <div class="form-group">
-        <label>Назва звіту</label>
+        <label class="form-label" for="docName">Назва звіту</label>
         <div class="input-wrapper">
-          <input type="text" id="docName" placeholder="GKP Report - Nike UA">
-          <span class="input-icon">📄</span>
+          <input
+            type="text"
+            class="input-field"
+            id="docName"
+            placeholder="GKP Report - Nike UA"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <i class="ti ti-file-text"></i>
         </div>
       </div>
 
-      <!-- Seed Keywords -->
+      <!-- Seed Keywords (Tags) -->
       <div class="form-group">
-        <label>Ключові слова <span class="label-hint">(Enter для додавання)</span></label>
+        <label class="form-label">Ключові слова <span class="form-label-hint">(Enter для додавання)</span></label>
         <div class="tags-container" id="tagsContainer" onclick="document.getElementById('tagsInput').focus()">
           <input type="text" class="tags-input" id="tagsInput" placeholder="Введіть ключове слово...">
         </div>
@@ -529,8 +814,8 @@
       <!-- Language + Geo -->
       <div class="row">
         <div class="form-group">
-          <label>Мова</label>
-          <select id="language">
+          <label class="form-label" for="language">Мова</label>
+          <select class="select-field" id="language">
             <option value="1036" selected>Українська</option>
             <option value="1000">English</option>
             <option value="1030">Polski</option>
@@ -554,8 +839,8 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Геотаргетинг</label>
-          <select id="geoTarget">
+          <label class="form-label" for="geoTarget">Геотаргетинг</label>
+          <select class="select-field" id="geoTarget">
             <option value="2804" selected>Україна</option>
             <option value="2840">США</option>
             <option value="2826">Великобританія</option>
@@ -581,52 +866,86 @@
       </div>
 
       <!-- Limit -->
-      <div class="row">
-        <div class="form-group">
-          <label>Ліміт ключів</label>
-          <input type="number" id="limit" value="600" min="10" max="5000">
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="limit">Ліміт ключів</label>
+        <input type="number" class="input-field-plain" id="limit" value="600" min="10" max="5000">
       </div>
 
       <!-- URL Mapping (collapsible) -->
       <div class="collapsible-header" onclick="toggleCollapsible()">
-        <label>URL-маппінг (необов'язково)</label>
-        <span class="collapsible-arrow" id="collapseArrow">▼</span>
+        <span class="collapsible-label">
+          <i class="ti ti-link"></i>
+          URL-маппінг (необов'язково)
+        </span>
+        <span class="collapsible-arrow" id="collapseArrow">
+          <i class="ti ti-chevron-down"></i>
+        </span>
       </div>
       <div class="collapsible-body" id="collapseBody">
-        <div class="form-group">
-          <textarea id="urlMapping" rows="4" placeholder="keyword | https://site.com/page&#10;keyword 2 | https://site.com/page2"></textarea>
+        <div class="form-group" style="margin-top: 4px;">
+          <textarea class="textarea-field" id="urlMapping" rows="4" placeholder="keyword | https://site.com/page&#10;keyword 2 | https://site.com/page2"></textarea>
         </div>
       </div>
 
+      <!-- Submit -->
       <button class="btn" id="submitBtn" onclick="handleSubmit()">
-        <span>Зібрати семантику</span>
+        <span class="btn-content"><i class="ti ti-player-play"></i> Зібрати семантику</span>
       </button>
 
+      <!-- Result -->
       <div class="result" id="result">
         <div class="result-header">
-          <div class="result-icon" id="resultIcon"></div>
-          <h3 id="resultTitle"></h3>
+          <div class="result-badge" id="resultBadge"><i id="resultIcon"></i></div>
+          <div class="result-title" id="resultTitle"></div>
         </div>
-        <p id="resultMessage"></p>
+        <div class="result-body" id="resultMessage"></div>
         <div id="resultExtra"></div>
       </div>
 
+      <!-- Footer -->
       <div class="footer">
         <div class="footer-time">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <i class="ti ti-clock"></i>
           Час генерації: ~2 хв
         </div>
         <div class="footer-brand">
-          <span>WebPromo</span>
+          <strong>WebPromo</strong>
         </div>
       </div>
+
     </div>
   </div>
 
   <script>
+    // ============================================
+    // Navigation: build links dynamically
+    // ============================================
+    (function buildNav() {
+      var navData = [
+        { label: 'Аналіз',      page: 'audit' },
+        { label: 'Мастер',      page: 'master' },
+        { label: 'Wizard',       page: 'wizard' },
+        { label: 'GKP',          page: 'gkp' },
+        { label: 'Ідеї GKP',    page: 'gkp_ideas' },
+        { label: 'Метрики GKP', page: 'gkp_metrics' },
+        { label: 'PageSpeed',    page: 'pagespeed' },
+        { label: 'AI Tools',     page: 'pdf_audit' }
+      ];
+
+      google.script.run
+        .withSuccessHandler(function(baseUrl) {
+          var container = document.getElementById('navLinks');
+          navData.forEach(function(item) {
+            var a = document.createElement('a');
+            a.className = 'nav-link' + (item.page === 'gkp' ? ' active' : '');
+            a.href = baseUrl + '?page=' + item.page;
+            a.textContent = item.label;
+            container.appendChild(a);
+          });
+        })
+        .getWebAppUrl();
+    })();
+
     // ============================================
     // Tags Input
     // ============================================
@@ -753,18 +1072,19 @@
 
     function showSuccess(data) {
       var resultDiv = document.getElementById('result');
+      var resultBadge = document.getElementById('resultBadge');
       var resultIcon = document.getElementById('resultIcon');
       var resultTitle = document.getElementById('resultTitle');
       var resultMessage = document.getElementById('resultMessage');
       var resultExtra = document.getElementById('resultExtra');
 
       resultDiv.className = 'result success';
-      resultIcon.textContent = '\u2713';
+      resultIcon.className = 'ti ti-check';
       resultTitle.textContent = 'Семантику зібрано';
       resultMessage.innerHTML = data.message;
       resultExtra.innerHTML =
-        '<a href="' + data.spreadsheetUrl + '" target="_blank">Відкрити таблицю \u2192</a>' +
-        '<div class="stats">' +
+        '<a class="result-link" href="' + data.spreadsheetUrl + '" target="_blank"><i class="ti ti-external-link"></i> Відкрити таблицю</a>' +
+        '<div class="result-stats">' +
           '<div class="stat"><div class="stat-value">' + data.totalKeywords + '</div><div class="stat-label">ключових слів</div></div>' +
           '<div class="stat"><div class="stat-value">' + data.totalClusters + '</div><div class="stat-label">сід-фраз</div></div>' +
         '</div>';
@@ -778,7 +1098,7 @@
       var resultExtra = document.getElementById('resultExtra');
 
       resultDiv.className = 'result error';
-      resultIcon.textContent = '\u2715';
+      resultIcon.className = 'ti ti-x';
       resultTitle.textContent = 'Помилка';
       resultMessage.textContent = message;
       resultExtra.innerHTML = '';
