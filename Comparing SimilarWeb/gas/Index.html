@@ -1303,3 +1303,98 @@ document.getElementById('newCompetitorSite').addEventListener('keydown', functio
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet') ?>
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────── -->
+<header>
+  <h1>SEO Audit — SimilarWeb</h1>
+  <nav>
+    <button class="tab active" data-tab="clients">Clients</button>
+    <button class="tab" data-tab="compare">Compare</button>
+    <button class="tab" data-tab="queue">Queue</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </nav>
+</header>
+
+<!-- ─── Clients Tab ─────────────────────────── -->
+<section id="tab-clients" class="tab-content active">
+  <div class="toolbar">
+    <h2>Clients & Competitors</h2>
+    <div class="add-form">
+      <input id="new-client-site" type="text" placeholder="example.com">
+      <button onclick="addClientHandler()">+ Add Client</button>
+    </div>
+  </div>
+
+  <div id="clients-list" class="cards-grid">
+    <p class="loading">Loading...</p>
+  </div>
+</section>
+
+<!-- ─── Compare Tab ─────────────────────────── -->
+<section id="tab-compare" class="tab-content">
+  <div class="toolbar">
+    <h2>Data Comparison</h2>
+    <div class="filters">
+      <select id="compare-client"></select>
+      <select id="compare-period"></select>
+      <button onclick="loadComparison()">Load</button>
+    </div>
+  </div>
+
+  <div id="compare-table-wrap">
+    <p class="hint">Select a client and period to view data.</p>
+  </div>
+</section>
+
+<!-- ─── Queue Tab ───────────────────────────── -->
+<section id="tab-queue" class="tab-content">
+  <div class="toolbar">
+    <h2>Task Queue</h2>
+    <button onclick="loadQueue()">Refresh</button>
+  </div>
+
+  <div id="queue-summary" class="summary-cards"></div>
+  <div id="queue-table-wrap"></div>
+</section>
+
+<!-- ─── Settings Tab ────────────────────────── -->
+<section id="tab-settings" class="tab-content">
+  <h2>Supabase Connection</h2>
+  <div class="settings-form">
+    <label>Supabase URL
+      <input id="sb-url" type="url" placeholder="https://xxx.supabase.co">
+    </label>
+    <label>Service Role Key
+      <input id="sb-key" type="password" placeholder="eyJ...">
+    </label>
+    <button onclick="saveSettingsHandler()">Save & Test</button>
+    <div id="settings-status"></div>
+  </div>
+</section>
+
+<!-- ─── Competitor Modal ────────────────────── -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Competitors for <span id="modal-client-name"></span></h3>
+    <div class="add-form">
+      <input id="new-competitor-site" type="text" placeholder="competitor.com">
+      <button onclick="addCompetitorHandler()">+ Add</button>
+    </div>
+    <div id="competitors-list"></div>
+    <button class="btn-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- ─── Toast ───────────────────────────────── -->
+<div id="toast" class="toast hidden"></div>
+
+<?!= include('JavaScript') ?>
+</body>
+</html>

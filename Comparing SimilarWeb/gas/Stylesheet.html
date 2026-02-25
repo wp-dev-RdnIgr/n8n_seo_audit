@@ -1,0 +1,92 @@
+<style>
+/* ─── Reset & Base ───────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+/* ─── Header ─────────────────────────────── */
+header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+header h1 { font-size: 18px; font-weight: 600; white-space: nowrap; }
+nav { display: flex; gap: 4px; }
+.tab { background: transparent; border: none; color: rgba(255,255,255,.6); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all .2s; }
+.tab:hover { color: #fff; background: rgba(255,255,255,.1); }
+.tab.active { color: #fff; background: rgba(255,255,255,.15); font-weight: 600; }
+
+/* ─── Tab Content ────────────────────────── */
+.tab-content { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* ─── Toolbar ────────────────────────────── */
+.toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.toolbar h2 { font-size: 20px; font-weight: 600; }
+
+/* ─── Forms ──────────────────────────────── */
+.add-form { display: flex; gap: 8px; }
+.add-form input, .filters select, .settings-form input {
+  padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; transition: border .2s;
+}
+.add-form input:focus, .settings-form input:focus { border-color: #4f46e5; }
+button { padding: 8px 16px; background: #4f46e5; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background .2s; }
+button:hover { background: #4338ca; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.settings-form { max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+.settings-form label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; font-size: 14px; }
+.settings-form input { width: 100%; }
+#settings-status { padding: 8px; border-radius: 6px; font-size: 14px; }
+#settings-status.ok { background: #dcfce7; color: #166534; }
+#settings-status.err { background: #fee2e2; color: #991b1b; }
+
+/* ─── Cards Grid ─────────────────────────── */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: box-shadow .2s; }
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-header h3 { font-size: 16px; font-weight: 600; }
+.card-actions { display: flex; gap: 6px; }
+.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+.btn-danger { background: #ef4444; }
+.btn-danger:hover { background: #dc2626; }
+.btn-secondary { background: #6b7280; }
+.btn-secondary:hover { background: #4b5563; }
+.chip { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; }
+.card-meta { font-size: 12px; color: #6b7280; margin-top: 8px; }
+
+/* ─── Comparison Table ───────────────────── */
+.data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.data-table th { background: #1a1a2e; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 500; text-align: left; white-space: nowrap; }
+.data-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8f9fb; }
+.data-table .type-client { font-weight: 600; color: #4f46e5; }
+.data-table .type-competitor { color: #6b7280; }
+
+/* ─── Queue Summary ──────────────────────── */
+.summary-cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.summary-card { background: #fff; border-radius: 8px; padding: 16px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); text-align: center; min-width: 120px; }
+.summary-card .num { font-size: 28px; font-weight: 700; }
+.summary-card .label { font-size: 12px; color: #6b7280; text-transform: uppercase; }
+.summary-card.pending .num { color: #f59e0b; }
+.summary-card.processing .num { color: #3b82f6; }
+.summary-card.done .num { color: #10b981; }
+.summary-card.error .num { color: #ef4444; }
+
+/* ─── Modal ──────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.hidden { display: none; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+.modal h3 { margin-bottom: 16px; }
+.btn-close { background: #6b7280; margin-top: 16px; }
+#competitors-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.comp-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fb; border-radius: 6px; }
+
+/* ─── Toast ──────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 14px; z-index: 200; transition: opacity .3s; }
+.toast.hidden { opacity: 0; pointer-events: none; }
+.toast.success { background: #10b981; }
+.toast.error { background: #ef4444; }
+
+.loading { color: #6b7280; font-style: italic; }
+.hint { color: #9ca3af; font-size: 14px; }
+.filters { display: flex; gap: 8px; align-items: center; }
+.filters select { min-width: 180px; }
+</style>
