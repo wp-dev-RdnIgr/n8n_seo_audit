@@ -180,18 +180,38 @@ function extractFileIdFromUrl(url) {
 // ============================================
 
 function submitAIAnalysis(formData) {
-  // Support both old format (string URL) and new format (object with url + manager_email)
-  var spreadsheetUrl = typeof formData === 'string' ? formData : (formData.url || '');
-  var managerEmail = typeof formData === 'string' ? '' : (formData.manager_email || '');
+  // Support 3 formats:
+  // 1. String URL (legacy single competitor)
+  // 2. { url: "...", manager_email: "..." } (legacy single)
+  // 3. { urls: ["...", "..."], manager_email: "..." } (new multi-competitor)
+  var urls = [];
+  var managerEmail = '';
 
-  if (!spreadsheetUrl || !spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
-    return { success: false, error: 'Невірний формат посилання на таблицю' };
+  if (typeof formData === 'string') {
+    urls = [formData];
+  } else if (formData.urls && formData.urls.length > 0) {
+    urls = formData.urls;
+    managerEmail = formData.manager_email || '';
+  } else if (formData.url) {
+    urls = [formData.url];
+    managerEmail = formData.manager_email || '';
+  }
+
+  // Validate all URLs
+  for (var i = 0; i < urls.length; i++) {
+    if (!urls[i] || !urls[i].includes('docs.google.com/spreadsheets')) {
+      return { success: false, error: 'Конкурент ' + (i + 1) + ': невірний формат посилання на таблицю' };
+    }
+  }
+
+  if (urls.length === 0) {
+    return { success: false, error: 'Додайте хоча б одне посилання на таблицю' };
   }
 
   var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/seo-audit-ai-report';
 
   var payload = {
-    url: spreadsheetUrl
+    urls: urls
   };
 
   if (managerEmail) {
@@ -202,7 +222,8 @@ function submitAIAnalysis(formData) {
     method: 'POST',
     contentType: 'application/json',
     payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+    muteHttpExceptions: true,
+    timeout: 600
   };
 
   try {
@@ -225,8 +246,10 @@ function submitAIAnalysis(formData) {
     return {
       success: true,
       docUrl: result.docUrl,
-      domain: result.domain,
-      message: 'AI звіт створено для ' + result.domain
+      domain: result.domain || '',
+      domains: result.domains || [],
+      competitorsCount: result.competitorsCount || urls.length,
+      message: 'AI звіт створено для ' + urls.length + ' конкурент(ів)'
     };
   } catch (error) {
     return { success: false, error: error.toString() };
