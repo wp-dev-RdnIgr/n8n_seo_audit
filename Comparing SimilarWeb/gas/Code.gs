@@ -190,6 +190,10 @@ function getAvailablePeriods() {
   return supabaseRpc('get_distinct_periods');
 }
 
+function getClientPeriods(clientId) {
+  return supabaseRpc('get_client_periods', { p_client_id: clientId });
+}
+
 // ============================================
 // TASK QUEUE
 // ============================================
