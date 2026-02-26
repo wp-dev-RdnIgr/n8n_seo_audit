@@ -519,6 +519,31 @@
     .ai-url-add:hover { background: var(--color-accent-light); border-color: var(--color-accent); }
     .ai-url-add i { font-size: 16px; }
 
+    /* === RESULT PROCESSING STATE === */
+    .result-card.processing { border-color: #FDE68A; background: #FFFBEB; }
+    .result-card.processing .result-card-header { color: #92400E; }
+    .result-processing-status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; font-size: 13px; color: var(--color-text-secondary);
+    }
+    .result-processing-status i { font-size: 16px; }
+    .result-processing-status .spinning { animation: spin 1s linear infinite; }
+    .btn-check-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      color: var(--color-accent-hover);
+      background: var(--color-accent-lighter);
+      border: 1.5px solid var(--color-accent-light);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-top: 8px;
+    }
+    .btn-check-status:hover { background: var(--color-accent-light); }
+    .btn-check-status:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-check-status i { font-size: 16px; }
+
     /* === REQUIREMENTS LIST === */
     .req-list {
       margin: 0; padding: 0 0 0 18px;
@@ -1433,6 +1458,8 @@ function getAiUrls() {
   return urls;
 }
 
+var _aiDocId = null; // Track doc ID for status polling
+
 function launchAI() {
   var urls = getAiUrls();
   if (urls.length === 0) {
@@ -1445,15 +1472,14 @@ function launchAI() {
   }
   var btn = document.getElementById('btnAI');
   btn.disabled = true; btn.classList.add('btn-loading');
-  showResultLoading('aiResult', 'Аналіз ' + urls.length + ' конкурент(ів)... ~' + (urls.length * 3) + '-' + (urls.length * 5) + ' хв');
+  showResultLoading('aiResult', 'Створення документа...');
 
   google.script.run
     .withSuccessHandler(function(r) {
       btn.disabled = false; btn.classList.remove('btn-loading');
       if (r.success) {
-        var domains = r.domains && r.domains.length > 0 ? r.domains.join(', ') : r.domain || '';
-        var label = 'AI-звіт створено (' + (r.competitorsCount || urls.length) + ' конкурент(ів)' + (domains ? ': ' + domains : '') + ')';
-        showResultSuccess('aiResult', label, r.docUrl, 'doc-link');
+        _aiDocId = r.docId || null;
+        showResultProcessing('aiResult', r.docUrl, r.competitorsCount || urls.length);
       } else { showResultError('aiResult', r.error || 'Помилка'); }
     })
     .withFailureHandler(function(e) {
@@ -1461,6 +1487,53 @@ function launchAI() {
       showResultError('aiResult', e.toString());
     })
     .submitAIAnalysis({ urls: urls, manager_email: stepData.email });
+}
+
+function showResultProcessing(id, docUrl, count) {
+  var el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.className = 'result-card processing';
+  el.innerHTML =
+    '<div class="result-card-header"><i class="ti ti-circle-check"></i> Документ створено (' + count + ' конкурент(ів))</div>' +
+    '<div class="result-link-row">' +
+      '<a href="' + docUrl + '" target="_blank" class="result-link doc-link"><i class="ti ti-external-link"></i> Відкрити документ</a>' +
+      '<button class="copy-btn" onclick="copyToClipboard(\'' + docUrl.replace(/'/g, "\\'") + '\',this)" title="Скопіювати"><i class="ti ti-copy"></i></button>' +
+    '</div>' +
+    '<div class="result-processing-status" id="aiStatusText">' +
+      '<i class="ti ti-loader-2 spinning"></i> <span>Документ форматується у фоні. Можна вже переглядати...</span>' +
+    '</div>' +
+    '<button class="btn-check-status" id="btnCheckAI" onclick="checkAiDocStatus()">' +
+      '<i class="ti ti-refresh"></i> Перевірити готовність' +
+    '</button>';
+}
+
+function checkAiDocStatus() {
+  if (!_aiDocId) { return; }
+  var btn = document.getElementById('btnCheckAI');
+  var statusEl = document.getElementById('aiStatusText');
+  btn.disabled = true;
+  statusEl.innerHTML = '<i class="ti ti-loader-2 spinning"></i> <span>Перевіряю...</span>';
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false;
+      if (r.success && r.isComplete) {
+        // Document is fully ready
+        var el = document.getElementById('aiResult');
+        el.className = 'result-card success';
+        statusEl.innerHTML = '<i class="ti ti-circle-check" style="color:var(--color-success)"></i> <span style="color:var(--color-success);font-weight:600">Документ повністю готовий!' + (r.docName ? ' (' + r.docName + ')' : '') + '</span>';
+        btn.style.display = 'none';
+      } else if (r.success && !r.isComplete) {
+        statusEl.innerHTML = '<i class="ti ti-loader-2 spinning"></i> <span>Ще форматується... Спробуйте через хвилину.</span>';
+      } else {
+        statusEl.innerHTML = '<i class="ti ti-alert-triangle" style="color:var(--color-warning)"></i> <span>' + (r.error || 'Не вдалося перевірити') + '</span>';
+      }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      statusEl.innerHTML = '<i class="ti ti-alert-triangle" style="color:var(--color-warning)"></i> <span>' + e.toString() + '</span>';
+    })
+    .checkDocStatus(_aiDocId);
 }
 
 function launchPDF() {
