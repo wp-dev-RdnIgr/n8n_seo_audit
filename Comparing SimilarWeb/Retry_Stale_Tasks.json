@@ -1,0 +1,172 @@
+{
+  "name": "Retry Stale Tasks",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-1111-4000-a000-000000000001",
+      "name": "Cron: каждые 15 мин",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-600, 0],
+      "notes": "Каждые 15 минут проверяет зависшие задачи"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT handle_stale_tasks(10) AS reset_count;",
+        "options": {}
+      },
+      "id": "a1b2c3d4-1111-4000-a000-000000000002",
+      "name": "Обнаружить и сбросить зависшие",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-360, 0],
+      "credentials": {
+        "postgres": {
+          "id": "supabasePgCred",
+          "name": "Supabase - Postgres account"
+        }
+      },
+      "notes": "Вызывает handle_stale_tasks(10): находит задачи в processing >10 мин, логирует ошибки, сбрасывает в pending"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.reset_count }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-1111-4000-a000-000000000003",
+      "name": "Есть зависшие?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-120, 0]
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=⚠️ *Retry Stale Tasks*\n\nОбнаружено зависших задач: *{{ $json.reset_count }}*\nЗадачи сброшены в pending и будут обработаны повторно.\n\n🕐 {{ $now.format('yyyy-MM-dd HH:mm:ss') }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "a1b2c3d4-1111-4000-a000-000000000004",
+      "name": "Telegram: зависшие задачи",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [120, -60],
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) AS unresolved_count FROM error_logs WHERE resolved = FALSE;",
+        "options": {}
+      },
+      "id": "a1b2c3d4-1111-4000-a000-000000000005",
+      "name": "Подсчет нерешённых ошибок",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [120, 60],
+      "credentials": {
+        "postgres": {
+          "id": "supabasePgCred",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-1111-4000-a000-000000000006",
+      "name": "No-op: всё чисто",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [120, 160]
+    }
+  ],
+  "connections": {
+    "Cron: каждые 15 мин": {
+      "main": [
+        [
+          {
+            "node": "Обнаружить и сбросить зависшие",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обнаружить и сбросить зависшие": {
+      "main": [
+        [
+          {
+            "node": "Есть зависшие?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть зависшие?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: зависшие задачи",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Подсчет нерешённых ошибок",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No-op: всё чисто",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "SimilarWeb"
+    }
+  ]
+}

@@ -700,7 +700,14 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title"><i class="ti ti-bug"></i> Error Logs</div>
-        <button class="btn btn-sm btn-secondary" onclick="loadLogs()"><i class="ti ti-refresh"></i> Refresh</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="logsFilter" onchange="loadLogs()" style="width:auto;padding:4px 8px;font-size:12px">
+            <option value="all">All errors</option>
+            <option value="unresolved" selected>Unresolved</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <button class="btn btn-sm btn-secondary" onclick="loadLogs()"><i class="ti ti-refresh"></i> Refresh</button>
+        </div>
       </div>
       <div id="logsTableWrap">
         <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>
@@ -823,7 +830,7 @@ function loadDashboard() {
       document.getElementById('statCompetitors').textContent = stats.totalCompetitors;
       document.getElementById('statPending').textContent = stats.pendingTasks;
       document.getElementById('statDone').textContent = stats.completedTasks;
-      document.getElementById('statErrors').textContent = stats.recentErrors;
+      document.getElementById('statErrors').textContent = stats.unresolvedErrors + ' / ' + stats.recentErrors;
       document.getElementById('statDataRows').textContent = stats.dataRows;
       document.getElementById('clientsBadge').textContent = stats.totalClients;
       document.getElementById('queueBadge').textContent = stats.pendingTasks;
@@ -1519,28 +1526,48 @@ function buildQueue() {
 
 // ===== LOGS =====
 function loadLogs() {
+  var filter = document.getElementById('logsFilter').value;
   document.getElementById('logsTableWrap').innerHTML =
     '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>';
 
   google.script.run
     .withSuccessHandler(function(logs) {
       if (!logs || logs.length === 0) {
+        var msg = filter === 'unresolved' ? 'No unresolved errors' : filter === 'resolved' ? 'No resolved errors' : 'No errors logged';
         document.getElementById('logsTableWrap').innerHTML =
-          '<div class="empty-state"><i class="ti ti-mood-happy"></i><p>No errors logged</p></div>';
+          '<div class="empty-state"><i class="ti ti-mood-happy"></i><p>' + msg + '</p></div>';
         return;
       }
       var html = '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Date</th><th>Robot</th><th>Period</th><th>Sites</th><th>Error</th>'
+        + '<th>Date</th><th>Status</th><th>Robot</th><th>Period</th><th>Sites</th><th>Error</th><th>Retries</th><th>Actions</th>'
         + '</tr></thead><tbody>';
       for (var i = 0; i < logs.length; i++) {
         var l = logs[i];
         var date = l.created_at ? new Date(l.created_at).toLocaleString() : '—';
-        html += '<tr>'
+        var isResolved = l.resolved === true;
+        var statusBadge = isResolved
+          ? '<span class="badge-status badge-done">Resolved</span>'
+          : '<span class="badge-status badge-error">Unresolved</span>';
+        var resolvedDate = isResolved && l.resolved_at ? '<br><span style="font-size:10px;color:var(--text-secondary)">' + new Date(l.resolved_at).toLocaleString() + '</span>' : '';
+        var retries = l.retry_count || 0;
+
+        var actions = '';
+        if (!isResolved) {
+          actions += '<button class="btn btn-sm btn-primary" onclick="retryErrorLog(\'' + l.id + '\')" title="Retry"><i class="ti ti-refresh"></i></button> ';
+          actions += '<button class="btn btn-sm btn-secondary" onclick="markErrorResolved(\'' + l.id + '\')" title="Mark resolved"><i class="ti ti-check"></i></button>';
+        } else {
+          actions = '<span style="font-size:11px;color:var(--text-secondary)">—</span>';
+        }
+
+        html += '<tr' + (isResolved ? ' style="opacity:0.6"' : '') + '>'
           + '<td style="font-size:12px;white-space:nowrap">' + date + '</td>'
+          + '<td>' + statusBadge + resolvedDate + '</td>'
           + '<td><span class="badge-status badge-processing">' + escHtml(l.robot_type || '—') + '</span></td>'
           + '<td>' + escHtml(l.period || '—') + '</td>'
-          + '<td style="font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis">' + escHtml(l.sites || '—') + '</td>'
+          + '<td style="font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis" title="' + escHtml(l.sites || '') + '">' + escHtml(l.sites || '—') + '</td>'
           + '<td style="font-size:12px;color:var(--error);max-width:300px">' + escHtml(l.error_message || '—') + '</td>'
+          + '<td style="text-align:center">' + retries + '</td>'
+          + '<td style="white-space:nowrap">' + actions + '</td>'
           + '</tr>';
       }
       html += '</tbody></table></div>';
@@ -1550,7 +1577,38 @@ function loadLogs() {
       document.getElementById('logsTableWrap').innerHTML =
         '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
     })
-    .getErrorLogs(50);
+    .getErrorLogs(50, filter === 'all' ? null : filter);
+}
+
+function retryErrorLog(errorId) {
+  if (!confirm('Retry this task? It will be reset to pending in the queue.')) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        toast(result.message || 'Task queued for retry', 'success');
+        loadLogs();
+      } else {
+        toast(result.error || 'Retry failed', 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      toast('Retry failed: ' + (err.message || err), 'error');
+    })
+    .retryError(errorId);
+}
+
+function markErrorResolved(errorId) {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        toast('Error marked as resolved', 'success');
+        loadLogs();
+      }
+    })
+    .withFailureHandler(function(err) {
+      toast('Failed: ' + (err.message || err), 'error');
+    })
+    .resolveError(errorId);
 }
 
 // ===== INIT =====
