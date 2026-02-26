@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -588,9 +589,15 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Period</label>
-          <select id="dataPeriodSelect" onchange="loadDataForClient()">
-            <option value="">All periods</option>
+          <label>Period from</label>
+          <select id="dataPeriodFrom" onchange="loadDataForClient()">
+            <option value="">-- start --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Period to</label>
+          <select id="dataPeriodTo" onchange="loadDataForClient()">
+            <option value="">-- end --</option>
           </select>
         </div>
         <button class="btn btn-primary" onclick="loadDataForClient()">
@@ -608,6 +615,39 @@
           <i class="ti ti-chart-dots"></i>
           <p>Select a client to view comparison data</p>
         </div>
+      </div>
+    </div>
+
+    <!-- CHART SECTION -->
+    <div class="card" style="margin-top:16px;display:none" id="chartCard">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-chart-line"></i> Chart</div>
+      </div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="flex:0 0 200px">
+          <label>Metric</label>
+          <select id="chartMetricSelect">
+            <option value="monthly_visits">Visits</option>
+            <option value="unique_visitors">Unique Visitors</option>
+            <option value="pages_per_visit">Pages/Visit</option>
+            <option value="bounce_rate">Bounce Rate</option>
+            <option value="visit_duration">Duration</option>
+            <option value="direct">Direct</option>
+            <option value="organic_search">Organic Search</option>
+            <option value="paid_search">Paid Search</option>
+            <option value="display_ads">Display Ads</option>
+            <option value="social">Social</option>
+            <option value="email">Email</option>
+            <option value="ai_traffic">AI Traffic</option>
+            <option value="page_views">Page Views</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="buildChart()">
+          <i class="ti ti-chart-bar"></i> Build Chart
+        </button>
+      </div>
+      <div id="chartWrap" style="position:relative;width:100%;min-height:350px">
+        <canvas id="dataChart"></canvas>
       </div>
     </div>
   </div>
@@ -1057,20 +1097,27 @@ function fillSelects() {
 function loadPeriods() {
   google.script.run
     .withSuccessHandler(function(rows) {
-      var sel = document.getElementById('dataPeriodSelect');
+      var periods = [];
       var seen = {};
-      sel.innerHTML = '<option value="">All periods</option>';
       if (rows) {
         for (var i = 0; i < rows.length; i++) {
           var p = rows[i].period;
-          if (p && !seen[p]) {
-            seen[p] = true;
-            var opt = document.createElement('option');
-            opt.value = p;
-            opt.textContent = p;
-            sel.appendChild(opt);
-          }
+          if (p && !seen[p]) { seen[p] = true; periods.push(p); }
         }
+      }
+      periods.sort();
+      var selIds = ['dataPeriodFrom', 'dataPeriodTo'];
+      for (var s = 0; s < selIds.length; s++) {
+        var sel = document.getElementById(selIds[s]);
+        var prev = sel.value;
+        sel.innerHTML = '<option value="">-- ' + (s === 0 ? 'start' : 'end') + ' --</option>';
+        for (var j = 0; j < periods.length; j++) {
+          var opt = document.createElement('option');
+          opt.value = periods[j];
+          opt.textContent = periods[j];
+          sel.appendChild(opt);
+        }
+        if (prev) sel.value = prev;
       }
     })
     .withFailureHandler(function(err) {
@@ -1083,10 +1130,12 @@ function loadPeriods() {
 // ===== DATA =====
 function loadDataForClient() {
   var clientId = document.getElementById('dataClientSelect').value;
-  var period = document.getElementById('dataPeriodSelect').value;
+  var periodFrom = document.getElementById('dataPeriodFrom').value;
+  var periodTo = document.getElementById('dataPeriodTo').value;
   if (!clientId) {
     document.getElementById('dataTableWrap').innerHTML =
       '<div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a client to view comparison data</p></div>';
+    document.getElementById('chartCard').style.display = 'none';
     return;
   }
 
@@ -1096,12 +1145,14 @@ function loadDataForClient() {
   google.script.run
     .withSuccessHandler(function(rows) {
       renderDataTable(rows);
+      // Show chart card if we have data
+      document.getElementById('chartCard').style.display = (rows && rows.length) ? 'block' : 'none';
     })
     .withFailureHandler(function(err) {
       document.getElementById('dataTableWrap').innerHTML =
         '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
     })
-    .getSimilarwebData(clientId, period || null);
+    .getSimilarwebData(clientId, periodFrom || null, periodTo || null);
 }
 
 function renderDataTable(rows) {
@@ -1211,6 +1262,128 @@ function fallbackCopy(text, rowCount) {
     toast('Copy failed: ' + e, 'error');
   }
   document.body.removeChild(ta);
+}
+
+// ===== CHART =====
+var chartInstance = null;
+
+var CHART_COLORS = [
+  '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+  '#EC4899', '#06B6D4', '#F97316', '#6366F1', '#14B8A6',
+  '#E11D48', '#84CC16', '#7C3AED', '#0EA5E9', '#D946EF'
+];
+
+function parseNumericValue(val) {
+  if (!val || val === '—' || val === 'N/A') return 0;
+  var s = String(val).replace(/[%,]/g, '').trim();
+  // Handle M/K suffixes: 1.316M → 1316000
+  if (s.match(/[\d.]M$/i)) return parseFloat(s) * 1000000;
+  if (s.match(/[\d.]K$/i)) return parseFloat(s) * 1000;
+  // Handle duration HH:MM:SS → seconds
+  var timeParts = s.match(/^(\d+):(\d+):(\d+)$/);
+  if (timeParts) return parseInt(timeParts[1]) * 3600 + parseInt(timeParts[2]) * 60 + parseInt(timeParts[3]);
+  return parseFloat(s) || 0;
+}
+
+function buildChart() {
+  var rows = window._lastDataRows;
+  if (!rows || rows.length === 0) { toast('No data to chart', 'error'); return; }
+
+  var metricKey = document.getElementById('chartMetricSelect').value;
+  var metricLabel = document.getElementById('chartMetricSelect').selectedOptions[0].textContent;
+
+  // Collect unique periods (sorted) and sites
+  var periodsSet = {};
+  var sitesSet = {};
+  for (var i = 0; i < rows.length; i++) {
+    periodsSet[rows[i].period] = true;
+    sitesSet[rows[i].site] = true;
+  }
+  var periods = Object.keys(periodsSet).sort();
+  var sites = Object.keys(sitesSet).sort();
+
+  // Build lookup: site+period → value
+  var lookup = {};
+  for (var k = 0; k < rows.length; k++) {
+    lookup[rows[k].site + '|' + rows[k].period] = parseNumericValue(rows[k][metricKey]);
+  }
+
+  // Create datasets (one per site)
+  var datasets = [];
+  for (var s = 0; s < sites.length; s++) {
+    var data = [];
+    for (var p = 0; p < periods.length; p++) {
+      data.push(lookup[sites[s] + '|' + periods[p]] || 0);
+    }
+    datasets.push({
+      label: sites[s],
+      data: data,
+      backgroundColor: CHART_COLORS[s % CHART_COLORS.length],
+      borderColor: CHART_COLORS[s % CHART_COLORS.length],
+      borderWidth: 1,
+      borderRadius: 4
+    });
+  }
+
+  // Destroy previous chart
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  var canvas = document.getElementById('dataChart');
+  // Reset canvas dimensions
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 400;
+
+  chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: periods, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 16, usePointStyle: true, pointStyle: 'rectRounded', font: { family: 'Inter', size: 12 } }
+        },
+        title: {
+          display: true,
+          text: metricLabel + ' — by site & period',
+          font: { family: 'Inter', size: 16, weight: '600' },
+          padding: { bottom: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var v = ctx.parsed.y;
+              var formatted = v >= 1000000 ? (v / 1000000).toFixed(2) + 'M' : v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v.toLocaleString();
+              return ctx.dataset.label + ': ' + formatted;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: 'Inter', size: 12 } }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            callback: function(v) {
+              if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+              if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+              return v;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Scroll to chart
+  document.getElementById('chartCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast('Chart built: ' + metricLabel + ' (' + sites.length + ' sites × ' + periods.length + ' periods)', 'success');
 }
 
 // ===== QUEUE =====

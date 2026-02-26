@@ -175,9 +175,13 @@ function deleteCompetitor(id) {
 // SIMILARWEB DATA
 // ============================================
 
-function getSimilarwebData(clientId, period) {
-  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=*&order=site_type.asc,site.asc';
-  if (period) path += '&period=eq.' + period;
+function getSimilarwebData(clientId, periodFrom, periodTo) {
+  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=*&order=period.asc,site_type.asc,site.asc';
+  if (periodFrom && periodTo) {
+    path += '&period=gte.' + periodFrom + '&period=lte.' + periodTo;
+  } else if (periodFrom) {
+    path += '&period=eq.' + periodFrom;
+  }
   return supabaseGet(path);
 }
 
