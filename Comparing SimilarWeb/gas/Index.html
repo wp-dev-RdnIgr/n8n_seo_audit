@@ -590,13 +590,13 @@
         </div>
         <div class="form-group">
           <label>Period from</label>
-          <select id="dataPeriodFrom" onchange="loadDataForClient()">
+          <select id="dataPeriodFrom" onchange="debouncedLoadData()">
             <option value="">-- start --</option>
           </select>
         </div>
         <div class="form-group">
           <label>Period to</label>
-          <select id="dataPeriodTo" onchange="loadDataForClient()">
+          <select id="dataPeriodTo" onchange="debouncedLoadData()">
             <option value="">-- end --</option>
           </select>
         </div>
@@ -784,6 +784,19 @@
 // ===== STATE =====
 var currentClientId = null;
 var clientsCache = [];
+var periodsCache = { data: null, ts: 0 };
+var CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// ===== DEBOUNCE =====
+function debounce(fn, delay) {
+  var timer = null;
+  return function() {
+    var ctx = this, args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(function() { fn.apply(ctx, args); }, delay);
+  };
+}
+var debouncedLoadData = debounce(loadDataForClient, 300);
 
 // ===== TOAST =====
 function toast(msg, type) {
@@ -815,7 +828,7 @@ function switchTab(tabId) {
   if (panel) panel.classList.add('active');
 
   if (tabId === 'dashboard') loadDashboard();
-  if (tabId === 'clients') loadClients();
+  if (tabId === 'clients') { clientsCache = []; loadClients(); }
   if (tabId === 'data') { populateClientSelects(); loadPeriods(); }
   if (tabId === 'queue') { populateClientSelects(); loadQueue(); }
   if (tabId === 'logs') loadLogs();
@@ -1101,7 +1114,13 @@ function fillSelects() {
   }
 }
 
-function loadPeriods() {
+function loadPeriods(forceRefresh) {
+  // Use cache if fresh
+  if (!forceRefresh && periodsCache.data && (Date.now() - periodsCache.ts < CACHE_TTL)) {
+    fillPeriodSelects(periodsCache.data);
+    return;
+  }
+
   google.script.run
     .withSuccessHandler(function(rows) {
       var periods = [];
@@ -1113,25 +1132,30 @@ function loadPeriods() {
         }
       }
       periods.sort();
-      var selIds = ['dataPeriodFrom', 'dataPeriodTo'];
-      for (var s = 0; s < selIds.length; s++) {
-        var sel = document.getElementById(selIds[s]);
-        var prev = sel.value;
-        sel.innerHTML = '<option value="">-- ' + (s === 0 ? 'start' : 'end') + ' --</option>';
-        for (var j = 0; j < periods.length; j++) {
-          var opt = document.createElement('option');
-          opt.value = periods[j];
-          opt.textContent = periods[j];
-          sel.appendChild(opt);
-        }
-        if (prev) sel.value = prev;
-      }
+      periodsCache = { data: periods, ts: Date.now() };
+      fillPeriodSelects(periods);
     })
     .withFailureHandler(function(err) {
       console.error('loadPeriods error:', err);
       toast('Failed to load periods: ' + (err.message || err), 'error');
     })
     .getAvailablePeriods();
+}
+
+function fillPeriodSelects(periods) {
+  var selIds = ['dataPeriodFrom', 'dataPeriodTo'];
+  for (var s = 0; s < selIds.length; s++) {
+    var sel = document.getElementById(selIds[s]);
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">-- ' + (s === 0 ? 'start' : 'end') + ' --</option>';
+    for (var j = 0; j < periods.length; j++) {
+      var opt = document.createElement('option');
+      opt.value = periods[j];
+      opt.textContent = periods[j];
+      sel.appendChild(opt);
+    }
+    if (prev) sel.value = prev;
+  }
 }
 
 // ===== DATA =====

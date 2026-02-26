@@ -114,12 +114,16 @@ function supabasePost(path, body, headers) { return supabaseRequest_('post', pat
 function supabasePatch(path, body) { return supabaseRequest_('patch', path, body); }
 function supabaseDelete(path) { return supabaseRequest_('delete', path); }
 
+function supabaseRpc(fnName, params) {
+  return supabaseRequest_('post', '/rest/v1/rpc/' + fnName, params || {});
+}
+
 // ============================================
 // CLIENTS
 // ============================================
 
 function getClients() {
-  return supabaseGet('/rest/v1/clients?select=*&order=client_site.asc');
+  return supabaseGet('/rest/v1/clients?select=id,client_site,employee_email,client_status,created_at&order=client_site.asc');
 }
 
 function addClient(clientSite, employeeEmail) {
@@ -152,10 +156,6 @@ function getCompetitors(clientId) {
   return supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&select=*&order=competitor_site.asc');
 }
 
-function getAllCompetitorsWithClients() {
-  return supabaseGet('/rest/v1/competitors?select=id,competitor_site,client_id,clients(client_site)&order=competitor_site.asc');
-}
-
 function addCompetitor(clientId, competitorSite) {
   var site = competitorSite.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase().trim();
   if (!site || !site.includes('.')) return { success: false, error: 'Invalid domain' };
@@ -176,7 +176,8 @@ function deleteCompetitor(id) {
 // ============================================
 
 function getSimilarwebData(clientId, periodFrom, periodTo) {
-  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=*&order=period.asc,site_type.asc,site.asc';
+  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
+  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
   if (periodFrom && periodTo) {
     path += '&period=gte.' + periodFrom + '&period=lte.' + periodTo;
   } else if (periodFrom) {
@@ -186,7 +187,7 @@ function getSimilarwebData(clientId, periodFrom, periodTo) {
 }
 
 function getAvailablePeriods() {
-  return supabaseGet('/rest/v1/similarweb_data?select=period&order=period.desc&limit=50');
+  return supabaseRpc('get_distinct_periods');
 }
 
 // ============================================
@@ -194,7 +195,7 @@ function getAvailablePeriods() {
 // ============================================
 
 function getTaskQueue(statusFilter) {
-  var path = '/rest/v1/task_queue?select=*&order=created_at.desc&limit=100';
+  var path = '/rest/v1/task_queue?select=id,queue_id,client_site,sites_list,period,chunk_index,total_chunks,status,error_message,created_at&order=created_at.desc&limit=100';
   if (statusFilter && statusFilter !== 'all') path += '&status=eq.' + statusFilter;
   return supabaseGet(path);
 }
@@ -260,15 +261,10 @@ function deleteTask(id) {
 
 function getErrorLogs(limit, filter) {
   var lim = limit || 50;
-  var path = '/rest/v1/error_logs?select=*&order=created_at.desc&limit=' + lim;
+  var path = '/rest/v1/error_logs?select=id,robot_type,period,sites,error_message,resolved,resolved_at,retry_count,queue_id,created_at&order=created_at.desc&limit=' + lim;
   if (filter === 'unresolved') path += '&resolved=eq.false';
   if (filter === 'resolved') path += '&resolved=eq.true';
   return supabaseGet(path);
-}
-
-function getUnresolvedErrorCount() {
-  var rows = supabaseGet('/rest/v1/error_logs?select=id&resolved=eq.false');
-  return rows ? rows.length : 0;
 }
 
 function resolveError(errorId) {
@@ -354,21 +350,5 @@ function buildFullQueue() {
 // ============================================
 
 function getDashboardStats() {
-  var clients = supabaseGet('/rest/v1/clients?select=id');
-  var competitors = supabaseGet('/rest/v1/competitors?select=id');
-  var pendingTasks = supabaseGet('/rest/v1/task_queue?status=eq.pending&select=id');
-  var doneTasks = supabaseGet('/rest/v1/task_queue?status=eq.done&select=id');
-  var unresolvedErrors = supabaseGet('/rest/v1/error_logs?select=id&resolved=eq.false');
-  var totalErrors = supabaseGet('/rest/v1/error_logs?select=id&order=created_at.desc&limit=100');
-  var dataRows = supabaseGet('/rest/v1/similarweb_data?select=id&limit=1000');
-
-  return {
-    totalClients: clients ? clients.length : 0,
-    totalCompetitors: competitors ? competitors.length : 0,
-    pendingTasks: pendingTasks ? pendingTasks.length : 0,
-    completedTasks: doneTasks ? doneTasks.length : 0,
-    unresolvedErrors: unresolvedErrors ? unresolvedErrors.length : 0,
-    recentErrors: totalErrors ? totalErrors.length : 0,
-    dataRows: dataRows ? dataRows.length : 0
-  };
+  return supabaseRpc('get_dashboard_stats');
 }
