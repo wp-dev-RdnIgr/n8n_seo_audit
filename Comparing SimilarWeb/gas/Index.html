@@ -1154,7 +1154,63 @@ function renderDataTable(rows) {
     html += '</tr>';
   }
   html += '</tbody></table></div>';
+
+  // Copy button
+  html += '<div style="margin-top:12px;text-align:right">';
+  html += '<button class="btn btn-secondary" onclick="copyDataToClipboard()" id="copyDataBtn">';
+  html += '<i class="ti ti-copy"></i> Copy for Excel / Google Sheets';
+  html += '</button></div>';
+
   document.getElementById('dataTableWrap').innerHTML = html;
+
+  // Store data for copy
+  window._lastDataCols = cols;
+  window._lastDataRows = rows;
+}
+
+function copyDataToClipboard() {
+  var cols = window._lastDataCols;
+  var rows = window._lastDataRows;
+  if (!cols || !rows) return;
+
+  // Header row
+  var tsv = cols.map(function(c) { return c.label; }).join('\t') + '\n';
+
+  // Data rows
+  for (var i = 0; i < rows.length; i++) {
+    var line = [];
+    for (var j = 0; j < cols.length; j++) {
+      line.push(rows[i][cols[j].key] || '');
+    }
+    tsv += line.join('\t') + '\n';
+  }
+
+  // Copy to clipboard
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(tsv).then(function() {
+      toast('Copied ' + rows.length + ' rows — paste into Excel / Google Sheets', 'success');
+    }).catch(function() {
+      fallbackCopy(tsv, rows.length);
+    });
+  } else {
+    fallbackCopy(tsv, rows.length);
+  }
+}
+
+function fallbackCopy(text, rowCount) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    toast('Copied ' + rowCount + ' rows — paste into Excel / Google Sheets', 'success');
+  } catch (e) {
+    toast('Copy failed: ' + e, 'error');
+  }
+  document.body.removeChild(ta);
 }
 
 // ===== QUEUE =====
