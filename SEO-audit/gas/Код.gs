@@ -222,34 +222,51 @@ function submitAIAnalysis(formData) {
     method: 'POST',
     contentType: 'application/json',
     payload: JSON.stringify(payload),
-    muteHttpExceptions: true,
-    timeout: 600
+    muteHttpExceptions: true
   };
 
   try {
     var response = UrlFetchApp.fetch(webhookUrl, options);
     var result = JSON.parse(response.getContentText());
 
-    // Move doc to manager folder if email provided
-    if (managerEmail && result.docUrl) {
-      try {
-        var docId = extractFileIdFromUrl(result.docUrl);
-        if (docId) {
-          var folderId = findOrCreateManagerFolder(managerEmail);
-          moveFileToFolder(docId, folderId);
-        }
-      } catch (moveErr) {
-        // Non-critical: doc created but not moved
-      }
+    // n8n responds immediately with status "processing" and docUrl.
+    // The document is being formatted in the background.
+    return {
+      success: true,
+      status: result.status || 'processing',
+      docUrl: result.docUrl,
+      docId: result.docId || extractFileIdFromUrl(result.docUrl || ''),
+      competitorsCount: result.competitorsCount || urls.length,
+      message: 'Документ створено. Форматування у фоні...'
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: Перевірка готовності AI документа
+// ============================================
+
+function checkDocStatus(docId) {
+  try {
+    var url = 'https://www.googleapis.com/drive/v3/files/' + docId + '?fields=properties,name';
+    var response = UrlFetchApp.fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    });
+
+    if (response.getResponseCode() !== 200) {
+      return { success: false, error: 'Файл не знайдено (код ' + response.getResponseCode() + ')' };
     }
+
+    var data = JSON.parse(response.getContentText());
+    var isComplete = data.properties && data.properties.seo_audit_status === 'complete';
 
     return {
       success: true,
-      docUrl: result.docUrl,
-      domain: result.domain || '',
-      domains: result.domains || [],
-      competitorsCount: result.competitorsCount || urls.length,
-      message: 'AI звіт створено для ' + urls.length + ' конкурент(ів)'
+      isComplete: isComplete,
+      docName: data.name || ''
     };
   } catch (error) {
     return { success: false, error: error.toString() };
