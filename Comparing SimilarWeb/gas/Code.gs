@@ -258,9 +258,69 @@ function deleteTask(id) {
 // ERROR LOGS
 // ============================================
 
-function getErrorLogs(limit) {
+function getErrorLogs(limit, filter) {
   var lim = limit || 50;
-  return supabaseGet('/rest/v1/error_logs?select=*&order=created_at.desc&limit=' + lim);
+  var path = '/rest/v1/error_logs?select=*&order=created_at.desc&limit=' + lim;
+  if (filter === 'unresolved') path += '&resolved=eq.false';
+  if (filter === 'resolved') path += '&resolved=eq.true';
+  return supabaseGet(path);
+}
+
+function getUnresolvedErrorCount() {
+  var rows = supabaseGet('/rest/v1/error_logs?select=id&resolved=eq.false');
+  return rows ? rows.length : 0;
+}
+
+function resolveError(errorId) {
+  var result = supabasePatch('/rest/v1/error_logs?id=eq.' + errorId, {
+    resolved: true,
+    resolved_at: new Date().toISOString()
+  });
+  return { success: true, data: result };
+}
+
+function retryError(errorId) {
+  // Get the error record
+  var errors = supabaseGet('/rest/v1/error_logs?id=eq.' + errorId + '&select=*');
+  if (!errors || errors.length === 0) return { success: false, error: 'Error not found' };
+  var err = errors[0];
+
+  // Find matching task in queue by queue_id
+  if (err.queue_id) {
+    var tasks = supabaseGet('/rest/v1/task_queue?queue_id=eq.' + err.queue_id + '&select=*');
+    if (tasks && tasks.length > 0) {
+      // Reset the task to pending
+      supabasePatch('/rest/v1/task_queue?queue_id=eq.' + err.queue_id, {
+        status: 'pending',
+        task_id: null,
+        error_message: 'Manual retry from error log #' + errorId
+      });
+      // Increment retry count
+      supabasePatch('/rest/v1/error_logs?id=eq.' + errorId, {
+        retry_count: (err.retry_count || 0) + 1
+      });
+      return { success: true, message: 'Task reset to pending for retry' };
+    }
+  }
+
+  // No queue_id or task not found — try to find task by period + sites
+  if (err.period && err.sites) {
+    var sitesMatch = encodeURIComponent(err.sites);
+    var matchTasks = supabaseGet('/rest/v1/task_queue?period=eq.' + err.period + '&sites_list=eq.' + sitesMatch + '&select=*&limit=1');
+    if (matchTasks && matchTasks.length > 0) {
+      supabasePatch('/rest/v1/task_queue?id=eq.' + matchTasks[0].id, {
+        status: 'pending',
+        task_id: null,
+        error_message: 'Manual retry from error log'
+      });
+      supabasePatch('/rest/v1/error_logs?id=eq.' + errorId, {
+        retry_count: (err.retry_count || 0) + 1
+      });
+      return { success: true, message: 'Task reset to pending for retry' };
+    }
+  }
+
+  return { success: false, error: 'Could not find matching task in queue. The task may need to be recreated manually.' };
 }
 
 // ============================================
@@ -298,7 +358,8 @@ function getDashboardStats() {
   var competitors = supabaseGet('/rest/v1/competitors?select=id');
   var pendingTasks = supabaseGet('/rest/v1/task_queue?status=eq.pending&select=id');
   var doneTasks = supabaseGet('/rest/v1/task_queue?status=eq.done&select=id');
-  var errors = supabaseGet('/rest/v1/error_logs?select=id&order=created_at.desc&limit=100');
+  var unresolvedErrors = supabaseGet('/rest/v1/error_logs?select=id&resolved=eq.false');
+  var totalErrors = supabaseGet('/rest/v1/error_logs?select=id&order=created_at.desc&limit=100');
   var dataRows = supabaseGet('/rest/v1/similarweb_data?select=id&limit=1000');
 
   return {
@@ -306,7 +367,8 @@ function getDashboardStats() {
     totalCompetitors: competitors ? competitors.length : 0,
     pendingTasks: pendingTasks ? pendingTasks.length : 0,
     completedTasks: doneTasks ? doneTasks.length : 0,
-    recentErrors: errors ? errors.length : 0,
+    unresolvedErrors: unresolvedErrors ? unresolvedErrors.length : 0,
+    recentErrors: totalErrors ? totalErrors.length : 0,
     dataRows: dataRows ? dataRows.length : 0
   };
 }
