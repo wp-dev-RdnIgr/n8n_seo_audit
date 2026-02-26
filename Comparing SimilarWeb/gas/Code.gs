@@ -263,7 +263,7 @@ function getErrorLogs(limit) {
 // BUILD FULL QUEUE (triggers n8n "Проверка полноты" webhook)
 // ============================================
 
-var N8N_QUEUE_BUILD_WEBHOOK = 'https://n8n.rnd.webpromo.tools/webhook/f3e7ad54-24db-469d-9fc5-d9c1c6d1a078';
+var N8N_QUEUE_BUILD_WEBHOOK = 'https://n8n.rnd.webpromo.tools/webhook/27adbc76-58fa-4b6e-a6ea-3b6516c65712';
 
 function buildFullQueue() {
   try {
