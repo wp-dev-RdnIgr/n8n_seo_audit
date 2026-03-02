@@ -639,15 +639,11 @@
         </div>
         <div class="form-group">
           <label>Period from</label>
-          <select id="dataPeriodFrom" onchange="debouncedLoadData()">
-            <option value="">-- start --</option>
-          </select>
+          <input type="month" id="dataPeriodFrom" onchange="debouncedLoadData()">
         </div>
         <div class="form-group">
           <label>Period to</label>
-          <select id="dataPeriodTo" onchange="debouncedLoadData()">
-            <option value="">-- end --</option>
-          </select>
+          <input type="month" id="dataPeriodTo" onchange="debouncedLoadData()">
         </div>
         <button class="btn btn-primary" onclick="loadDataForClient()">
           <i class="ti ti-search"></i> Load
@@ -727,8 +723,8 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Period (YYYY.MM)</label>
-          <input type="text" id="queuePeriod" placeholder="2025.01" value="">
+          <label>Period</label>
+          <input type="month" id="queuePeriod">
         </div>
         <button class="btn btn-primary" id="createTasksBtn" onclick="createTasks()">
           <i class="ti ti-player-play"></i> Create
@@ -1231,19 +1227,23 @@ function loadClientPeriods(clientId) {
     .getClientPeriods(clientId);
 }
 
+// Convert YYYY.MM → YYYY-MM for <input type="month">
+function periodToMonth(p) { return p ? p.replace('.', '-') : ''; }
+// Convert YYYY-MM → YYYY.MM for backend
+function monthToPeriod(m) { return m ? m.replace('-', '.') : ''; }
+
 function fillPeriodSelects(periods) {
-  var selIds = ['dataPeriodFrom', 'dataPeriodTo'];
-  for (var s = 0; s < selIds.length; s++) {
-    var sel = document.getElementById(selIds[s]);
-    var prev = sel.value;
-    sel.innerHTML = '<option value="">-- ' + (s === 0 ? 'start' : 'end') + ' --</option>';
-    for (var j = 0; j < periods.length; j++) {
-      var opt = document.createElement('option');
-      opt.value = periods[j];
-      opt.textContent = periods[j];
-      sel.appendChild(opt);
-    }
-    if (prev) sel.value = prev;
+  if (!periods || periods.length === 0) return;
+  var sorted = periods.slice().sort();
+  var minMonth = periodToMonth(sorted[0]);
+  var maxMonth = periodToMonth(sorted[sorted.length - 1]);
+  var ids = ['dataPeriodFrom', 'dataPeriodTo'];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    var prev = el.value;
+    el.min = minMonth;
+    el.max = maxMonth;
+    if (prev) el.value = prev;
   }
 }
 
@@ -1253,18 +1253,22 @@ function onDataClientChange() {
   // Reset period filters
   document.getElementById('dataPeriodFrom').value = '';
   document.getElementById('dataPeriodTo').value = '';
+  document.getElementById('dataPeriodFrom').removeAttribute('min');
+  document.getElementById('dataPeriodFrom').removeAttribute('max');
+  document.getElementById('dataPeriodTo').removeAttribute('min');
+  document.getElementById('dataPeriodTo').removeAttribute('max');
   if (clientId) {
     loadClientPeriods(clientId);
   } else {
-    fillPeriodSelects([]);
+    loadPeriods(true);
   }
   loadDataForClient();
 }
 
 function loadDataForClient() {
   var clientId = document.getElementById('dataClientSelect').value;
-  var periodFrom = document.getElementById('dataPeriodFrom').value;
-  var periodTo = document.getElementById('dataPeriodTo').value;
+  var periodFrom = monthToPeriod(document.getElementById('dataPeriodFrom').value);
+  var periodTo = monthToPeriod(document.getElementById('dataPeriodTo').value);
   if (!clientId) {
     document.getElementById('dataTableWrap').innerHTML =
       '<div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a client to view comparison data</p></div>';
@@ -1700,9 +1704,9 @@ function renderQueueTable(tasks) {
 
 function createTasks() {
   var clientId = document.getElementById('queueClientSelect').value;
-  var period = document.getElementById('queuePeriod').value.trim();
+  var period = monthToPeriod(document.getElementById('queuePeriod').value);
   if (!clientId) { toast('Select a client', 'error'); return; }
-  if (!period || !/^\d{4}\.\d{2}$/.test(period)) { toast('Period format: YYYY.MM', 'error'); return; }
+  if (!period || !/^\d{4}\.\d{2}$/.test(period)) { toast('Select a period', 'error'); return; }
 
   var btn = document.getElementById('createTasksBtn');
   btn.disabled = true;
@@ -1862,11 +1866,11 @@ function markErrorResolved(errorId) {
 (function init() {
   loadConfig();
   loadDashboard();
-  // Set default period
+  // Set default period (input type=month uses YYYY-MM format)
   var now = new Date();
   var y = now.getFullYear();
   var m = String(now.getMonth() + 1).padStart(2, '0');
-  document.getElementById('queuePeriod').value = y + '.' + m;
+  document.getElementById('queuePeriod').value = y + '-' + m;
 })();
 
 // Close modal on overlay click
