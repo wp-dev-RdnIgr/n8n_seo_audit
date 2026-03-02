@@ -499,6 +499,128 @@
     @media (max-width: 480px) {
       .stats-grid { grid-template-columns: 1fr; }
     }
+
+    /* ===== MONTH PICKER ===== */
+    .mp-wrap { position: relative; }
+    .mp-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      user-select: none;
+    }
+    .mp-trigger:hover { border-color: var(--border-hover); }
+    .mp-trigger.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .mp-icon { color: var(--text-secondary); font-size: 18px; flex-shrink: 0; }
+    .mp-display {
+      flex: 1;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mp-display.placeholder { color: #94A3B8; }
+    .mp-chevron {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .mp-trigger.active .mp-chevron { transform: rotate(180deg); }
+    .mp-popup {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 1000;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      padding: 16px;
+      width: 260px;
+    }
+    .mp-popup.open { display: block; animation: mp-in 0.15s ease; }
+    @keyframes mp-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .mp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .mp-year-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .mp-nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+    .mp-nav-btn:hover { background: var(--bg); color: var(--text); }
+    .mp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .mp-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: none;
+      transition: all 0.12s;
+    }
+    .mp-cell:hover:not(.disabled):not(.selected) {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .mp-cell.selected {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    .mp-cell.today:not(.selected) {
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .mp-cell.disabled {
+      color: var(--border-hover);
+      cursor: default;
+      opacity: 0.35;
+    }
   </style>
 </head>
 <body>
@@ -639,11 +761,11 @@
         </div>
         <div class="form-group">
           <label>Period from</label>
-          <input type="month" id="dataPeriodFrom" onchange="debouncedLoadData()">
+          <div id="dataPeriodFrom"></div>
         </div>
         <div class="form-group">
           <label>Period to</label>
-          <input type="month" id="dataPeriodTo" onchange="debouncedLoadData()">
+          <div id="dataPeriodTo"></div>
         </div>
         <button class="btn btn-primary" onclick="loadDataForClient()">
           <i class="ti ti-search"></i> Load
@@ -724,7 +846,7 @@
         </div>
         <div class="form-group">
           <label>Period</label>
-          <input type="month" id="queuePeriod">
+          <div id="queuePeriod"></div>
         </div>
         <button class="btn btn-primary" id="createTasksBtn" onclick="createTasks()">
           <i class="ti ti-player-play"></i> Create
@@ -854,6 +976,174 @@ function debounce(fn, delay) {
   };
 }
 var debouncedLoadData = debounce(loadDataForClient, 300);
+
+// ===== MONTH PICKER =====
+var MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var mpDataFrom, mpDataTo, mpQueue;
+
+function MonthPicker(el, opts) {
+  opts = opts || {};
+  this.el = el;
+  this._val = opts.value || '';
+  this._min = null;
+  this._max = null;
+  this._onChange = opts.onChange || null;
+  this._placeholder = opts.placeholder || 'Select month...';
+  this._open = false;
+  var now = new Date();
+  this._viewYear = this._val ? parseInt(this._val.split('-')[0]) : now.getFullYear();
+  this._todayYear = now.getFullYear();
+  this._todayMonth = now.getMonth();
+  this._build();
+  this._listen();
+}
+
+MonthPicker._instances = [];
+
+MonthPicker._closeAll = function() {
+  for (var i = 0; i < MonthPicker._instances.length; i++) {
+    MonthPicker._instances[i].close();
+  }
+};
+
+MonthPicker.prototype._build = function() {
+  this.el.classList.add('mp-wrap');
+  this.el.innerHTML =
+    '<div class="mp-trigger">' +
+      '<i class="ti ti-calendar-month mp-icon"></i>' +
+      '<span class="mp-display placeholder">' + escHtml(this._placeholder) + '</span>' +
+      '<i class="ti ti-chevron-down mp-chevron"></i>' +
+    '</div>' +
+    '<div class="mp-popup">' +
+      '<div class="mp-head">' +
+        '<button type="button" class="mp-nav-btn mp-prev-btn"><i class="ti ti-chevron-left"></i></button>' +
+        '<span class="mp-year-label"></span>' +
+        '<button type="button" class="mp-nav-btn mp-next-btn"><i class="ti ti-chevron-right"></i></button>' +
+      '</div>' +
+      '<div class="mp-grid"></div>' +
+    '</div>';
+
+  this._trigger = this.el.querySelector('.mp-trigger');
+  this._display = this.el.querySelector('.mp-display');
+  this._popup = this.el.querySelector('.mp-popup');
+  this._yearLabel = this.el.querySelector('.mp-year-label');
+  this._grid = this.el.querySelector('.mp-grid');
+
+  this._renderDisplay();
+  this._renderGrid();
+};
+
+MonthPicker.prototype._listen = function() {
+  var self = this;
+
+  this._trigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (self._open) { self.close(); }
+    else { MonthPicker._closeAll(); self.open(); }
+  });
+
+  this.el.querySelector('.mp-prev-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    self._viewYear--;
+    self._renderGrid();
+  });
+
+  this.el.querySelector('.mp-next-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    self._viewYear++;
+    self._renderGrid();
+  });
+
+  this._popup.addEventListener('click', function(e) { e.stopPropagation(); });
+
+  MonthPicker._instances.push(this);
+};
+
+MonthPicker.prototype.open = function() {
+  this._open = true;
+  this._trigger.classList.add('active');
+  this._popup.classList.add('open');
+  if (this._val) this._viewYear = parseInt(this._val.split('-')[0]);
+  this._renderGrid();
+};
+
+MonthPicker.prototype.close = function() {
+  if (!this._open) return;
+  this._open = false;
+  this._trigger.classList.remove('active');
+  this._popup.classList.remove('open');
+};
+
+MonthPicker.prototype._renderDisplay = function() {
+  if (!this._val) {
+    this._display.textContent = this._placeholder;
+    this._display.classList.add('placeholder');
+  } else {
+    var parts = this._val.split('-');
+    this._display.textContent = MONTH_FULL[parseInt(parts[1]) - 1] + ' ' + parts[0];
+    this._display.classList.remove('placeholder');
+  }
+};
+
+MonthPicker.prototype._renderGrid = function() {
+  this._yearLabel.textContent = this._viewYear;
+  var html = '';
+  for (var m = 0; m < 12; m++) {
+    var mv = this._viewYear + '-' + String(m + 1).padStart(2, '0');
+    var cls = 'mp-cell';
+    if (mv === this._val) cls += ' selected';
+    else if (this._viewYear === this._todayYear && m === this._todayMonth) cls += ' today';
+    var disabled = false;
+    if (this._min && mv < this._min) disabled = true;
+    if (this._max && mv > this._max) disabled = true;
+    if (disabled) cls += ' disabled';
+    html += '<button type="button" class="' + cls + '" data-mv="' + mv + '"' + (disabled ? ' disabled' : '') + '>' + MONTH_ABBR[m] + '</button>';
+  }
+  this._grid.innerHTML = html;
+
+  var self = this;
+  var cells = this._grid.querySelectorAll('.mp-cell:not(.disabled)');
+  for (var i = 0; i < cells.length; i++) {
+    (function(cell) {
+      cell.addEventListener('click', function(e) {
+        e.stopPropagation();
+        self._select(cell.getAttribute('data-mv'));
+      });
+    })(cells[i]);
+  }
+};
+
+MonthPicker.prototype._select = function(mv) {
+  this._val = mv;
+  this._renderDisplay();
+  this._renderGrid();
+  this.close();
+  if (this._onChange) this._onChange();
+};
+
+MonthPicker.prototype.val = function(v) {
+  if (arguments.length === 0) return this._val;
+  this._val = v || '';
+  if (this._val) this._viewYear = parseInt(this._val.split('-')[0]);
+  this._renderDisplay();
+  if (this._open) this._renderGrid();
+  return this;
+};
+
+MonthPicker.prototype.clear = function() {
+  this._val = '';
+  this._renderDisplay();
+  if (this._open) this._renderGrid();
+};
+
+MonthPicker.prototype.setRange = function(min, max) {
+  this._min = min || null;
+  this._max = max || null;
+  if (this._open) this._renderGrid();
+};
+
+document.addEventListener('click', function() { MonthPicker._closeAll(); });
 
 // ===== TOAST =====
 function toast(msg, type) {
@@ -1237,26 +1527,17 @@ function fillPeriodSelects(periods) {
   var sorted = periods.slice().sort();
   var minMonth = periodToMonth(sorted[0]);
   var maxMonth = periodToMonth(sorted[sorted.length - 1]);
-  var ids = ['dataPeriodFrom', 'dataPeriodTo'];
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    var prev = el.value;
-    el.min = minMonth;
-    el.max = maxMonth;
-    if (prev) el.value = prev;
-  }
+  if (mpDataFrom) mpDataFrom.setRange(minMonth, maxMonth);
+  if (mpDataTo) mpDataTo.setRange(minMonth, maxMonth);
 }
 
 // ===== DATA =====
 function onDataClientChange() {
   var clientId = document.getElementById('dataClientSelect').value;
-  // Reset period filters
-  document.getElementById('dataPeriodFrom').value = '';
-  document.getElementById('dataPeriodTo').value = '';
-  document.getElementById('dataPeriodFrom').removeAttribute('min');
-  document.getElementById('dataPeriodFrom').removeAttribute('max');
-  document.getElementById('dataPeriodTo').removeAttribute('min');
-  document.getElementById('dataPeriodTo').removeAttribute('max');
+  mpDataFrom.clear();
+  mpDataTo.clear();
+  mpDataFrom.setRange(null, null);
+  mpDataTo.setRange(null, null);
   if (clientId) {
     loadClientPeriods(clientId);
   } else {
@@ -1267,8 +1548,8 @@ function onDataClientChange() {
 
 function loadDataForClient() {
   var clientId = document.getElementById('dataClientSelect').value;
-  var periodFrom = monthToPeriod(document.getElementById('dataPeriodFrom').value);
-  var periodTo = monthToPeriod(document.getElementById('dataPeriodTo').value);
+  var periodFrom = monthToPeriod(mpDataFrom.val());
+  var periodTo = monthToPeriod(mpDataTo.val());
   if (!clientId) {
     document.getElementById('dataTableWrap').innerHTML =
       '<div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a client to view comparison data</p></div>';
@@ -1704,7 +1985,7 @@ function renderQueueTable(tasks) {
 
 function createTasks() {
   var clientId = document.getElementById('queueClientSelect').value;
-  var period = monthToPeriod(document.getElementById('queuePeriod').value);
+  var period = monthToPeriod(mpQueue.val());
   if (!clientId) { toast('Select a client', 'error'); return; }
   if (!period || !/^\d{4}\.\d{2}$/.test(period)) { toast('Select a period', 'error'); return; }
 
@@ -1866,11 +2147,24 @@ function markErrorResolved(errorId) {
 (function init() {
   loadConfig();
   loadDashboard();
-  // Set default period (input type=month uses YYYY-MM format)
+
+  // Initialize month pickers
   var now = new Date();
   var y = now.getFullYear();
   var m = String(now.getMonth() + 1).padStart(2, '0');
-  document.getElementById('queuePeriod').value = y + '-' + m;
+
+  mpDataFrom = new MonthPicker(document.getElementById('dataPeriodFrom'), {
+    placeholder: 'From...',
+    onChange: debouncedLoadData
+  });
+  mpDataTo = new MonthPicker(document.getElementById('dataPeriodTo'), {
+    placeholder: 'To...',
+    onChange: debouncedLoadData
+  });
+  mpQueue = new MonthPicker(document.getElementById('queuePeriod'), {
+    placeholder: 'Select period...',
+    value: y + '-' + m
+  });
 })();
 
 // Close modal on overlay click
