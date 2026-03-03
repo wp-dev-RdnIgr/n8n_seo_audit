@@ -805,7 +805,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Disable FK checks\nSET session_replication_role = 'replica';\n\n-- Clean staging tables\nTRUNCATE TABLE ws_time_logs_stg CASCADE;\nTRUNCATE TABLE ws_tasks_stg CASCADE;\nTRUNCATE TABLE ws_projects_stg CASCADE;\nTRUNCATE TABLE ws_users_stg CASCADE;\nTRUNCATE TABLE ws_departments_stg CASCADE;\nTRUNCATE TABLE ws_sync_state_stg CASCADE;\n\n-- Re-enable FK checks\nSET session_replication_role = 'origin';\n\n-- Reset departments sequence\nALTER SEQUENCE ws_departments_stg_id_seq RESTART WITH 1;\n\n-- Initialize sync state\nINSERT INTO ws_sync_state_stg (key, value, updated_at)\nVALUES ('batch_offset', '0', NOW()), ('sync_status', 'syncing', NOW())\nON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();",
+        "query": "-- 1. Отключаем проверку FK constraints (ВАЖНО!)\nSET session_replication_role = 'replica';\n\n-- 2. Очищаем таблицы (task_status_history НЕ трогаем!)\nTRUNCATE TABLE ws_time_logs_stg CASCADE;\nTRUNCATE TABLE ws_tasks_stg CASCADE;\nTRUNCATE TABLE ws_projects_stg CASCADE;\nTRUNCATE TABLE ws_users_stg CASCADE;\nTRUNCATE TABLE ws_departments_stg CASCADE;\nTRUNCATE TABLE ws_sync_state_stg CASCADE;\n\n-- 3. Включаем проверку FK constraints обратно (ВАЖНО!)\nSET session_replication_role = 'origin';\n\n-- 4. Скидаємо sequence для departments на 1\nALTER SEQUENCE ws_departments_stg_id_seq RESTART WITH 1;\n\n-- 5. Ініціалізуємо sync_state\nINSERT INTO ws_sync_state_stg (key, value, updated_at) \nVALUES ('batch_offset', '0', NOW())\nON CONFLICT (key) DO UPDATE SET value = '0', updated_at = NOW();",
         "options": {}
       },
       "id": "a613f3ce-2339-41d2-83fb-7b3c49885f94",
@@ -836,7 +836,7 @@
     },
     {
       "parameters": {
-        "content": "## Cleanup WS Tables\n\n**Запуск:** щодня о 01:00\n\n**Що робить:**\n1. TRUNCATE всіх таблиць:\n   - ws_time_logs\n   - ws_tasks\n   - ws_projects\n   - ws_users\n   - ws_departments\n   - ws_sync_state\n\n2. Скидає sequence departments на 1\n\n3. Ініціалізує batch_offset = 0\n\n**Після цього запускай:**\n- Flow юзерів (get_users)\n- Flow проектів (Schedule Trigger1)",
+        "content": "## Cleanup WS Tables\n\n**Запуск:** щодня о 01:00\n\n**Що робить:**\n1. TRUNCATE всіх таблиць:\n   - ws_time_logs_stg\n   - ws_tasks_stg\n   - ws_projects_stg\n   - ws_users_stg\n   - ws_departments_stg\n   - ws_sync_state_stg\n\n2. Скидає sequence departments на 1\n\n3. Ініціалізує batch_offset = 0\n\n**Після цього запускай:**\n- Flow юзерів (get_users)\n- Flow проектів (Schedule Trigger1)",
         "height": 480,
         "width": 340,
         "color": 6
@@ -895,6 +895,80 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS(\n    SELECT 1 FROM task_status_history \n    WHERE log_date = CURRENT_DATE\n    LIMIT 1\n) as snapshot_exists;",
+        "options": {}
+      },
+      "id": "ebdd7cf7-2820-44f8-b534-b9c91d079587",
+      "name": "Check Snapshot Today",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        624
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-exists",
+              "leftValue": "={{ $json.snapshot_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a83b0238-56ee-460e-acb7-d3a992ac39ed",
+      "name": "Already Done?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO task_status_history (log_date, task_id, user_id, status_on_date)\nSELECT \n    CURRENT_DATE,\n    t.id,\n    t.user_to_id,\n    'overdue'\nFROM ws_tasks_stg t\nWHERE \n    t.status = 'active'\n    AND t.date_end IS NOT NULL\n    AND t.date_end::date < CURRENT_DATE\nON CONFLICT (log_date, task_id) \nDO UPDATE SET \n    user_id = EXCLUDED.user_id,\n    status_on_date = EXCLUDED.status_on_date;",
+        "options": {}
+      },
+      "id": "8ab0d868-ebca-4093-803f-27f684117ebe",
+      "name": "Snapshot Overdue Tasks1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1280,
+        608
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "-1003503638426",
         "text": "=📸 Snapshot Complete!\n\n✅ Overdue tasks saved to history\n📅 Date: {{ $now.format('DD.MM.YYYY') }}\n⏱ Time: {{ $now.format('HH:mm:ss') }}",
         "additionalFields": {}
@@ -917,6 +991,96 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM ws_users_stg;",
+        "options": {}
+      },
+      "id": "56aa3b05-174f-47b6-8374-ddef1e233adb",
+      "name": "Get Valid Users",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -528,
+        -16
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Отримуємо поточний batch offset\nSELECT COALESCE(\n  (SELECT value::int FROM ws_sync_state_stg WHERE key = 'batch_offset'),\n  0\n) as batch_offset;",
+        "options": {}
+      },
+      "id": "1de7e3f2-d48f-4008-8b44-f8b17a6c339f",
+      "name": "Get Batch Offset1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -288,
+        -16
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://webpromo.worksection.com/api/admin/v2/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "get_projects"
+            },
+            {
+              "name": "hash",
+              "value": "={{ (\"action=get_projects\" + \"6dd901af056f1dfc31374e4b8feb422b\").hash('md5') }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "7fe213db-d1c5-4cf4-a8c5-e49fd5de985c",
+      "name": "Get Projects (API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -64,
+        -16
+      ],
+      "retryOnFail": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.data;\nconst batchOffsetData = $('Get Batch Offset').first().json;\nconst currentOffset = batchOffsetData.batch_offset || 0;\nconst BATCH_SIZE = 50;\n\nif (!data) return [{ _done: true, message: 'No projects data' }];\n\nconst allProjects = Object.values(data);\n\n// 90 днів тому\nconst cutoffDate = new Date();\ncutoffDate.setDate(cutoffDate.getDate() - 90);\n\n// Фільтруємо проекти\nconst filteredProjects = allProjects.filter(p => {\n  if (p.status === 'active') return true;\n  if (p.status === 'pending') return true;\n  \n  if (p.status === 'done' || p.status === 'archive') {\n    if (p.date_closed) {\n      const dateClosed = new Date(p.date_closed);\n      return dateClosed >= cutoffDate;\n    }\n    return false;\n  }\n  return false;\n});\n\n// Сортуємо для консистентності\nfilteredProjects.sort((a, b) => Number(a.id) - Number(b.id));\n\nconst totalProjects = filteredProjects.length;\n\n// Перевіряємо чи є ще проекти для обробки\nif (currentOffset >= totalProjects) {\n  // Всі проекти оброблені — скидаємо offset на 0\n  return [{ \n    _reset: true, \n    _done: true,\n    message: 'All projects processed, resetting offset',\n    totalProjects,\n    currentOffset\n  }];\n}\n\n// Вибираємо batch\nconst batchProjects = filteredProjects.slice(currentOffset, currentOffset + BATCH_SIZE);\nconst nextOffset = currentOffset + BATCH_SIZE;\nconst isLastBatch = nextOffset >= totalProjects;\n\n// Дати для costs (90 днів)\nconst today = new Date();\nconst startDate = new Date();\nstartDate.setDate(today.getDate() - 90);\n\nconst formatDate = (d) => {\n  const day = String(d.getDate()).padStart(2, '0');\n  const month = String(d.getMonth() + 1).padStart(2, '0');\n  const year = d.getFullYear();\n  return day + '.' + month + '.' + year;\n};\n\nconst datestart = formatDate(startDate);\nconst dateend = formatDate(today);\n\n// Логування\nconsole.log('=== BATCH INFO ===');\nconsole.log('Total filtered projects: ' + totalProjects);\nconsole.log('Current offset: ' + currentOffset);\nconsole.log('Batch size: ' + batchProjects.length);\nconsole.log('Next offset: ' + nextOffset);\nconsole.log('Is last batch: ' + isLastBatch);\n\n// Повертаємо проекти з метаданими\nconst result = batchProjects.map((p, index) => ({\n  id: p.id,\n  name: p.name,\n  status: p.status,\n  datestart,\n  dateend,\n  _batchIndex: index,\n  _nextOffset: nextOffset,\n  _isLastBatch: isLastBatch,\n  _totalProjects: totalProjects\n}));\n\nreturn result;"
+      },
+      "id": "fcaef03d-1a07-43ec-884a-b0948ff9d74d",
+      "name": "Prepare Batch1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -16
+      ]
+    },
+    {
+      "parameters": {
         "content": "## Проверка авторизации\n",
         "height": 272,
         "width": 1264
@@ -932,6 +1096,127 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Исправляем только задачи с явными иероглифами\nUPDATE ws_tasks_stg\nSET \n    name = regexp_replace(name, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g'),\n    text = regexp_replace(text, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g')\nWHERE \n    name ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]'\n    OR text ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1440,
+        608
+      ],
+      "id": "3efbb3f9-f581-4752-b7b5-dd9a3b2858f4",
+      "name": "Fix Encoding Errors",
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO task_status_history (log_date, task_id, user_id, status_on_date)\nSELECT \n    CURRENT_DATE,\n    t.id,\n    t.user_to_id,\n    'overdue'\nFROM ws_tasks_stg t\nWHERE \n    t.status = 'active'\n    AND t.date_end IS NOT NULL\n    AND t.date_end::date < CURRENT_DATE\nON CONFLICT (log_date, task_id) \nDO UPDATE SET \n    user_id = EXCLUDED.user_id,\n    status_on_date = EXCLUDED.status_on_date;",
+        "options": {}
+      },
+      "id": "d484c96e-9a70-4643-80b3-7396b493f977",
+      "name": "Snapshot Overdue Tasks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -512,
+        1584
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Исправляем только задачи с явными иероглифами\nWITH updated AS (\n  UPDATE ws_tasks_stg\n  SET \n      name = regexp_replace(name, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g'),\n      text = regexp_replace(text, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g')\n  WHERE \n      name ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]'\n      OR text ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]'\n  RETURNING id\n)\nSELECT \n  COUNT(*) as fixed_count,\n  CASE \n    WHEN COUNT(*) > 0 THEN '✅ Fixed ' || COUNT(*) || ' tasks with encoding errors'\n    ELSE '✅ No encoding errors found'\n  END as message\nFROM updated;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -288,
+        1584
+      ],
+      "id": "505a7e78-71c3-43af-9fac-ae9c2e671155",
+      "name": "Fix Encoding Errors1",
+      "credentials": {
+        "postgres": {
+          "id": "Vew3cjknhnKa16N5",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=📸 Snapshot Complete!\n\n✅ Overdue tasks saved to history\n{{ $('Fix Encoding Errors1').first().json.message }}\n📅 Date: {{ $now.format('DD.MM.YYYY') }}\n⏱ Time: {{ $now.format('HH:mm:ss') }}\n```\n\n---\n\n## 📊 Что будет в Telegram:\n\n**Если были иероглифы:**\n```\n📸 Snapshot Complete!\n\n✅ Overdue tasks saved to history\n✅ Fixed 15 tasks with encoding errors\n📅 Date: 27 Dec 2025\n⏱ Time: 04:00:58\n```\n\n**Если не было иероглифов:**\n```\n📸 Snapshot Complete!\n\n✅ Overdue tasks saved to history\n✅ No encoding errors found\n📅 Date: 27 Dec 2025\n⏱ Time: 04:00:58",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        1584
+      ],
+      "id": "7c97738a-391b-46c0-8077-2b79b4b7ee75",
+      "name": "Send a text message2",
+      "webhookId": "9e2e345e-93fe-445d-9fee-295c40951425",
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Контрольное выполнение запроса Снепшота + Исправление иероглифов\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 288,
+        "width": 1872,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -752,
+        1456
+      ],
+      "typeVersion": 1,
+      "id": "6c130f15-74cd-4ba6-99ef-70f1b525b71c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "00 04 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        1584
+      ],
+      "id": "98f564cd-5067-42e1-bae1-e84fde4709f5",
+      "name": "After Load"
+    },
+    {
+      "parameters": {
         "rule": {
           "interval": [
             {
@@ -942,7 +1227,7 @@
         }
       },
       "id": "b91b9550-ae98-4af9-a263-02747b168f1c",
-      "name": "Batch",
+      "name": "Main",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
@@ -956,209 +1241,19 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 */2 * * *"
+              "expression": "01 02 * * *"
             }
           ]
         }
       },
       "id": "62d1d773-37a7-4914-82c1-61b6552a029c",
-      "name": "START_staging",
+      "name": "START_main",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
         -960,
         416
       ]
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT COALESCE(\n  (SELECT value FROM ws_sync_state_stg WHERE key = 'sync_status'),\n  'idle'\n) as sync_status;",
-        "options": {}
-      },
-      "id": "bfcada29-ce5b-4fec-8fde-1365ca0e3692",
-      "name": "Check Sync Status",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -752,
-        944
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "credentials": {
-        "postgres": {
-          "id": "Vew3cjknhnKa16N5",
-          "name": "Supabase - Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "check-sync-complete",
-              "leftValue": "={{ $json.sync_status }}",
-              "rightValue": "complete",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "93d950b0-166e-4bfc-accb-da7edf8fcbaa",
-      "name": "Is Sync Complete?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -592,
-        944
-      ]
-    },
-    {
-      "parameters": {},
-      "id": "89b0d2c4-cf7a-46f9-9d41-c57790299d57",
-      "name": "Skip Batch",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        -432,
-        848
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT * FROM migrate_staging_to_production();",
-        "options": {}
-      },
-      "id": "e73d2866-13bd-4799-821a-651945137fd9",
-      "name": "Migrate to Production",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        928,
-        624
-      ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "credentials": {
-        "postgres": {
-          "id": "Vew3cjknhnKa16N5",
-          "name": "Supabase - Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO task_status_history (log_date, task_id, user_id, status_on_date)\nSELECT \n    CURRENT_DATE,\n    t.id,\n    t.user_to_id,\n    'overdue'\nFROM ws_tasks t\nWHERE \n    t.status = 'active'\n    AND t.date_end IS NOT NULL\n    AND t.date_end::date < CURRENT_DATE\nON CONFLICT (log_date, task_id) \nDO UPDATE SET \n    user_id = EXCLUDED.user_id,\n    status_on_date = EXCLUDED.status_on_date;",
-        "options": {}
-      },
-      "id": "a9861f17-f87f-4465-8c61-4753cc3e245e",
-      "name": "Snapshot After Migration",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1168,
-        624
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "Vew3cjknhnKa16N5",
-          "name": "Supabase - Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "WITH updated AS (\n  UPDATE ws_tasks\n  SET \n      name = regexp_replace(name, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g'),\n      text = regexp_replace(text, '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+', '[ENCODING ERROR]', 'g')\n  WHERE \n      name ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]'\n      OR text ~ '[\\u4E00-\\u9FFF\\u3400-\\u4DBF]'\n  RETURNING id\n)\nSELECT \n  COUNT(*) as fixed_count,\n  CASE \n    WHEN COUNT(*) > 0 THEN 'Fixed ' || COUNT(*) || ' tasks with encoding errors'\n    ELSE 'No encoding errors found'\n  END as message\nFROM updated;",
-        "options": {}
-      },
-      "id": "d38fe336-6c65-4824-a34a-ec41fae8a366",
-      "name": "Fix Encoding After Migration",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1408,
-        624
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "Vew3cjknhnKa16N5",
-          "name": "Supabase - Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO ws_sync_state_stg (key, value, updated_at)\nVALUES ('sync_status', 'complete', NOW())\nON CONFLICT (key) DO UPDATE SET value = 'complete', updated_at = NOW();",
-        "options": {}
-      },
-      "id": "8ed6bfd8-a138-439c-92e2-75dcf4556877",
-      "name": "Set Sync Complete",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1648,
-        624
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "Vew3cjknhnKa16N5",
-          "name": "Supabase - Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "-1003503638426",
-        "text": "={{ \"\\u2705 Migration Complete!\\n\\n\" + \"\\ud83d\\udcca Departments: \" + $('Migrate to Production').first().json.migrated_departments + \"\\n\" + \"\\ud83d\\udc65 Users: \" + $('Migrate to Production').first().json.migrated_users + \"\\n\" + \"\\ud83d\\udcc1 Projects: \" + $('Migrate to Production').first().json.migrated_projects + \"\\n\" + \"\\u2611\\ufe0f Tasks: \" + $('Migrate to Production').first().json.migrated_tasks + \"\\n\" + \"\\u23f1 Time logs: \" + $('Migrate to Production').first().json.migrated_time_logs + \"\\n\" + \"\\n\" + $('Fix Encoding After Migration').first().json.message + \"\\n\\ud83d\\udcc5 \" + $now.format('DD.MM.YYYY HH:mm:ss') }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1888,
-        624
-      ],
-      "id": "248731ff-8be8-44b5-b641-dd100859352a",
-      "name": "Telegram Migration",
-      "webhookId": "8205e359-66f8-433c-9e29-51c86705c275",
-      "credentials": {
-        "telegramApi": {
-          "id": "mHbM43fsaWN90avF",
-          "name": "I.Redin - ws tg log"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## WS - DB (STAGING)\n\n**Shadow sync workflow**\n\n**START_staging** (every 2h):\nClean staging tables -> Load users -> Init offset\n\n**Batch** (every 6 min):\nCheck sync status -> Process batch -> Update offset\n\n**Migration** (after all batches done):\nAtomic migrate staging->prod -> Snapshot -> Fix encoding -> Telegram",
-        "height": 480,
-        "width": 420,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -1904,
-        144
-      ],
-      "typeVersion": 1,
-      "id": "45376d76-ba85-45af-9fe6-0d54f769a814",
-      "name": "Sticky Note Staging Info"
     }
   ],
   "pinData": {},
@@ -1251,7 +1346,7 @@
       "main": [
         [
           {
-            "node": "Migrate to Production",
+            "node": "Check Snapshot Today",
             "type": "main",
             "index": 0
           }
@@ -1615,42 +1710,124 @@
         ]
       ]
     },
+    "Check Snapshot Today": {
+      "main": [
+        [
+          {
+            "node": "Already Done?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Done?": {
+      "main": [
+        [
+          {
+            "node": "Cycle Complete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cycle Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Snapshot Overdue Tasks1": {
+      "main": [
+        [
+          {
+            "node": "Fix Encoding Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Valid Users": {
+      "main": [
+        [
+          {
+            "node": "Get Batch Offset1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Batch Offset1": {
+      "main": [
+        [
+          {
+            "node": "Get Projects (API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Projects (API)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Batch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Encoding Errors": {
+      "main": [
+        []
+      ]
+    },
+    "Snapshot Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Fix Encoding Errors1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Encoding Errors1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Cycle Complete": {
       "main": [
         []
       ]
     },
-    "Batch": {
+    "After Load": {
       "main": [
         [
           {
-            "node": "Check Sync Status",
+            "node": "Snapshot Overdue Tasks",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check Sync Status": {
+    "Main": {
       "main": [
-        [
-          {
-            "node": "Is Sync Complete?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Is Sync Complete?": {
-      "main": [
-        [
-          {
-            "node": "Skip Batch",
-            "type": "main",
-            "index": 0
-          }
-        ],
         [
           {
             "node": "Get Valid Users4",
@@ -1660,71 +1837,11 @@
         ]
       ]
     },
-    "Skip Batch": {
-      "main": [
-        []
-      ]
-    },
-    "START_staging": {
+    "START_main": {
       "main": [
         [
           {
             "node": "Cleanup All Tables",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Migrate to Production": {
-      "main": [
-        [
-          {
-            "node": "Snapshot After Migration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Snapshot After Migration": {
-      "main": [
-        [
-          {
-            "node": "Fix Encoding After Migration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fix Encoding After Migration": {
-      "main": [
-        [
-          {
-            "node": "Set Sync Complete",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Sync Complete": {
-      "main": [
-        [
-          {
-            "node": "Telegram Migration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Telegram Migration": {
-      "main": [
-        [
-          {
-            "node": "Cycle Complete",
             "type": "main",
             "index": 0
           }
@@ -1741,10 +1858,11 @@
     "errorWorkflow": "i6feMHLya6oSMXYC",
     "timeSavedPerExecution": 360
   },
-  "versionId": "26bd6ea3-52d8-4a4d-b403-dddb63658245",
+  "versionId": "bdc63f09-674f-4c78-9eb1-f99a604a6a8c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
   },
+  "id": "VQpJswTGOr3lX7fS",
   "tags": []
 }
