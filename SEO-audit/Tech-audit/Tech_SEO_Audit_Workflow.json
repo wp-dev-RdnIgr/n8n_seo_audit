@@ -185,62 +185,101 @@
     },
     {
       "parameters": {
-        "model": "claude-sonnet-4-20250514",
         "messages": {
           "values": [
             {
-              "role": "user",
               "content": "={{ $json.prompt }}"
             }
           ]
         },
-        "options": {
-          "maxTokens": 4096,
-          "temperature": 0.3
+        "options": {},
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
         }
       },
       "id": "ta-031",
       "name": "AI Analysis",
-      "type": "@n8n/n8n-nodes-langchain.anthropic",
-      "typeVersion": 1,
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
       "position": [1440, 600],
       "continueOnFail": true,
       "credentials": {
-        "anthropicApi": {
-          "id": "anthropic-api",
-          "name": "Anthropic API"
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI"
         }
       }
     },
     {
       "parameters": {
-        "resource": "document",
-        "operation": "create",
-        "title": "=SEO Тех. аудит — {{ $('Parse XLSX').first().json.domain }} — {{ new Date().toISOString().split('T')[0] }}",
-        "content": "={{ $json.content || $json.message?.content?.[0]?.text || 'Звіт генерується...' }}"
+        "jsCode": "// Prepare document title and content for Google Docs API\nconst domain = $('Parse XLSX').first().json.domain;\nconst dateToday = new Date().toISOString().split('T')[0];\nconst aiContent = $json.message?.content || $json.content || $json.text || 'Звіт генерується...';\n\nreturn [{\n  json: {\n    docTitle: `SEO Тех. аудит — ${domain} — ${dateToday}`,\n    docContent: aiContent\n  }\n}];"
       },
-      "id": "ta-032",
-      "name": "Create Google Doc",
-      "type": "n8n-nodes-base.googleDocs",
+      "id": "ta-032a",
+      "name": "Prepare Document",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1680, 600],
+      "position": [1680, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://docs.googleapis.com/v1/documents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"title\": \"{{ $json.docTitle }}\" }",
+        "options": {}
+      },
+      "id": "ta-032b",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1920, 600],
       "continueOnFail": true,
       "credentials": {
         "googleDocsOAuth2Api": {
-          "id": "google-docs",
+          "id": "google-docs-credentials",
           "name": "Google Docs"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Final response — send back Excel URL and Doc URL\nconst excelUpload = $('Upload Excel to Drive').first().json;\nconst docCreate = $('Create Google Doc').first().json;\nconst domain = $('Parse XLSX').first().json.domain;\n\nconst excelId = excelUpload.id || '';\nconst docId = docCreate.documentId || docCreate.id || '';\n\nconst excelUrl = excelId ? `https://docs.google.com/spreadsheets/d/${excelId}` : '';\nconst docUrl = docId ? `https://docs.google.com/document/d/${docId}` : '';\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: `Тех. аудит ${domain} завершено`,\n    excelUrl,\n    docUrl,\n    folderUrl: '',\n    domain\n  }\n}];"
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.documentId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"insertText\": {\n        \"location\": { \"index\": 1 },\n        \"text\": {{ JSON.stringify($('Prepare Document').first().json.docContent) }}\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "ta-032c",
+      "name": "Write Document Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2140, 600],
+      "continueOnFail": true,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "google-docs-credentials",
+          "name": "Google Docs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final response — send back Excel URL and Doc URL\nconst excelUpload = $('Upload Excel to Drive').first().json;\nconst domain = $('Parse XLSX').first().json.domain;\n\nconst excelId = excelUpload.id || '';\n\n// Get doc ID from Create Google Doc node\nlet docId = '';\ntry {\n  docId = $('Create Google Doc').first().json.documentId || '';\n} catch(e) {}\n\nconst excelUrl = excelId ? `https://docs.google.com/spreadsheets/d/${excelId}` : '';\nconst docUrl = docId ? `https://docs.google.com/document/d/${docId}` : '';\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: `Тех. аудит ${domain} завершено`,\n    excelUrl,\n    docUrl,\n    folderUrl: '',\n    domain\n  }\n}];"
       },
       "id": "ta-040",
       "name": "Build Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1920, 500]
+      "position": [2400, 500]
     },
     {
       "parameters": {
@@ -252,7 +291,7 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [2140, 500]
+      "position": [2620, 500]
     }
   ],
   "connections": {
@@ -471,6 +510,17 @@
       "main": [
         [
           {
+            "node": "Prepare Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Document": {
+      "main": [
+        [
+          {
             "node": "Create Google Doc",
             "type": "main",
             "index": 0
@@ -479,6 +529,17 @@
       ]
     },
     "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Write Document Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Document Content": {
       "main": [
         [
           {
