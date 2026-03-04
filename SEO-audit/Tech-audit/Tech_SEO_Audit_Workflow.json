@@ -203,7 +203,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "multipart/related; boundary=boundary_excel",
-        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $('Build Excel').first().json['_meta_file_name'] || 'audit.xlsx' }}\", \"mimeType\": \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $binary.data.data }}\n--boundary_excel--",
+        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $('Build Excel').first().json['_meta_file_name'] || 'audit.xlsx' }}\", \"mimeType\": \"application/vnd.google-apps.spreadsheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $binary.data.data }}\n--boundary_excel--",
         "options": {}
       },
       "id": "ta-021",
