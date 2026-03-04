@@ -35,15 +35,14 @@
     },
     {
       "parameters": {
-        "language": "python",
-        "pythonCode": "import openpyxl\nimport io\nimport base64\nimport json\n\n# Read XLSX binary from input\nbinary_data = _input.first().binary.internal_all\nraw_bytes = base64.b64decode(binary_data['data'])\n\nwb = openpyxl.load_workbook(io.BytesIO(raw_bytes), read_only=True, data_only=True)\n\n# Find the main sheet (usually 'Internal' or first sheet)\nsheet_name = None\nfor name in wb.sheetnames:\n    if 'internal' in name.lower() or name.lower() in ['аркуш1', 'sheet1', 'all']:\n        sheet_name = name\n        break\nif not sheet_name:\n    sheet_name = wb.sheetnames[0]\n\nws = wb[sheet_name]\n\n# Read headers\nheaders = []\nfor cell in next(ws.iter_rows(min_row=1, max_row=1, values_only=True)):\n    headers.append(str(cell) if cell else '')\n\n# Map header names to indices\ncol_map = {}\nfor i, h in enumerate(headers):\n    col_map[h.strip()] = i\n\n# Read all rows into list of dicts\nall_rows = []\nfor row in ws.iter_rows(min_row=2, values_only=True):\n    row_dict = {}\n    for i, val in enumerate(row):\n        if i < len(headers) and headers[i]:\n            row_dict[headers[i].strip()] = str(val) if val is not None else ''\n    if row_dict.get('Address', ''):  # Skip empty rows\n        all_rows.append(row_dict)\n\nwb.close()\n\n# Domain from input\ndomain = _input.first().json.get('domain', '')\n\n# Pre-filter datasets for each agent\n\n# HTML pages only\npages_html = [r for r in all_rows if r.get('Content Type', '') == 'text/html']\n\n# Pages with status 200\npages_200 = [r for r in pages_html if str(r.get('Status Code', '')).startswith('200')]\n\n# Indexable pages\npages_indexable = [r for r in pages_200 if r.get('Indexability', '') == 'Indexable']\n\n# Canonical issues: canonical != address\npages_canonical = [r for r in pages_200 if r.get('Canonical Link Element 1', '') and r.get('Canonical Link Element 1', '') != r.get('Address', '')]\n\n# Multiple H1\npages_multi_h1 = [r for r in pages_200 if r.get('H1-2', '').strip()]\n\n# Missing H1 (indexable html 200 with empty H1)\npages_missing_h1 = [r for r in pages_indexable if not r.get('H1-1', '').strip()]\n\n# 301 redirects\npages_301 = [r for r in all_rows if str(r.get('Status Code', '')).startswith('301')]\n\n# 404 pages\npages_404 = [r for r in all_rows if str(r.get('Status Code', '')).startswith('404')]\n\n# Tag pages\npages_tags = [r for r in pages_indexable if '/tag/' in r.get('Address', '')]\n\n# For structure: indexable pages split EN/UK\npages_en = [r for r in pages_indexable if '/uk/' not in r.get('Address', '')]\npages_uk = [r for r in pages_indexable if '/uk/' in r.get('Address', '')]\n\n# Batch limit — max 500 per agent\ndef limit(lst, n=500):\n    return lst[:n]\n\nresult = {\n    'domain': domain,\n    'total_pages': len(all_rows),\n    'total_html': len(pages_html),\n    'total_indexable': len(pages_indexable),\n    'headers': headers,\n    'pages_canonical': limit(pages_canonical),\n    'pages_canonical_count': len(pages_canonical),\n    'pages_indexable_sample': limit(pages_indexable),\n    'pages_multi_h1': limit(pages_multi_h1),\n    'pages_multi_h1_count': len(pages_multi_h1),\n    'pages_missing_h1': limit(pages_missing_h1),\n    'pages_missing_h1_count': len(pages_missing_h1),\n    'pages_301': limit(pages_301),\n    'pages_301_count': len(pages_301),\n    'pages_404': limit(pages_404),\n    'pages_404_count': len(pages_404),\n    'pages_tags': limit(pages_tags),\n    'pages_tags_count': len(pages_tags),\n    'pages_en': limit(pages_en),\n    'pages_uk': limit(pages_uk),\n    'pages_all_sample': limit(pages_200, 200)\n}\n\nreturn [{'json': result}]"
+        "jsCode": "// Process all rows from Spreadsheet File node\nconst items = $input.all();\nconst domain = $('Parse Input').first().json.domain;\n\n// Each item is a row from the XLSX\nconst all_rows = items.map(item => item.json).filter(r => r['Address']);\n\nconst headers = Object.keys(all_rows[0] || {});\n\n// Pre-filter datasets for each agent\nconst pages_html = all_rows.filter(r => (r['Content Type'] || '') === 'text/html');\nconst pages_200 = pages_html.filter(r => String(r['Status Code'] || '').startsWith('200'));\nconst pages_indexable = pages_200.filter(r => (r['Indexability'] || '') === 'Indexable');\nconst pages_canonical = pages_200.filter(r => r['Canonical Link Element 1'] && r['Canonical Link Element 1'] !== r['Address']);\nconst pages_multi_h1 = pages_200.filter(r => (r['H1-2'] || '').trim());\nconst pages_missing_h1 = pages_indexable.filter(r => !(r['H1-1'] || '').trim());\nconst pages_301 = all_rows.filter(r => String(r['Status Code'] || '').startsWith('301'));\nconst pages_404 = all_rows.filter(r => String(r['Status Code'] || '').startsWith('404'));\nconst pages_tags = pages_indexable.filter(r => (r['Address'] || '').includes('/tag/'));\nconst pages_en = pages_indexable.filter(r => !(r['Address'] || '').includes('/uk/'));\nconst pages_uk = pages_indexable.filter(r => (r['Address'] || '').includes('/uk/'));\n\nfunction limit(arr, n = 500) { return arr.slice(0, n); }\n\nreturn [{\n  json: {\n    domain,\n    total_pages: all_rows.length,\n    total_html: pages_html.length,\n    total_indexable: pages_indexable.length,\n    headers,\n    pages_canonical: limit(pages_canonical),\n    pages_canonical_count: pages_canonical.length,\n    pages_indexable_sample: limit(pages_indexable),\n    pages_multi_h1: limit(pages_multi_h1),\n    pages_multi_h1_count: pages_multi_h1.length,\n    pages_missing_h1: limit(pages_missing_h1),\n    pages_missing_h1_count: pages_missing_h1.length,\n    pages_301: limit(pages_301),\n    pages_301_count: pages_301.length,\n    pages_404: limit(pages_404),\n    pages_404_count: pages_404.length,\n    pages_tags: limit(pages_tags),\n    pages_tags_count: pages_tags.length,\n    pages_en: limit(pages_en),\n    pages_uk: limit(pages_uk),\n    pages_all_sample: limit(pages_200, 200)\n  }\n}];"
       },
       "id": "ta-003",
       "name": "Parse XLSX",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
+        680,
         400
       ]
     },
@@ -60,7 +59,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        700,
+        900,
         400
       ],
       "continueOnFail": true
@@ -74,7 +73,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1140,
+        1340,
         400
       ]
     },
@@ -87,7 +86,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1360,
+        1560,
         400
       ]
     },
@@ -100,7 +99,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1580,
+        1780,
         400
       ]
     },
@@ -113,7 +112,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1800,
+        2000,
         400
       ]
     },
@@ -126,7 +125,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2020,
+        2220,
         400
       ]
     },
@@ -139,7 +138,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
+        2440,
         400
       ]
     },
@@ -152,7 +151,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2460,
+        2660,
         400
       ]
     },
@@ -165,21 +164,20 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        920,
+        1120,
         400
       ]
     },
     {
       "parameters": {
-        "language": "python",
-        "pythonCode": "import openpyxl\nfrom openpyxl.styles import Font, PatternFill, Alignment, Border, Side\nfrom openpyxl.utils import get_column_letter\nimport io\nimport base64\nimport json\n\n# Gather all agent results\ncanonicals_data = _input.first().json.get('canonicals', {})\nmeta_data = _input.first().json.get('meta', {})\nh1_data = _input.first().json.get('h1', {})\nredirects_data = _input.first().json.get('redirects', {})\nalt_data = _input.first().json.get('alt', {})\ntags_data = _input.first().json.get('tags', {})\nstatus_data = _input.first().json.get('status', {})\nrobots_data = _input.first().json.get('robots', {})\nstructure_data = _input.first().json.get('structure', {})\ndomain = _input.first().json.get('domain', '')\n\n# Styles\nheader_font = Font(bold=True, color='FFFFFF', size=11)\nheader_fill = PatternFill(start_color='1F3864', end_color='1F3864', fill_type='solid')\nalt_fill = PatternFill(start_color='F5F8FF', end_color='F5F8FF', fill_type='solid')\nthin_border = Border(\n    left=Side(style='thin', color='E2E8F0'),\n    right=Side(style='thin', color='E2E8F0'),\n    top=Side(style='thin', color='E2E8F0'),\n    bottom=Side(style='thin', color='E2E8F0')\n)\n\ndef style_header(ws, ncols):\n    for col in range(1, ncols + 1):\n        cell = ws.cell(row=1, column=col)\n        cell.font = header_font\n        cell.fill = header_fill\n        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)\n        cell.border = thin_border\n    ws.freeze_panes = 'A2'\n\ndef auto_width(ws, max_width=80):\n    for col in ws.columns:\n        max_len = 0\n        col_letter = get_column_letter(col[0].column)\n        for cell in col:\n            if cell.value:\n                max_len = max(max_len, min(len(str(cell.value)), max_width))\n        ws.column_dimensions[col_letter].width = max(max_len + 2, 12)\n\ndef alt_rows(ws, start_row, end_row, ncols):\n    for r in range(start_row, end_row + 1):\n        if r % 2 == 0:\n            for c in range(1, ncols + 1):\n                ws.cell(row=r, column=c).fill = alt_fill\n        for c in range(1, ncols + 1):\n            ws.cell(row=r, column=c).border = thin_border\n\ndef write_rows(ws, headers, rows, start_row=1):\n    for i, h in enumerate(headers, 1):\n        ws.cell(row=start_row, column=i, value=h)\n    for r_idx, row in enumerate(rows, start_row + 1):\n        for c_idx, val in enumerate(row, 1):\n            ws.cell(row=r_idx, column=c_idx, value=val)\n    style_header(ws, len(headers))\n    alt_rows(ws, start_row + 1, start_row + len(rows), len(headers))\n    auto_width(ws)\n    if len(rows) == 0:\n        ws.cell(row=2, column=1, value='Дані відсутні або не знайдено проблем')\n\nwb = openpyxl.Workbook()\n\n# ===== Sheet 1: Статуси =====\nws1 = wb.active\nws1.title = 'Статуси'\nstatus_headers = ['Задача', 'Пріоритет', 'Вплив на КРІ', 'Статус', 'Дата постановки', 'DL', 'Виконавець', 'Дата перевірки', 'Дата впровадження', 'Коментар виконавця', 'Коментар SEO']\ntasks = status_data.get('tasks', [])\ntask_rows = [[t.get('task',''), t.get('priority',''), t.get('impact',''), t.get('status',''), t.get('date_set',''), '', '', '', '', '', t.get('comment_seo','')] for t in tasks]\nwrite_rows(ws1, status_headers, task_rows)\n\n# ===== Sheet 2: Canonicals =====\nws2 = wb.create_sheet('Canonicals')\ncan_headers = ['URL', 'Canonical ', 'Correct canonical']\ncan_list = canonicals_data.get('canonicals', [])\ncan_rows = [[c.get('url',''), c.get('canonical',''), c.get('correct_canonical','')] for c in can_list]\nwrite_rows(ws2, can_headers, can_rows)\n\n# ===== Sheet 3: Аркуш22 (highlighted canonical issues) =====\nws3 = wb.create_sheet('Аркуш22')\nark_headers = ['URL', 'Canonical зараз', 'Canonical коректний']\n# Take first 10 most problematic canonicals as examples\nark_rows = can_rows[:10]\nwrite_rows(ws3, ark_headers, ark_rows)\n\n# ===== Sheet 4: Структура наявна =====\nws4 = wb.create_sheet('Структура наявна')\nstruct_headers = ['Назва сторінки', 'URL EN', 'URL UK']\nstruct_list = structure_data.get('structure', canonicals_data.get('structure', []))\nstruct_rows = [[s.get('name',''), s.get('url_en',''), s.get('url_uk','')] for s in struct_list]\nwrite_rows(ws4, struct_headers, struct_rows)\n\n# ===== Sheet 5: Структура рекомендована =====\nws5 = wb.create_sheet('Структура рекомендована')\nrec_headers = ['1 рівень вкладеності', '2 рівень вкладеності', '3 рівень вкладеності', '4 рівень вкладеності', 'Наявність сторінки']\nwrite_rows(ws5, rec_headers, [])  # AI fills this later or manually\n\n# ===== Sheet 6: Шаблони мета-тегів =====\nws6 = wb.create_sheet('Шаблони мета-тегів')\ntpl_headers = ['Title', 'Description', 'Title приклад', 'Description приклад']\nwrite_rows(ws6, tpl_headers, [])\n\n# ===== Sheet 7: Ручні мета-теги =====\nws7 = wb.create_sheet('Ручні мета-теги')\nmanual_headers = ['URL UK', 'Title UK', 'LEN', 'Description UK', 'LEN', 'URL EN', 'Title EN', 'LEN', 'Description EN', 'LEN']\nmanual_list = meta_data.get('manualMeta', [])\nmanual_rows = [[m.get('url',''), '', '', '', '', '', m.get('title_current',''), m.get('title_len',''), m.get('desc_current',''), m.get('desc_len','')] for m in manual_list]\nwrite_rows(ws7, manual_headers, manual_rows)\n\n# ===== Sheet 8: Декілька Н1 =====\nws8 = wb.create_sheet('Декілька Н1')\nmulti_headers = ['URL', 'H1-1', 'H1-2']\nmulti_list = h1_data.get('multiH1', [])\nmulti_rows = [[m.get('url',''), m.get('h1_1',''), m.get('h1_2','')] for m in multi_list]\n# Add H1-3 column if any have it\nhas_h1_3 = any(m.get('h1_3','') for m in multi_list)\nif has_h1_3:\n    multi_headers.append('H1-3')\n    multi_rows = [[m.get('url',''), m.get('h1_1',''), m.get('h1_2',''), m.get('h1_3','')] for m in multi_list]\nwrite_rows(ws8, multi_headers, multi_rows)\n\n# ===== Sheet 9: Відсутні Н1 =====\nws9 = wb.create_sheet('Відсутні Н1')\nmiss_headers = ['URL', 'H1 заголовок']\nmiss_list = h1_data.get('missingH1', [])\nmiss_rows = [[m.get('url',''), m.get('h1','')] for m in miss_list]\nwrite_rows(ws9, miss_headers, miss_rows)\n\n# ===== Sheet 10: Robots.txt =====\nws10 = wb.create_sheet('Robots.txt')\nrobots_lines = robots_data.get('robotsLines', [{'line': 'robots.txt не знайдено'}])\nfor i, rl in enumerate(robots_lines, 1):\n    ws10.cell(row=i, column=1, value=rl.get('line', ''))\nauto_width(ws10)\n\n# ===== Sheet 11: 301 сторінки =====\nws11 = wb.create_sheet('301 сторінки')\nlink_headers = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin']\np301 = redirects_data.get('pages301', [])\np301_rows = [[p.get('type',''), p.get('from',''), p.get('to',''), p.get('anchor',''), p.get('alt_text',''), p.get('follow',''), p.get('target',''), p.get('rel',''), p.get('status_code',''), p.get('status',''), p.get('path_type',''), p.get('link_path',''), p.get('link_position',''), p.get('link_origin','')] for p in p301]\nwrite_rows(ws11, link_headers, p301_rows)\n\n# ===== Sheet 12: 404 сторінки =====\nws12 = wb.create_sheet('404 сторінки')\np404 = redirects_data.get('pages404', [])\np404_rows = [[p.get('type',''), p.get('from',''), p.get('to',''), p.get('anchor',''), p.get('alt_text',''), p.get('follow',''), p.get('target',''), p.get('rel',''), p.get('status_code',''), p.get('status',''), p.get('path_type',''), p.get('link_path',''), p.get('link_position',''), p.get('link_origin','')] for p in p404]\nwrite_rows(ws12, link_headers, p404_rows)\n\n# ===== Sheet 13: ALT =====\nws13 = wb.create_sheet('ALT')\nalt_img_headers = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin']\nalt_imgs = alt_data.get('altImages', [])\nalt_rows_data = [[a.get('type',''), a.get('from',''), a.get('to',''), a.get('anchor',''), a.get('alt_text',''), a.get('follow',''), a.get('target',''), a.get('rel',''), a.get('status_code',''), a.get('status',''), a.get('path_type',''), a.get('link_path',''), a.get('link_position',''), a.get('link_origin','')] for a in alt_imgs]\nwrite_rows(ws13, alt_img_headers, alt_rows_data)\n\n# ===== Sheet 14: Посилання =====\nws14 = wb.create_sheet('Посилання')\nbacklinks_headers = ['', 'Referring page title', 'Referring page URL', 'Referring page HTTP code', 'Domain rating', 'UR', 'Domain traffic', 'Referring domains', 'Linked domains', 'External links', 'Page traffic', 'Keywords', 'Target URL', 'Anchor', 'Type', 'Content', 'Nofollow', 'UGC', 'Sponsored', 'Rendered', 'Raw', 'Discovered status']\nwrite_rows(ws14, backlinks_headers, [])  # Backlinks require separate Ahrefs file\n\n# ===== Sheet 15: Сторінки тегів =====\nws15 = wb.create_sheet('Сторінки тегів')\ntag_headers = ['EN сторінка', 'UK сторінка', 'Н1']\ntag_list = tags_data.get('tagPages', [])\ntag_rows = [[t.get('en_url',''), t.get('uk_url',''), t.get('h1','')] for t in tag_list]\nwrite_rows(ws15, tag_headers, tag_rows)\n\n# ===== Sheet 16: Аналіз GMB =====\nws16 = wb.create_sheet('Аналіз GMB')\ngmb_headers = ['Категорія', 'Як у нас зараз', 'Що треба додати / змінити / перевірити', 'Навіщо це потрібно', 'Приклади']\ngmb_categories = [\n    ['URL', '', '', '', ''],\n    ['Назва компанії', '', 'Перевірити на відповідність офіційної назви.', 'Допомагає покращити впізнаваність у пошуку.', ''],\n    ['Категорія бізнесу', '', 'Додати релевантні додаткові категорії.', 'Розширює охоплення у пошуку.', ''],\n    ['Опис бізнесу', '', 'Додати повний опис з ключовими фразами.', 'Покращує позиції у локальній видачі.', ''],\n    ['Фотографії', '', 'Додати обкладинку, логотип, фото офісу.', 'Підвищує довіру та привабливість профілю.', ''],\n    ['Відгуки', '', 'Відповідати на відгуки регулярно.', 'Впливає на рейтинг та довіру.', ''],\n    ['Графік роботи', '', 'Перевірити актуальність.', 'Коректний графік покращує UX.', ''],\n    ['Контактні дані', '', 'Перевірити телефон, email, адресу.', 'Забезпечує коректне відображення.', ''],\n    ['Атрибути', '', 'Додати доступність, особливості.', 'Більше інформації для клієнтів.', ''],\n    ['Запитання та відповіді', '', 'Додати FAQ.', 'Проактивні відповіді зменшують бар\\'єри.', ''],\n    ['Публікації', '', 'Регулярні Google Posts.', 'Показує активність компанії.', '']\n]\nwrite_rows(ws16, gmb_headers, gmb_categories)\n\n# Save to buffer\nbuf = io.BytesIO()\nwb.save(buf)\nbuf.seek(0)\nb64 = base64.b64encode(buf.read()).decode('utf-8')\n\n# Summary for AI analysis\nsummary = status_data.get('summary', {})\n\nreturn [{\n    'json': {\n        'excel_base64': b64,\n        'file_name': f'Додаток до аудиту - {domain}.xlsx',\n        'domain': domain,\n        'summary': summary,\n        'tasks_count': len(tasks)\n    }\n}]"
+        "jsCode": "// Prepare all sheet data as a single status sheet for XLSX\n// (Multi-sheet XLSX requires Python/openpyxl; Google Doc contains full report)\nconst inp = $input.first().json;\nconst status = inp.status || {};\nconst tasks = status.tasks || [];\nconst domain = inp.domain || '';\n\n// Create rows for the status sheet\nconst rows = tasks.map(t => ({\n  json: {\n    'Задача': t.task || '',\n    'Пріоритет': t.priority || '',\n    'Вплив на КРІ': t.impact || '',\n    'Статус': t.status || '',\n    'Дата постановки': t.date_set || '',\n    'DL': '',\n    'Виконавець': '',\n    'Дата перевірки': '',\n    'Дата впровадження': '',\n    'Коментар виконавця': '',\n    'Коментар SEO': t.comment_seo || ''\n  }\n}));\n\n// If no tasks, add a placeholder row\nif (rows.length === 0) {\n  rows.push({ json: { 'Задача': 'Проблем не знайдено', 'Статус': 'OK' } });\n}\n\n// Store metadata for later nodes\nrows[0].json._meta_domain = domain;\nrows[0].json._meta_file_name = `Додаток до аудиту - ${domain}.xlsx`;\nrows[0].json._meta_tasks_count = tasks.length;\nrows[0].json._meta_summary = status.summary || {};\n\nreturn rows;"
       },
       "id": "ta-020",
       "name": "Build Excel",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2900,
+        3100,
         400
       ]
     },
@@ -192,7 +190,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2680,
+        2880,
         400
       ]
     },
@@ -205,7 +203,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "multipart/related; boundary=boundary_excel",
-        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $json.file_name }}\", \"mimeType\": \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $json.excel_base64 }}\n--boundary_excel--",
+        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $('Build Excel').first().json['_meta_file_name'] || 'audit.xlsx' }}\", \"mimeType\": \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $binary.data.data }}\n--boundary_excel--",
         "options": {}
       },
       "id": "ta-021",
@@ -213,7 +211,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        3120,
+        3540,
         400
       ],
       "continueOnFail": true
@@ -227,7 +225,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3340,
+        3760,
         400
       ]
     },
@@ -253,7 +251,7 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        3560,
+        3980,
         400
       ],
       "continueOnFail": true,
@@ -273,7 +271,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3780,
+        4200,
         400
       ]
     },
@@ -293,7 +291,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4000,
+        4420,
         400
       ],
       "continueOnFail": true,
@@ -320,7 +318,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4220,
+        4640,
         400
       ],
       "continueOnFail": true,
@@ -340,7 +338,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4440,
+        4860,
         400
       ]
     },
@@ -355,7 +353,41 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        4660,
+        5080,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "ta-003a",
+      "name": "Read XLSX",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toFile",
+        "fileFormat": "xlsx",
+        "options": {
+          "sheetName": "Статуси"
+        }
+      },
+      "id": "ta-020b",
+      "name": "Create XLSX",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        3320,
         400
       ]
     }
@@ -373,6 +405,17 @@
       ]
     },
     "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "Read XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read XLSX": {
       "main": [
         [
           {
@@ -505,6 +548,17 @@
       ]
     },
     "Build Excel": {
+      "main": [
+        [
+          {
+            "node": "Create XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create XLSX": {
       "main": [
         [
           {
