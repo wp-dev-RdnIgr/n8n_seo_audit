@@ -170,7 +170,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare all sheet data as a single status sheet for XLSX\n// (Multi-sheet XLSX requires Python/openpyxl; Google Doc contains full report)\nconst inp = $input.first().json;\nconst status = inp.status || {};\nconst tasks = status.tasks || [];\nconst domain = inp.domain || '';\n\n// Create rows for the status sheet\nconst rows = tasks.map(t => ({\n  json: {\n    'Задача': t.task || '',\n    'Пріоритет': t.priority || '',\n    'Вплив на КРІ': t.impact || '',\n    'Статус': t.status || '',\n    'Дата постановки': t.date_set || '',\n    'DL': '',\n    'Виконавець': '',\n    'Дата перевірки': '',\n    'Дата впровадження': '',\n    'Коментар виконавця': '',\n    'Коментар SEO': t.comment_seo || ''\n  }\n}));\n\n// If no tasks, add a placeholder row\nif (rows.length === 0) {\n  rows.push({ json: { 'Задача': 'Проблем не знайдено', 'Статус': 'OK' } });\n}\n\n// Store metadata for later nodes\nrows[0].json._meta_domain = domain;\nrows[0].json._meta_file_name = `Додаток до аудиту - ${domain}.xlsx`;\nrows[0].json._meta_tasks_count = tasks.length;\nrows[0].json._meta_summary = status.summary || {};\n\nreturn rows;"
+        "jsCode": "// Prepare sheet data as 2D array for Google Sheets API\nconst inp = $input.first().json;\nconst status = inp.status || {};\nconst tasks = status.tasks || [];\nconst domain = inp.domain || '';\n\n// Header row\nconst headers = ['Задача', 'Пріоритет', 'Вплив на КРІ', 'Статус', 'Дата постановки', 'DL', 'Виконавець', 'Дата перевірки', 'Дата впровадження', 'Коментар виконавця', 'Коментар SEO'];\n\n// Data rows\nconst dataRows = tasks.map(function(t) {\n  return [\n    t.task || '', t.priority || '', t.impact || '', t.status || '',\n    t.date_set || '', '', '', '', '', '', t.comment_seo || ''\n  ];\n});\n\nif (dataRows.length === 0) {\n  dataRows.push(['Проблем не знайдено', '', '', 'OK', '', '', '', '', '', '', '']);\n}\n\nconst values = [headers].concat(dataRows);\n\nreturn [{\n  json: {\n    sheetTitle: 'Додаток до аудиту - ' + domain,\n    values: values,\n    domain: domain,\n    tasks_count: tasks.length,\n    summary: status.summary || {}\n  }\n}];"
       },
       "id": "ta-020",
       "name": "Build Excel",
@@ -197,24 +197,29 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "multipart/related; boundary=boundary_excel",
-        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $('Build Excel').first().json['_meta_file_name'] || 'audit.xlsx' }}\", \"mimeType\": \"application/vnd.google-apps.spreadsheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $binary.data.data }}\n--boundary_excel--",
+        "specifyBody": "json",
+        "jsonBody": "={ \"properties\": { \"title\": \"{{ $json.sheetTitle }}\" }, \"sheets\": [{ \"properties\": { \"title\": \"Статуси\" } }] }",
         "options": {}
       },
-      "id": "ta-021",
-      "name": "Upload Excel to Drive",
+      "id": "ta-021a",
+      "name": "Create Google Sheet",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.3,
       "position": [
-        3540,
+        3320,
         400
       ],
-      "continueOnFail": true
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets"
+        }
+      }
     },
     {
       "parameters": {
@@ -331,7 +336,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Final response — send back Excel URL and Doc URL\nconst excelUpload = $('Upload Excel to Drive').first().json;\nconst domain = $('Parse XLSX').first().json.domain;\n\nconst excelId = excelUpload.id || '';\n\n// Get doc ID from Create Google Doc node\nlet docId = '';\ntry {\n  docId = $('Create Google Doc').first().json.documentId || '';\n} catch(e) {}\n\nconst excelUrl = excelId ? `https://docs.google.com/spreadsheets/d/${excelId}` : '';\nconst docUrl = docId ? `https://docs.google.com/document/d/${docId}` : '';\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: `Тех. аудит ${domain} завершено`,\n    excelUrl,\n    docUrl,\n    folderUrl: '',\n    domain\n  }\n}];"
+        "jsCode": "// Final response — send back Sheet URL and Doc URL\nconst domain = $('Parse XLSX').first().json.domain;\n\n// Get spreadsheet ID from Create Google Sheet node\nlet excelId = '';\ntry {\n  excelId = $('Create Google Sheet').first().json.spreadsheetId || '';\n} catch(e) {}\n\n// Get doc ID from Create Google Doc node\nlet docId = '';\ntry {\n  docId = $('Create Google Doc').first().json.documentId || '';\n} catch(e) {}\n\nconst excelUrl = excelId ? 'https://docs.google.com/spreadsheets/d/' + excelId : '';\nconst docUrl = docId ? 'https://docs.google.com/document/d/' + docId : '';\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: 'Тех. аудит ' + domain + ' завершено',\n    excelUrl: excelUrl,\n    docUrl: docUrl,\n    folderUrl: '',\n    domain: domain\n  }\n}];"
       },
       "id": "ta-040",
       "name": "Build Response",
@@ -377,20 +382,30 @@
     },
     {
       "parameters": {
-        "operation": "toFile",
-        "fileFormat": "xlsx",
-        "options": {
-          "sheetName": "Статуси"
-        }
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.spreadsheetId }}/values/%D0%A1%D1%82%D0%B0%D1%82%D1%83%D1%81%D1%96?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"values\": {{ JSON.stringify($('Build Excel').first().json.values) }} }",
+        "options": {}
       },
-      "id": "ta-020b",
-      "name": "Create XLSX",
-      "type": "n8n-nodes-base.spreadsheetFile",
-      "typeVersion": 2,
+      "id": "ta-021b",
+      "name": "Write Sheet Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
       "position": [
-        3320,
+        3540,
         400
-      ]
+      ],
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets"
+        }
+      }
     }
   ],
   "connections": {
@@ -552,25 +567,25 @@
       "main": [
         [
           {
-            "node": "Create XLSX",
+            "node": "Create Google Sheet",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Create XLSX": {
+    "Create Google Sheet": {
       "main": [
         [
           {
-            "node": "Upload Excel to Drive",
+            "node": "Write Sheet Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Upload Excel to Drive": {
+    "Write Sheet Data": {
       "main": [
         [
           {
