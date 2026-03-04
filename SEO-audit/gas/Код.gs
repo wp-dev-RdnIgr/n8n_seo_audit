@@ -206,6 +206,80 @@ function checkDocStatus(docId) {
 }
 
 // ============================================
+// БЕКЕНД: Технічний SEO-аудит (Screaming Frog)
+// ============================================
+
+function submitTechAudit(formData) {
+  // Валідація
+  if (!formData.domain) {
+    return { success: false, error: 'Вкажіть домен сайту' };
+  }
+  if (!formData.internal_all || !formData.internal_all.data) {
+    return { success: false, error: 'Завантажте файл internal_all.xlsx' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/tech-seo-audit';
+
+  var payload = {
+    domain: formData.domain,
+    manager_email: formData.manager_email || '',
+    folder_url: formData.folder_url || '',
+    internal_all: {
+      name: formData.internal_all.name,
+      data: formData.internal_all.data,
+      mimeType: formData.internal_all.mimeType
+    }
+  };
+
+  // Опціональні файли зображень без ALT
+  if (formData.images_alt && formData.images_alt.length > 0) {
+    payload.images_alt = formData.images_alt.map(function(f) {
+      return { name: f.name, data: f.data, mimeType: f.mimeType };
+    });
+  }
+
+  // Опціональний файл бекліків
+  if (formData.backlinks && formData.backlinks.data) {
+    payload.backlinks = {
+      name: formData.backlinks.name,
+      data: formData.backlinks.data,
+      mimeType: formData.backlinks.mimeType
+    };
+  }
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    timeout: 600  // 10 хвилин
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var code = response.getResponseCode();
+
+    if (code >= 200 && code < 300) {
+      var result = JSON.parse(response.getContentText());
+      return {
+        success: true,
+        status: result.status || 'processing',
+        excelUrl: result.excelUrl || '',
+        docUrl: result.docUrl || '',
+        folderUrl: result.folderUrl || '',
+        message: result.message || 'Тех. аудит запущено'
+      };
+    } else {
+      var errText = response.getContentText();
+      try { errText = JSON.parse(errText).error || errText; } catch(e) {}
+      return { success: false, error: 'Помилка сервера (' + code + '): ' + errText };
+    }
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
 // БЕКЕНД: PDF Audit Parser
 // ============================================
 

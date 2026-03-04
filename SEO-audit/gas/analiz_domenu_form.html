@@ -553,6 +553,46 @@
     .req-list li { margin-bottom: 2px; }
     .req-list li::marker { color: var(--color-accent); }
 
+    /* === FILE UPLOAD === */
+    .file-drop-zone {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: #FAFBFC;
+    }
+    .file-drop-zone:hover,
+    .file-drop-zone.dragover {
+      border-color: var(--color-accent);
+      background: var(--color-accent-lighter);
+    }
+    .file-drop-zone.has-file {
+      border-color: var(--color-success);
+      background: #F0FDF4;
+      border-style: solid;
+    }
+    .file-drop-icon { font-size: 32px; color: var(--color-text-muted); margin-bottom: 8px; }
+    .file-drop-zone.has-file .file-drop-icon { color: var(--color-success); }
+    .file-drop-text { font-size: 14px; color: var(--color-text-secondary); font-weight: 500; }
+    .file-drop-hint { font-size: 12px; color: var(--color-text-muted); margin-top: 4px; }
+    .file-drop-name {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: var(--color-success-light);
+      color: #166534;
+      border-radius: 6px;
+      font-size: 13px; font-weight: 600;
+      margin-top: 8px;
+    }
+    .file-drop-name .file-remove {
+      cursor: pointer; font-size: 15px; color: var(--color-error);
+      margin-left: 4px;
+    }
+    .file-drop-name .file-remove:hover { opacity: 0.7; }
+    .file-upload-hidden { display: none; }
+
     /* === RESPONSIVE === */
     @media (max-width: 767px) {
       .master-sidebar { display: none; }
@@ -614,11 +654,16 @@
         <div class="sb-circle">8</div>
         <div class="sb-label">PDF парсинг</div>
       </div>
+      <div class="sb-group-label">Етап 3 — Тех. аудит</div>
+      <div class="sb-step" data-step="9" onclick="sidebarClick(9)">
+        <div class="sb-circle">9</div>
+        <div class="sb-label">Тех. аудит SF</div>
+      </div>
     </aside>
 
     <!-- MOBILE PROGRESS -->
     <div class="mobile-progress" id="mobileProgress">
-      <div class="mobile-progress-label" id="mobileLabel">Крок 1 з 8</div>
+      <div class="mobile-progress-label" id="mobileLabel">Крок 1 з 9</div>
       <div class="mobile-bar"><div class="mobile-bar-fill" id="mobileBar" style="width:12.5%"></div></div>
     </div>
 
@@ -974,6 +1019,82 @@
           </div>
         </section>
 
+        <!-- STEP 9: Технічний аудит Screaming Frog -->
+        <section class="step-panel" data-step="9">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-card-icon"><i class="ti ti-bug"></i></div>
+              <div>
+                <div class="step-card-title">Технічний SEO-аудит</div>
+                <div class="step-card-desc">Автоматична генерація аудиту з даних Screaming Frog</div>
+              </div>
+            </div>
+            <div class="info-box">
+              <i class="ti ti-info-circle"></i>
+              <span>Завантажте файл <strong>internal_all.xlsx</strong> з Screaming Frog. Система створить Excel з 16 листами та AI-звіт у Google Docs.</span>
+            </div>
+
+            <!-- Домен -->
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-world"></i> Домен сайту <span class="required-mark">*</span></label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="fTaDomain" class="form-input" placeholder="example.com" autocomplete="off" spellcheck="false">
+              </div>
+              <div class="form-hint"><i class="ti ti-info-circle"></i> Домен для аудиту (використовується для robots.txt та структури)</div>
+              <div class="form-error" id="fTaDomainErr">Введіть домен сайту</div>
+            </div>
+
+            <!-- internal_all.xlsx -->
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-file-spreadsheet"></i> Screaming Frog — internal_all.xlsx <span class="required-mark">*</span></label>
+              <div class="file-drop-zone" id="taMainFileDrop" onclick="document.getElementById('taMainFileInput').click()">
+                <input type="file" id="taMainFileInput" class="file-upload-hidden" accept=".xlsx,.xls">
+                <div class="file-drop-icon"><i class="ti ti-upload"></i></div>
+                <div class="file-drop-text">Перетягніть файл або натисніть для вибору</div>
+                <div class="file-drop-hint">.xlsx — експорт Internal All зі Screaming Frog</div>
+              </div>
+              <div class="form-error" id="fTaMainErr">Завантажте файл internal_all.xlsx</div>
+            </div>
+
+            <!-- images_missing_alt (опційно) -->
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-photo"></i> Зображення без ALT (опційно)</label>
+              <div class="file-drop-zone" id="taAltFileDrop" onclick="document.getElementById('taAltFileInput').click()">
+                <input type="file" id="taAltFileInput" class="file-upload-hidden" accept=".xlsx,.xls" multiple>
+                <div class="file-drop-icon"><i class="ti ti-upload"></i></div>
+                <div class="file-drop-text">images_missing_alt_attribute + images_missing_alt_text</div>
+                <div class="file-drop-hint">.xlsx — можна обрати кілька файлів</div>
+              </div>
+            </div>
+
+            <!-- Ahrefs backlinks (опційно) -->
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-link"></i> Бекліки Ahrefs (опційно)</label>
+              <div class="file-drop-zone" id="taBacklinksDrop" onclick="document.getElementById('taBacklinksInput').click()">
+                <input type="file" id="taBacklinksInput" class="file-upload-hidden" accept=".xlsx,.xls,.csv">
+                <div class="file-drop-icon"><i class="ti ti-upload"></i></div>
+                <div class="file-drop-text">Файл з бекліками (Ahrefs експорт)</div>
+                <div class="file-drop-hint">.xlsx або .csv</div>
+              </div>
+            </div>
+
+            <!-- Google Folder URL (опційно) -->
+            <div class="form-group">
+              <label class="form-label"><i class="ti ti-folder"></i> Папка Google Drive для результату (опційно)</label>
+              <div class="input-wrap">
+                <i class="ti ti-link input-ico"></i>
+                <input type="text" id="fTaFolderUrl" class="form-input" placeholder="https://drive.google.com/drive/folders/..." autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+
+            <button class="btn-launch" id="btnTechAudit" onclick="launchTechAudit()">
+              <i class="ti ti-bug"></i> <span>Запустити тех. аудит</span>
+            </button>
+            <div class="result-card hidden" id="techAuditResult"></div>
+          </div>
+        </section>
+
         <!-- NAVIGATION (flows with content, not fixed at bottom) -->
         <div class="step-nav" id="stepNav">
           <button class="nav-btn nav-btn-back" id="navBack" onclick="prevStep()">
@@ -999,9 +1120,9 @@
 // STATE
 // =========================================
 var currentStep = 1;
-var totalSteps = 8;
-// Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск (усе через оркестратор), 7=AI, 8=PDF
-var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
+var totalSteps = 9;
+// Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск (усе через оркестратор), 7=AI, 8=PDF, 9=Тех.аудит SF
+var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
 var phase1Done = false;
 var stepData = { email:'', domain:'', competitors:[], semantic:null, metrics:null, pagespeed:null, phase1Results:null };
 
@@ -1693,6 +1814,191 @@ function showCompetitorsResult(data) {
 }
 
 // =========================================
+// STEP 9: TECH AUDIT (Screaming Frog)
+// =========================================
+var _taFiles = { main: null, alt: [], backlinks: null };
+
+function setupFileDropZone(dropId, inputId, fileKey, multi) {
+  var drop = document.getElementById(dropId);
+  var input = document.getElementById(inputId);
+
+  input.addEventListener('change', function() {
+    if (multi) {
+      _taFiles[fileKey] = Array.from(this.files);
+    } else {
+      _taFiles[fileKey] = this.files[0] || null;
+    }
+    updateDropZoneUI(drop, multi ? _taFiles[fileKey] : (_taFiles[fileKey] ? [_taFiles[fileKey]] : []));
+  });
+
+  drop.addEventListener('dragover', function(e) { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', function() { drop.classList.remove('dragover'); });
+  drop.addEventListener('drop', function(e) {
+    e.preventDefault();
+    drop.classList.remove('dragover');
+    if (multi) {
+      _taFiles[fileKey] = Array.from(e.dataTransfer.files);
+      input.files = e.dataTransfer.files;
+    } else {
+      _taFiles[fileKey] = e.dataTransfer.files[0] || null;
+      input.files = e.dataTransfer.files;
+    }
+    updateDropZoneUI(drop, multi ? _taFiles[fileKey] : (_taFiles[fileKey] ? [_taFiles[fileKey]] : []));
+  });
+}
+
+function updateDropZoneUI(drop, files) {
+  if (files.length > 0) {
+    drop.classList.add('has-file');
+    var names = files.map(function(f) { return f.name; }).join(', ');
+    drop.querySelector('.file-drop-text').textContent = '';
+    drop.querySelector('.file-drop-hint').textContent = '';
+    var existing = drop.querySelector('.file-drop-name');
+    if (existing) existing.remove();
+    var nameEl = document.createElement('div');
+    nameEl.className = 'file-drop-name';
+    nameEl.innerHTML = '<i class="ti ti-file-check"></i> ' + names +
+      ' <span class="file-remove" onclick="event.stopPropagation(); clearFileZone(\'' + drop.id + '\')">&times;</span>';
+    drop.appendChild(nameEl);
+  } else {
+    drop.classList.remove('has-file');
+    var nameEl = drop.querySelector('.file-drop-name');
+    if (nameEl) nameEl.remove();
+  }
+}
+
+function clearFileZone(dropId) {
+  var drop = document.getElementById(dropId);
+  drop.classList.remove('has-file');
+  var nameEl = drop.querySelector('.file-drop-name');
+  if (nameEl) nameEl.remove();
+
+  if (dropId === 'taMainFileDrop') {
+    _taFiles.main = null;
+    document.getElementById('taMainFileInput').value = '';
+    drop.querySelector('.file-drop-text').textContent = 'Перетягніть файл або натисніть для вибору';
+    drop.querySelector('.file-drop-hint').textContent = '.xlsx — експорт Internal All зі Screaming Frog';
+  } else if (dropId === 'taAltFileDrop') {
+    _taFiles.alt = [];
+    document.getElementById('taAltFileInput').value = '';
+    drop.querySelector('.file-drop-text').textContent = 'images_missing_alt_attribute + images_missing_alt_text';
+    drop.querySelector('.file-drop-hint').textContent = '.xlsx — можна обрати кілька файлів';
+  } else if (dropId === 'taBacklinksDrop') {
+    _taFiles.backlinks = null;
+    document.getElementById('taBacklinksInput').value = '';
+    drop.querySelector('.file-drop-text').textContent = 'Файл з бекліками (Ahrefs експорт)';
+    drop.querySelector('.file-drop-hint').textContent = '.xlsx або .csv';
+  }
+}
+
+function readFileAsBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      var base64 = reader.result.split(',')[1];
+      resolve({ name: file.name, data: base64, mimeType: file.type || 'application/octet-stream' });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function launchTechAudit() {
+  var domain = document.getElementById('fTaDomain').value.trim();
+  if (!domain) {
+    document.getElementById('fTaDomainErr').classList.add('visible');
+    document.getElementById('fTaDomain').classList.add('error');
+    return;
+  }
+  document.getElementById('fTaDomainErr').classList.remove('visible');
+  document.getElementById('fTaDomain').classList.remove('error');
+  domain = normalizeDomain(domain);
+
+  if (!_taFiles.main) {
+    document.getElementById('fTaMainErr').classList.add('visible');
+    return;
+  }
+  document.getElementById('fTaMainErr').classList.remove('visible');
+
+  var btn = document.getElementById('btnTechAudit');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('techAuditResult', 'Читаємо файли та запускаємо аудит...');
+
+  // Read all files as base64
+  var promises = [readFileAsBase64(_taFiles.main)];
+  for (var i = 0; i < _taFiles.alt.length; i++) {
+    promises.push(readFileAsBase64(_taFiles.alt[i]));
+  }
+  if (_taFiles.backlinks) {
+    promises.push(readFileAsBase64(_taFiles.backlinks));
+  }
+
+  Promise.all(promises).then(function(results) {
+    var payload = {
+      domain: domain,
+      manager_email: stepData.email || '',
+      folder_url: document.getElementById('fTaFolderUrl').value.trim(),
+      internal_all: results[0]
+    };
+
+    var altStart = 1;
+    var altEnd = altStart + _taFiles.alt.length;
+    if (_taFiles.alt.length > 0) {
+      payload.images_alt = results.slice(altStart, altEnd);
+    }
+    if (_taFiles.backlinks) {
+      payload.backlinks = results[results.length - 1];
+    }
+
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled = false; btn.classList.remove('btn-loading');
+        if (r.success) {
+          var html = '<div class="result-card-header"><i class="ti ti-circle-check"></i> Тех. аудит запущено</div>';
+          if (r.excelUrl) {
+            html += '<div class="result-link-row"><a href="' + r.excelUrl + '" target="_blank" class="result-link"><i class="ti ti-file-spreadsheet"></i> Excel аудит</a>' +
+              '<button class="copy-btn" onclick="copyToClipboard(\'' + r.excelUrl.replace(/'/g, "\\'") + '\',this)"><i class="ti ti-copy"></i></button></div>';
+          }
+          if (r.docUrl) {
+            html += '<div class="result-link-row"><a href="' + r.docUrl + '" target="_blank" class="result-link doc-link"><i class="ti ti-file-text"></i> Google Docs звіт</a>' +
+              '<button class="copy-btn" onclick="copyToClipboard(\'' + r.docUrl.replace(/'/g, "\\'") + '\',this)"><i class="ti ti-copy"></i></button></div>';
+          }
+          if (r.folderUrl) {
+            html += '<div class="result-link-row"><a href="' + r.folderUrl + '" target="_blank" class="result-link folder-link"><i class="ti ti-folder"></i> Папка проекту</a></div>';
+          }
+          if (r.status === 'processing') {
+            html += '<div class="result-processing-status"><i class="ti ti-loader-2 spinning"></i> <span>Аудит обробляється. Результати з\'являться у папці...</span></div>';
+          }
+          var el = document.getElementById('techAuditResult');
+          el.classList.remove('hidden');
+          el.className = 'result-card ' + (r.status === 'processing' ? 'processing' : 'success');
+          el.innerHTML = html;
+        } else {
+          showResultError('techAuditResult', r.error || 'Помилка');
+        }
+      })
+      .withFailureHandler(function(e) {
+        btn.disabled = false; btn.classList.remove('btn-loading');
+        showResultError('techAuditResult', e.toString());
+      })
+      .submitTechAudit(payload);
+  }).catch(function(err) {
+    btn.disabled = false; btn.classList.remove('btn-loading');
+    showResultError('techAuditResult', 'Помилка читання файлів: ' + err.toString());
+  });
+}
+
+// Initialize file drop zones after DOM is ready
+setupFileDropZone('taMainFileDrop', 'taMainFileInput', 'main', false);
+setupFileDropZone('taAltFileDrop', 'taAltFileInput', 'alt', true);
+setupFileDropZone('taBacklinksDrop', 'taBacklinksInput', 'backlinks', false);
+
+// Auto-fill domain from step 1
+document.getElementById('fTaDomain').addEventListener('focus', function() {
+  if (!this.value && stepData.domain) this.value = stepData.domain;
+});
+
+// =========================================
 // ENTER KEY HANDLERS
 // =========================================
 document.getElementById('fEmail').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
@@ -1700,7 +2006,7 @@ document.getElementById('fDomain').addEventListener('keypress', function(e) { if
 document.getElementById('fSemUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fPsUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
-document.getElementById('fAiUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchAI(); });
+// AI URLs use dynamic inputs — no single fAiUrl
 document.getElementById('fPdfUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPDF(); });
 
 // =========================================
