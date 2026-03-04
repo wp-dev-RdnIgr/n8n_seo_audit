@@ -363,7 +363,8 @@
         "fileFormat": "xlsx",
         "options": {
           "headerRow": true
-        }
+        },
+        "binaryPropertyName": "internal_all"
       },
       "id": "ta-003a",
       "name": "Read XLSX",
