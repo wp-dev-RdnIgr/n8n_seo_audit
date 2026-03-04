@@ -14,7 +14,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 400],
+      "position": [
+        0,
+        400
+      ],
       "webhookId": "tech-seo-audit"
     },
     {
@@ -25,7 +28,10 @@
       "name": "Parse Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 400]
+      "position": [
+        220,
+        400
+      ]
     },
     {
       "parameters": {
@@ -36,7 +42,10 @@
       "name": "Parse XLSX",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 400]
+      "position": [
+        460,
+        400
+      ]
     },
     {
       "parameters": {
@@ -50,7 +59,10 @@
       "name": "Fetch robots.txt",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [700, 100],
+      "position": [
+        700,
+        400
+      ],
       "continueOnFail": true
     },
     {
@@ -61,7 +73,10 @@
       "name": "Agent 1: Canonicals + Structure",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 250]
+      "position": [
+        1140,
+        400
+      ]
     },
     {
       "parameters": {
@@ -71,7 +86,10 @@
       "name": "Agent 2: Meta Tags",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 400]
+      "position": [
+        1360,
+        400
+      ]
     },
     {
       "parameters": {
@@ -81,7 +99,10 @@
       "name": "Agent 3: H1 Problems",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 550]
+      "position": [
+        1580,
+        400
+      ]
     },
     {
       "parameters": {
@@ -91,7 +112,10 @@
       "name": "Agent 4: Redirects & Errors",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 700]
+      "position": [
+        1800,
+        400
+      ]
     },
     {
       "parameters": {
@@ -101,7 +125,10 @@
       "name": "Agent 5: ALT Images",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 850]
+      "position": [
+        2020,
+        400
+      ]
     },
     {
       "parameters": {
@@ -111,7 +138,10 @@
       "name": "Agent 6: Tag Pages",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [700, 1000]
+      "position": [
+        2240,
+        400
+      ]
     },
     {
       "parameters": {
@@ -121,7 +151,10 @@
       "name": "Agent 7: Status Tracker",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 600]
+      "position": [
+        2460,
+        400
+      ]
     },
     {
       "parameters": {
@@ -131,7 +164,10 @@
       "name": "Parse robots.txt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 100]
+      "position": [
+        920,
+        400
+      ]
     },
     {
       "parameters": {
@@ -142,7 +178,10 @@
       "name": "Build Excel",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 400]
+      "position": [
+        2900,
+        400
+      ]
     },
     {
       "parameters": {
@@ -152,7 +191,10 @@
       "name": "Merge Agent Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 250]
+      "position": [
+        2680,
+        400
+      ]
     },
     {
       "parameters": {
@@ -170,7 +212,10 @@
       "name": "Upload Excel to Drive",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1440, 400],
+      "position": [
+        3120,
+        400
+      ],
       "continueOnFail": true
     },
     {
@@ -181,7 +226,10 @@
       "name": "Prepare AI Report Prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 600]
+      "position": [
+        3340,
+        400
+      ]
     },
     {
       "parameters": {
@@ -204,7 +252,10 @@
       "name": "AI Analysis",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [1440, 600],
+      "position": [
+        3560,
+        400
+      ],
       "continueOnFail": true,
       "credentials": {
         "openAiApi": {
@@ -221,7 +272,10 @@
       "name": "Prepare Document",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1680, 600]
+      "position": [
+        3780,
+        400
+      ]
     },
     {
       "parameters": {
@@ -238,7 +292,10 @@
       "name": "Create Google Doc",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1920, 600],
+      "position": [
+        4000,
+        400
+      ],
       "continueOnFail": true,
       "credentials": {
         "googleDocsOAuth2Api": {
@@ -262,7 +319,10 @@
       "name": "Write Document Content",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2140, 600],
+      "position": [
+        4220,
+        400
+      ],
       "continueOnFail": true,
       "credentials": {
         "googleDocsOAuth2Api": {
@@ -279,7 +339,10 @@
       "name": "Build Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2400, 500]
+      "position": [
+        4440,
+        400
+      ]
     },
     {
       "parameters": {
@@ -291,7 +354,10 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [2620, 500]
+      "position": [
+        4660,
+        400
+      ]
     }
   ],
   "connections": {
@@ -324,36 +390,6 @@
             "node": "Fetch robots.txt",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Agent 1: Canonicals + Structure",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Agent 2: Meta Tags",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Agent 3: H1 Problems",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Agent 4: Redirects & Errors",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Agent 5: ALT Images",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Agent 6: Tag Pages",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -369,11 +405,22 @@
         ]
       ]
     },
+    "Parse robots.txt": {
+      "main": [
+        [
+          {
+            "node": "Agent 1: Canonicals + Structure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Agent 1: Canonicals + Structure": {
       "main": [
         [
           {
-            "node": "Agent 7: Status Tracker",
+            "node": "Agent 2: Meta Tags",
             "type": "main",
             "index": 0
           }
@@ -384,7 +431,7 @@
       "main": [
         [
           {
-            "node": "Agent 7: Status Tracker",
+            "node": "Agent 3: H1 Problems",
             "type": "main",
             "index": 0
           }
@@ -395,7 +442,7 @@
       "main": [
         [
           {
-            "node": "Agent 7: Status Tracker",
+            "node": "Agent 4: Redirects & Errors",
             "type": "main",
             "index": 0
           }
@@ -406,7 +453,7 @@
       "main": [
         [
           {
-            "node": "Agent 7: Status Tracker",
+            "node": "Agent 5: ALT Images",
             "type": "main",
             "index": 0
           }
@@ -417,7 +464,7 @@
       "main": [
         [
           {
-            "node": "Agent 7: Status Tracker",
+            "node": "Agent 6: Tag Pages",
             "type": "main",
             "index": 0
           }
@@ -436,22 +483,6 @@
       ]
     },
     "Agent 7: Status Tracker": {
-      "main": [
-        [
-          {
-            "node": "Merge Agent Results",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Prepare AI Report Prompt",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse robots.txt": {
       "main": [
         [
           {
@@ -488,7 +519,7 @@
       "main": [
         [
           {
-            "node": "Build Response",
+            "node": "Prepare AI Report Prompt",
             "type": "main",
             "index": 0
           }
@@ -544,6 +575,17 @@
         [
           {
             "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
