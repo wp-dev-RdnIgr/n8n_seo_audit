@@ -35,7 +35,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Process all rows from Spreadsheet File node\nconst items = $input.all();\nconst domain = $('Parse Input').first().json.domain;\n\n// Each item is a row from the XLSX\nconst all_rows = items.map(item => item.json).filter(r => r['Address']);\n\nconst headers = Object.keys(all_rows[0] || {});\n\n// Pre-filter datasets for each agent\nconst pages_html = all_rows.filter(r => (r['Content Type'] || '') === 'text/html');\nconst pages_200 = pages_html.filter(r => String(r['Status Code'] || '').startsWith('200'));\nconst pages_indexable = pages_200.filter(r => (r['Indexability'] || '') === 'Indexable');\nconst pages_canonical = pages_200.filter(r => r['Canonical Link Element 1'] && r['Canonical Link Element 1'] !== r['Address']);\nconst pages_multi_h1 = pages_200.filter(r => (r['H1-2'] || '').trim());\nconst pages_missing_h1 = pages_indexable.filter(r => !(r['H1-1'] || '').trim());\nconst pages_301 = all_rows.filter(r => String(r['Status Code'] || '').startsWith('301'));\nconst pages_404 = all_rows.filter(r => String(r['Status Code'] || '').startsWith('404'));\nconst pages_tags = pages_indexable.filter(r => (r['Address'] || '').includes('/tag/'));\nconst pages_en = pages_indexable.filter(r => !(r['Address'] || '').includes('/uk/'));\nconst pages_uk = pages_indexable.filter(r => (r['Address'] || '').includes('/uk/'));\n\nfunction limit(arr, n = 500) { return arr.slice(0, n); }\n\nreturn [{\n  json: {\n    domain,\n    total_pages: all_rows.length,\n    total_html: pages_html.length,\n    total_indexable: pages_indexable.length,\n    headers,\n    pages_canonical: limit(pages_canonical),\n    pages_canonical_count: pages_canonical.length,\n    pages_indexable_sample: limit(pages_indexable),\n    pages_multi_h1: limit(pages_multi_h1),\n    pages_multi_h1_count: pages_multi_h1.length,\n    pages_missing_h1: limit(pages_missing_h1),\n    pages_missing_h1_count: pages_missing_h1.length,\n    pages_301: limit(pages_301),\n    pages_301_count: pages_301.length,\n    pages_404: limit(pages_404),\n    pages_404_count: pages_404.length,\n    pages_tags: limit(pages_tags),\n    pages_tags_count: pages_tags.length,\n    pages_en: limit(pages_en),\n    pages_uk: limit(pages_uk),\n    pages_all_sample: limit(pages_200, 200)\n  }\n}];"
+        "jsCode": "// Process all rows from Spreadsheet File node\nconst items = $input.all();\nconst domain = $('Parse Input').first().json.domain;\n\n// Each item is a row from the XLSX\nconst all_rows = items.map(item => item.json).filter(r => r['Address']);\nconst headers = Object.keys(all_rows[0] || {});\n\n// Pre-filter datasets for each agent\nconst pages_html = all_rows.filter(r => (r['Content Type'] || '').includes('text/html'));\nconst pages_200 = pages_html.filter(r => String(r['Status Code'] || '') === '200');\nconst pages_indexable = pages_200.filter(r => (r['Indexability'] || '') === 'Indexable');\n\n// Canonicals: pages where canonical differs from URL\nconst pages_canonical = pages_html.filter(r =>\n  r['Canonical Link Element 1'] &&\n  r['Canonical Link Element 1'] !== r['Address']\n);\n\n// H1 problems\nconst pages_multi_h1 = pages_html.filter(r => (r['H1-2'] || '').trim());\nconst pages_missing_h1 = pages_indexable.filter(r => !(r['H1-1'] || '').trim());\n\n// Status codes\nconst pages_301 = all_rows.filter(r => String(r['Status Code'] || '') === '301');\nconst pages_404 = all_rows.filter(r => String(r['Status Code'] || '') === '404');\n\n// Tags\nconst pages_tags = pages_indexable.filter(r => (r['Address'] || '').includes('/tag/'));\n\n// EN/UK split\nconst pages_en = pages_indexable.filter(r => !(r['Address'] || '').includes('/uk/'));\nconst pages_uk = pages_indexable.filter(r => (r['Address'] || '').includes('/uk/'));\n\n// Meta issues: empty/short title or description\nconst pages_meta_issues = pages_indexable.filter(r => {\n  const titleLen = parseInt(r['Title 1 Length'] || '0');\n  const descLen = parseInt(r['Meta Description 1 Length'] || '0');\n  return !r['Title 1'] || titleLen < 30 || titleLen > 60 ||\n         !r['Meta Description 1'] || descLen < 70 || descLen > 160;\n});\n\n// No limit — pass all filtered data to agents\nreturn [{\n  json: {\n    domain,\n    total_pages: all_rows.length,\n    total_html: pages_html.length,\n    total_indexable: pages_indexable.length,\n    headers,\n    pages_canonical,\n    pages_canonical_count: pages_canonical.length,\n    pages_indexable,\n    pages_indexable_count: pages_indexable.length,\n    pages_multi_h1,\n    pages_multi_h1_count: pages_multi_h1.length,\n    pages_missing_h1,\n    pages_missing_h1_count: pages_missing_h1.length,\n    pages_301,\n    pages_301_count: pages_301.length,\n    pages_404,\n    pages_404_count: pages_404.length,\n    pages_tags,\n    pages_tags_count: pages_tags.length,\n    pages_en,\n    pages_uk,\n    pages_meta_issues,\n    pages_meta_issues_count: pages_meta_issues.length\n  }\n}];"
       },
       "id": "ta-003",
       "name": "Parse XLSX",
@@ -79,7 +79,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Agent 2: Meta Tags Analysis\nconst data = $('Parse XLSX').first().json;\nconst pages = data.pages_indexable_sample || [];\nconst domain = data.domain;\n\n// Group pages by URL pattern for template generation\nconst patterns = {\n  home: [],\n  services: [],\n  blog: [],\n  author: [],\n  contact: [],\n  tag: [],\n  pagination: [],\n  other: []\n};\n\nfor (const p of pages) {\n  const url = p['Address'] || '';\n  const path = url.replace(`https://${domain}`, '').replace(`http://${domain}`, '');\n  \n  if (path === '/' || path === '/uk/' || path === '') patterns.home.push(p);\n  else if (/\\/(services?|category|categories|послуги|категорі)\\//i.test(path)) patterns.services.push(p);\n  else if (/\\/(blog|articles?|статт|новин)\\//i.test(path)) patterns.blog.push(p);\n  else if (/\\/author\\//i.test(path)) patterns.author.push(p);\n  else if (/\\/contact/i.test(path)) patterns.contact.push(p);\n  else if (/\\/tag\\//i.test(path)) patterns.tag.push(p);\n  else if (/\\/page\\/\\d+/i.test(path)) patterns.pagination.push(p);\n  else patterns.other.push(p);\n}\n\n// Pages needing manual meta tags (empty/short/duplicate titles or descriptions)\nconst manualMeta = [];\nconst seenTitles = {};\n\nfor (const p of pages) {\n  const url = p['Address'] || '';\n  const title = p['Title 1'] || '';\n  const titleLen = parseInt(p['Title 1 Length'] || '0');\n  const desc = p['Meta Description 1'] || '';\n  const descLen = parseInt(p['Meta Description 1 Length'] || '0');\n  \n  let needsManual = false;\n  if (!title || titleLen < 30) needsManual = true;\n  if (!desc || descLen < 70) needsManual = true;\n  if (seenTitles[title] && title) needsManual = true;\n  seenTitles[title] = true;\n  \n  if (needsManual) {\n    manualMeta.push({\n      url,\n      title_current: title,\n      title_len: titleLen,\n      desc_current: desc,\n      desc_len: descLen\n    });\n  }\n}\n\nreturn [{\n  json: {\n    patterns,\n    manualMeta: manualMeta.slice(0, 100),\n    manualMetaCount: manualMeta.length,\n    domain\n  }\n}];"
+        "jsCode": "// Agent 2: Meta Tags Analysis\nconst data = $('Parse XLSX').first().json;\nconst domain = data.domain;\n\n// Use pre-filtered meta issues from Parse XLSX\nconst pages = data.pages_meta_issues || [];\n\nconst manualMeta = pages.map(p => ({\n  url: p['Address'] || '',\n  title_current: p['Title 1'] || '',\n  title_len: parseInt(p['Title 1 Length'] || '0'),\n  desc_current: p['Meta Description 1'] || '',\n  desc_len: parseInt(p['Meta Description 1 Length'] || '0')\n}));\n\nreturn [{\n  json: {\n    manualMeta,\n    manualMetaCount: manualMeta.length,\n    domain\n  }\n}];"
       },
       "id": "ta-011",
       "name": "Agent 2: Meta Tags",
@@ -105,7 +105,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Agent 4: Redirects and Errors (301 + 404)\nconst data = $('Parse XLSX').first().json;\n\nconst pages301 = (data.pages_301 || []).map(p => ({\n  type: p['Type'] || 'Hyperlink',\n  from: p['Address'] || p['Source'] || '',\n  to: p['Redirect URL'] || p['Redirect URI'] || p['Destination'] || '',\n  anchor: p['Anchor Text'] || '',\n  alt_text: p['Alt Text'] || '',\n  follow: p['Follow'] || '',\n  target: p['Target'] || '',\n  rel: p['Rel'] || '',\n  status_code: '301',\n  status: 'Moved Permanently',\n  path_type: p['Path Type'] || '',\n  link_path: p['Link Path'] || '',\n  link_position: p['Link Position'] || '',\n  link_origin: p['Link Origin'] || ''\n}));\n\nconst pages404 = (data.pages_404 || []).map(p => ({\n  type: p['Type'] || 'Hyperlink',\n  from: p['Address'] || p['Source'] || '',\n  to: p['Redirect URL'] || p['Destination'] || '',\n  anchor: p['Anchor Text'] || '',\n  alt_text: p['Alt Text'] || '',\n  follow: p['Follow'] || '',\n  target: p['Target'] || '',\n  rel: p['Rel'] || '',\n  status_code: '404',\n  status: 'Not Found',\n  path_type: p['Path Type'] || '',\n  link_path: p['Link Path'] || '',\n  link_position: p['Link Position'] || '',\n  link_origin: p['Link Origin'] || ''\n}));\n\nreturn [{\n  json: {\n    pages301,\n    pages301Count: data.pages_301_count,\n    pages404,\n    pages404Count: data.pages_404_count\n  }\n}];"
+        "jsCode": "// Agent 4: Redirects and Errors (301 + 404)\nconst data = $('Parse XLSX').first().json;\n\nconst pages301 = (data.pages_301 || []).map(p => ({\n  address: p['Address'] || '',\n  redirect_url: p['Redirect URL'] || p['Redirect URI'] || '',\n  redirect_type: p['Redirect Type'] || 'Permanent',\n  title: p['Title 1'] || '',\n  status_code: '301'\n}));\n\nconst pages404 = (data.pages_404 || []).map(p => ({\n  address: p['Address'] || '',\n  title: p['Title 1'] || '',\n  crawl_depth: p['Crawl Depth'] || '',\n  status_code: '404'\n}));\n\nreturn [{\n  json: {\n    pages301,\n    pages301Count: data.pages_301_count,\n    pages404,\n    pages404Count: data.pages_404_count\n  }\n}];"
       },
       "id": "ta-013",
       "name": "Agent 4: Redirects & Errors",
@@ -170,7 +170,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Build all 16 sheets data from merged agent results\nvar inp = $input.first().json;\nvar canonicals = inp.canonicals || {};\nvar meta = inp.meta || {};\nvar h1 = inp.h1 || {};\nvar redirects = inp.redirects || {};\nvar alt = inp.alt || {};\nvar tags = inp.tags || {};\nvar status = inp.status || {};\nvar robots = inp.robots || {};\nvar domain = inp.domain || '';\n\nvar sheetNames = [\n  'Статуси', 'Canonicals', 'Аркуш22', 'Структура наявна',\n  'Шаблони мета-тегів', 'Ручні мета-теги', 'Декілька Н1', 'Відсутні Н1',\n  'Robots.txt', '301 сторінки', '404 сторінки', 'ALT',\n  'Посилання', 'Сторінки тегів', 'Структура рекомендована', 'Аналіз GMB'\n];\n\nvar sheetsData = [];\n\n// Helper: wrap sheet name for range (quote if special chars)\nfunction rng(name) { return \"'\" + name + \"'!A1\"; }\n\n// 1. Статуси\nvar tasks = status.tasks || [];\nvar statusRows = [['Задача', 'Пріоритет', 'Вплив на КРІ', 'Статус', 'Дата постановки', 'DL', 'Виконавець', 'Дата перевірки', 'Дата впровадження', 'Коментар виконавця', 'Коментар SEO']];\nfor (var i = 0; i < tasks.length; i++) {\n  var t = tasks[i];\n  statusRows.push([t.task||'', t.priority||'', t.impact||'', t.status||'', t.date_set||'', '', '', '', '', '', t.comment_seo||'']);\n}\nif (tasks.length === 0) statusRows.push(['Проблем не знайдено', '', '', 'OK', '', '', '', '', '', '', '']);\nsheetsData.push({range: rng('Статуси'), values: statusRows});\n\n// 2. Canonicals\nvar canList = canonicals.canonicals || [];\nvar canRows = [['URL', 'Canonical', 'Correct canonical']];\nfor (var i = 0; i < canList.length; i++) {\n  var c = canList[i];\n  canRows.push([c.url||'', c.canonical||'', c.correct_canonical||'']);\n}\nif (canList.length === 0) canRows.push(['Дані відсутні або не знайдено проблем', '', '']);\nsheetsData.push({range: rng('Canonicals'), values: canRows});\n\n// 3. Аркуш22 (top 10 canonical issues)\nvar arkRows = [['URL', 'Canonical зараз', 'Canonical коректний']];\nvar arkSlice = canList.slice(0, 10);\nfor (var i = 0; i < arkSlice.length; i++) {\n  var c = arkSlice[i];\n  arkRows.push([c.url||'', c.canonical||'', c.correct_canonical||'']);\n}\nsheetsData.push({range: rng('Аркуш22'), values: arkRows});\n\n// 4. Структура наявна\nvar struct = canonicals.structure || [];\nvar structRows = [['Назва сторінки', 'URL EN', 'URL UK']];\nfor (var i = 0; i < struct.length; i++) {\n  var s = struct[i];\n  structRows.push([s.name||'', s.url_en||'', s.url_uk||'']);\n}\nif (struct.length === 0) structRows.push(['Дані відсутні', '', '']);\nsheetsData.push({range: rng('Структура наявна'), values: structRows});\n\n// 5. Шаблони мета-тегів (manual — headers only)\nsheetsData.push({range: rng('Шаблони мета-тегів'), values: [\n  ['Title', 'Description', 'Title приклад', 'Description приклад'],\n  ['Головна сторінка', '', '', ''],\n  ['Послуги', '', '', ''],\n  ['Блог', '', '', ''],\n  ['Автори', '', '', ''],\n  ['Контакти', '', '', ''],\n  ['Теги', '', '', ''],\n  ['Пагінація', '', '', ''],\n  ['Інше', '', '', '']\n]});\n\n// 6. Ручні мета-теги\nvar manualMeta = meta.manualMeta || [];\nvar metaRows = [['URL UK', 'Title UK', 'LEN', 'Description UK', 'LEN', 'URL EN', 'Title EN', 'LEN', 'Description EN', 'LEN']];\nfor (var i = 0; i < manualMeta.length; i++) {\n  var m = manualMeta[i];\n  metaRows.push(['', '', '', '', '', m.url||'', m.title_current||'', m.title_len||'', m.desc_current||'', m.desc_len||'']);\n}\nif (manualMeta.length === 0) metaRows.push(['Дані відсутні або не знайдено проблем', '', '', '', '', '', '', '', '', '']);\nsheetsData.push({range: rng('Ручні мета-теги'), values: metaRows});\n\n// 7. Декілька Н1\nvar multiH1 = h1.multiH1 || [];\nvar mh1Rows = [['URL', 'H1-1', 'H1-2']];\nfor (var i = 0; i < multiH1.length; i++) {\n  var m = multiH1[i];\n  mh1Rows.push([m.url||'', m.h1_1||'', m.h1_2||'']);\n}\nif (multiH1.length === 0) mh1Rows.push(['Дані відсутні або не знайдено проблем', '', '']);\nsheetsData.push({range: rng('Декілька Н1'), values: mh1Rows});\n\n// 8. Відсутні Н1\nvar missingH1 = h1.missingH1 || [];\nvar missRows = [['URL', 'H1 заголовок']];\nfor (var i = 0; i < missingH1.length; i++) {\n  missRows.push([missingH1[i].url||'', missingH1[i].h1||'']);\n}\nif (missingH1.length === 0) missRows.push(['Дані відсутні або не знайдено проблем', '']);\nsheetsData.push({range: rng('Відсутні Н1'), values: missRows});\n\n// 9. Robots.txt\nvar robotsLines = robots.robotsLines || [];\nvar robotsRows = [];\nfor (var i = 0; i < robotsLines.length; i++) {\n  robotsRows.push([robotsLines[i].line || '']);\n}\nif (robotsRows.length === 0) robotsRows.push(['robots.txt не знайдено']);\nsheetsData.push({range: rng('Robots.txt'), values: robotsRows});\n\n// Link columns header\nvar linkHeaders = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin'];\n\n// 10. 301 сторінки\nvar p301 = redirects.pages301 || [];\nvar r301 = [linkHeaders];\nfor (var i = 0; i < p301.length; i++) {\n  var p = p301[i];\n  r301.push([p.type||'', p.from||'', p.to||'', p.anchor||'', p.alt_text||'', p.follow||'', p.target||'', p.rel||'', p.status_code||'', p.status||'', p.path_type||'', p.link_path||'', p.link_position||'', p.link_origin||'']);\n}\nif (p301.length === 0) r301.push(['Дані відсутні або не знайдено проблем','','','','','','','','','','','','','']);\nsheetsData.push({range: rng('301 сторінки'), values: r301});\n\n// 11. 404 сторінки\nvar p404 = redirects.pages404 || [];\nvar r404 = [linkHeaders];\nfor (var i = 0; i < p404.length; i++) {\n  var p = p404[i];\n  r404.push([p.type||'', p.from||'', p.to||'', p.anchor||'', p.alt_text||'', p.follow||'', p.target||'', p.rel||'', p.status_code||'', p.status||'', p.path_type||'', p.link_path||'', p.link_position||'', p.link_origin||'']);\n}\nif (p404.length === 0) r404.push(['Дані відсутні або не знайдено проблем','','','','','','','','','','','','','']);\nsheetsData.push({range: rng('404 сторінки'), values: r404});\n\n// 12. ALT\nvar altImgs = alt.altImages || [];\nvar altRows = [linkHeaders];\nfor (var i = 0; i < altImgs.length; i++) {\n  var a = altImgs[i];\n  altRows.push([a.type||'', a.from||'', a.to||'', a.anchor||'', a.alt_text||'', a.follow||'', a.target||'', a.rel||'', a.status_code||'', a.status||'', a.path_type||'', a.link_path||'', a.link_position||'', a.link_origin||'']);\n}\nif (altImgs.length === 0) altRows.push(['Дані відсутні (потрібен окремий файл images_alt)','','','','','','','','','','','','','']);\nsheetsData.push({range: rng('ALT'), values: altRows});\n\n// 13. Посилання (manual — headers + empty)\nsheetsData.push({range: rng('Посилання'), values: [\n  ['', 'Referring page title', 'Referring page URL', 'Referring page HTTP code', 'Domain rating', 'UR', 'Domain traffic', 'Referring domains', 'Linked domains', 'External links', 'Page traffic', 'Keywords', 'Target URL', 'Anchor', 'Type', 'Content', 'Nofollow', 'UGC', 'Sponsored', 'Rendered', 'Raw', 'Discovered status'],\n  ['Дані з Ahrefs — заповнити вручну або додати файл backlinks', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']\n]});\n\n// 14. Сторінки тегів\nvar tagList = tags.tagPages || [];\nvar tagRows = [['EN сторінка', 'UK сторінка', 'Н1']];\nfor (var i = 0; i < tagList.length; i++) {\n  var tg = tagList[i];\n  tagRows.push([tg.en_url||'', tg.uk_url||'', tg.h1||'']);\n}\nif (tagList.length === 0) tagRows.push(['Дані відсутні або не знайдено тегів', '', '']);\nsheetsData.push({range: rng('Сторінки тегів'), values: tagRows});\n\n// 15. Структура рекомендована (manual — headers + empty)\nsheetsData.push({range: rng('Структура рекомендована'), values: [\n  ['1 рівень вкладеності', '2 рівень вкладеності', '3 рівень вкладеності', '4 рівень вкладеності', 'Наявність сторінки']\n]});\n\n// 16. Аналіз GMB\nsheetsData.push({range: rng('Аналіз GMB'), values: [\n  ['Категорія', 'Як у нас зараз', 'Що треба додати / змінити / перевірити', 'Навіщо це потрібно', 'Приклади'],\n  ['URL', '', '', '', ''],\n  ['Назва компанії', '', 'Перевірити на відповідність офіційної назви.', 'Допомагає покращити впізнаваність у пошуку.', ''],\n  ['Категорія бізнесу', '', 'Додати релевантні додаткові категорії.', 'Розширює охоплення у пошуку.', ''],\n  ['Опис бізнесу', '', 'Додати повний опис з ключовими фразами.', 'Покращує позиції у локальній видачі.', ''],\n  ['Фотографії', '', 'Додати обкладинку, логотип, фото офісу.', 'Підвищує довіру та привабливість профілю.', ''],\n  ['Відгуки', '', 'Відповідати на відгуки регулярно.', 'Впливає на рейтинг та довіру.', ''],\n  ['Графік роботи', '', 'Перевірити актуальність.', 'Коректний графік покращує UX.', ''],\n  ['Контактні дані', '', 'Перевірити телефон, email, адресу.', 'Забезпечує коректне відображення.', ''],\n  ['Атрибути', '', 'Додати доступність, особливості.', 'Більше інформації для клієнтів.', ''],\n  ['Запитання та відповіді', '', 'Додати FAQ.', 'Проактивні відповіді зменшують бар\\'єри.', ''],\n  ['Публікації', '', 'Регулярні Google Posts.', 'Показує активність компанії.', '']\n]});\n\nreturn [{\n  json: {\n    sheetTitle: 'Додаток до аудиту - ' + domain,\n    sheetNames: sheetNames,\n    sheetsData: sheetsData,\n    domain: domain,\n    tasks_count: tasks.length,\n    summary: status.summary || {}\n  }\n}];"
+        "jsCode": "// Build all 16 sheets data from merged agent results\nvar inp = $input.first().json;\nvar canonicals = inp.canonicals || {};\nvar meta = inp.meta || {};\nvar h1 = inp.h1 || {};\nvar redirects = inp.redirects || {};\nvar alt = inp.alt || {};\nvar tags = inp.tags || {};\nvar status = inp.status || {};\nvar robots = inp.robots || {};\nvar domain = inp.domain || '';\n\nvar sheetNames = [\n  'Статуси', 'Canonicals', 'Аркуш22', 'Структура наявна',\n  'Шаблони мета-тегів', 'Ручні мета-теги', 'Декілька Н1', 'Відсутні Н1',\n  'Robots.txt', '301 сторінки', '404 сторінки', 'ALT',\n  'Посилання', 'Сторінки тегів', 'Структура рекомендована', 'Аналіз GMB'\n];\n\nvar sheetsData = [];\n\n// Helper: wrap sheet name for range\nfunction rng(name) { return \"'\" + name + \"'!A1\"; }\n\n// 1. Статуси\nvar tasks = status.tasks || [];\nvar statusRows = [['Задача', 'Пріоритет', 'Вплив на КРІ', 'Статус', 'Дата постановки', 'DL', 'Виконавець', 'Дата перевірки', 'Дата впровадження', 'Коментар виконавця', 'Коментар SEO']];\nfor (var i = 0; i < tasks.length; i++) {\n  var t = tasks[i];\n  statusRows.push([t.task||'', String(t.priority||''), String(t.impact||''), t.status||'', t.date_set||'', '', '', '', '', '', t.comment_seo||'']);\n}\nif (tasks.length === 0) statusRows.push(['Проблем не знайдено', '', '', 'OK', '', '', '', '', '', '', '']);\nsheetsData.push({range: rng('Статуси'), values: statusRows});\n\n// 2. Canonicals\nvar canList = canonicals.canonicals || [];\nvar canRows = [['URL', 'Canonical (поточний)', 'Correct canonical']];\nfor (var i = 0; i < canList.length; i++) {\n  var c = canList[i];\n  canRows.push([c.url||'', c.canonical||'', c.correct_canonical||'']);\n}\nif (canList.length === 0) canRows.push(['Дані відсутні або не знайдено проблем', '', '']);\nsheetsData.push({range: rng('Canonicals'), values: canRows});\n\n// 3. Аркуш22 (top canonical issues highlighted)\nvar arkRows = [['URL', 'Canonical зараз', 'Canonical коректний']];\nvar arkSlice = canList.slice(0, 20);\nfor (var i = 0; i < arkSlice.length; i++) {\n  var c = arkSlice[i];\n  arkRows.push([c.url||'', c.canonical||'', c.correct_canonical||'']);\n}\nif (arkSlice.length === 0) arkRows.push(['Проблем з canonical не знайдено', '', '']);\nsheetsData.push({range: rng('Аркуш22'), values: arkRows});\n\n// 4. Структура наявна\nvar struct = canonicals.structure || [];\nvar structRows = [['Назва сторінки', 'URL EN', 'URL UK']];\nfor (var i = 0; i < struct.length; i++) {\n  var s = struct[i];\n  structRows.push([s.name||'', s.url_en||'', s.url_uk||'']);\n}\nif (struct.length === 0) structRows.push(['Дані відсутні', '', '']);\nsheetsData.push({range: rng('Структура наявна'), values: structRows});\n\n// 5. Шаблони мета-тегів (MANUAL — headers + template rows)\nsheetsData.push({range: rng('Шаблони мета-тегів'), values: [\n  ['Тип сторінки', 'Title шаблон', 'Description шаблон', 'Title приклад', 'Description приклад'],\n  ['Головна сторінка', '', '', '', ''],\n  ['Послуги / Категорії', '', '', '', ''],\n  ['Блог / Статті', '', '', '', ''],\n  ['Автори', '', '', '', ''],\n  ['Контакти', '', '', '', ''],\n  ['Теги', '', '', '', ''],\n  ['Пагінація', '', '', '', ''],\n  ['Інше', '', '', '', '']\n]});\n\n// 6. Ручні мета-теги (AUTO from Agent 2)\nvar manualMeta = meta.manualMeta || [];\nvar metaRows = [['URL', 'Title', 'Title LEN', 'Description', 'Description LEN']];\nfor (var i = 0; i < manualMeta.length; i++) {\n  var m = manualMeta[i];\n  metaRows.push([m.url||'', m.title_current||'', String(m.title_len||0), m.desc_current||'', String(m.desc_len||0)]);\n}\nif (manualMeta.length === 0) metaRows.push(['Дані відсутні або не знайдено проблем', '', '', '', '']);\nsheetsData.push({range: rng('Ручні мета-теги'), values: metaRows});\n\n// 7. Декілька Н1\nvar multiH1 = h1.multiH1 || [];\nvar mh1Rows = [['URL', 'H1-1', 'H1-2', 'H1-3']];\nfor (var i = 0; i < multiH1.length; i++) {\n  var m = multiH1[i];\n  mh1Rows.push([m.url||'', m.h1_1||'', m.h1_2||'', m.h1_3||'']);\n}\nif (multiH1.length === 0) mh1Rows.push(['Дані відсутні або не знайдено проблем', '', '', '']);\nsheetsData.push({range: rng('Декілька Н1'), values: mh1Rows});\n\n// 8. Відсутні Н1\nvar missingH1 = h1.missingH1 || [];\nvar missRows = [['URL', 'H1 заголовок']];\nfor (var i = 0; i < missingH1.length; i++) {\n  missRows.push([missingH1[i].url||'', missingH1[i].h1||'']);\n}\nif (missingH1.length === 0) missRows.push(['Дані відсутні або не знайдено проблем', '']);\nsheetsData.push({range: rng('Відсутні Н1'), values: missRows});\n\n// 9. Robots.txt\nvar robotsLines = robots.robotsLines || [];\nvar robotsRows = [];\nfor (var i = 0; i < robotsLines.length; i++) {\n  robotsRows.push([robotsLines[i].line || robotsLines[i] || '']);\n}\nif (robotsRows.length === 0) robotsRows.push(['robots.txt не знайдено']);\nsheetsData.push({range: rng('Robots.txt'), values: robotsRows});\n\n// Link columns header\nvar linkHeaders = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin'];\n\n// 10. 301 сторінки\nvar p301 = redirects.pages301 || [];\nvar r301 = [linkHeaders.slice(0, 3)]; // Simplified: Type, From (Address), To (Redirect URL)\nr301[0] = ['Address', 'Status Code', 'Redirect URL', 'Redirect Type'];\nfor (var i = 0; i < p301.length; i++) {\n  var p = p301[i];\n  r301.push([p.address||p.from||'', '301', p.redirect_url||p.to||'', p.redirect_type||'']);\n}\nif (p301.length === 0) r301.push(['Дані відсутні або не знайдено проблем', '', '', '']);\nsheetsData.push({range: rng('301 сторінки'), values: r301});\n\n// 11. 404 сторінки\nvar p404 = redirects.pages404 || [];\nvar r404 = [['Address', 'Status Code', 'Title', 'Crawl Depth']];\nfor (var i = 0; i < p404.length; i++) {\n  var p = p404[i];\n  r404.push([p.address||p.from||'', '404', p.title||'', String(p.crawl_depth||'')]);\n}\nif (p404.length === 0) r404.push(['Дані відсутні або не знайдено проблем', '', '', '']);\nsheetsData.push({range: rng('404 сторінки'), values: r404});\n\n// 12. ALT (placeholder — needs separate images_alt file)\nsheetsData.push({range: rng('ALT'), values: [\n  ['Address', 'Alt Text', 'Image URL'],\n  ['Потрібен окремий файл images_missing_alt з Screaming Frog', '', '']\n]});\n\n// 13. Посилання (MANUAL — Ahrefs data)\nsheetsData.push({range: rng('Посилання'), values: [\n  ['Referring page title', 'Referring page URL', 'HTTP code', 'Domain rating', 'UR', 'Domain traffic', 'Referring domains', 'Linked domains', 'External links', 'Page traffic', 'Keywords', 'Target URL', 'Anchor', 'Type', 'Content', 'Nofollow', 'UGC', 'Sponsored', 'Rendered', 'Raw', 'Discovered status']\n]});\n\n// 14. Сторінки тегів\nvar tagList = tags.tagPages || [];\nvar tagRows = [['EN сторінка', 'UK сторінка', 'Н1']];\nfor (var i = 0; i < tagList.length; i++) {\n  var tg = tagList[i];\n  tagRows.push([tg.en_url||'', tg.uk_url||'', tg.h1||'']);\n}\nif (tagList.length === 0) tagRows.push(['Дані відсутні або не знайдено тегів', '', '']);\nsheetsData.push({range: rng('Сторінки тегів'), values: tagRows});\n\n// 15. Структура рекомендована (MANUAL)\nsheetsData.push({range: rng('Структура рекомендована'), values: [\n  ['1 рівень вкладеності', '2 рівень вкладеності', '3 рівень вкладеності', '4 рівень вкладеності', 'Наявність сторінки']\n]});\n\n// 16. Аналіз GMB (MANUAL)\nsheetsData.push({range: rng('Аналіз GMB'), values: [\n  ['Категорія', 'Як у нас зараз', 'Що треба додати / змінити / перевірити', 'Навіщо це потрібно', 'Приклади']\n]});\n\nreturn [{\n  json: {\n    sheetTitle: 'Додаток до аудиту - ' + domain,\n    sheetNames: sheetNames,\n    sheetsData: sheetsData,\n    domain: domain,\n    tasks_count: tasks.length,\n    summary: status.summary || {}\n  }\n}];"
       },
       "id": "ta-020",
       "name": "Build Excel",
@@ -230,7 +230,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3760,
+        3980,
         400
       ]
     },
@@ -256,7 +256,7 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        3980,
+        4200,
         400
       ],
       "continueOnFail": true,
@@ -276,7 +276,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4200,
+        4420,
         400
       ]
     },
@@ -296,7 +296,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4420,
+        4640,
         400
       ],
       "continueOnFail": true,
@@ -323,7 +323,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4640,
+        4860,
         400
       ],
       "continueOnFail": true,
@@ -343,7 +343,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4860,
+        5080,
         400
       ]
     },
@@ -358,7 +358,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        5080,
+        5300,
         400
       ]
     },
@@ -388,7 +388,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"valueInputOption\": \"RAW\", \"data\": {{ JSON.stringify($('Build Excel').first().json.sheetsData) }} }",
+        "jsonBody": "={{ JSON.stringify($json.batchBody) }}",
         "options": {}
       },
       "id": "ta-021b",
@@ -396,7 +396,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        3540,
+        3650,
         400
       ],
       "continueOnFail": true,
@@ -406,6 +406,19 @@
           "name": "Google Sheets"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine spreadsheetId from Google response + sheetsData from Build Excel\nconst spreadsheetId = $json.spreadsheetId;\nconst sheetsData = $('Build Excel').first().json.sheetsData;\n\nreturn [{\n  json: {\n    spreadsheetId,\n    batchBody: {\n      valueInputOption: \"RAW\",\n      data: sheetsData\n    }\n  }\n}];"
+      },
+      "id": "ta-021c",
+      "name": "Prepare Batch Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3430,
+        400
+      ]
     }
   ],
   "connections": {
@@ -578,7 +591,7 @@
       "main": [
         [
           {
-            "node": "Write Sheet Data",
+            "node": "Prepare Batch Request",
             "type": "main",
             "index": 0
           }
@@ -656,6 +669,17 @@
         [
           {
             "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Batch Request": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet Data",
             "type": "main",
             "index": 0
           }
