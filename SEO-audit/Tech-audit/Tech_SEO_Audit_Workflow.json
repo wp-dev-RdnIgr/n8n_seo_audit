@@ -1,0 +1,511 @@
+{
+  "name": "Tech SEO Audit — Screaming Frog",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tech-seo-audit",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "ta-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 400],
+      "webhookId": "tech-seo-audit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming webhook payload\nconst body = $input.first().json.body || $input.first().json;\n\nconst domain = body.domain;\nconst managerEmail = body.manager_email || '';\nconst folderUrl = body.folder_url || '';\n\n// Decode internal_all.xlsx from base64\nconst internalAll = body.internal_all;\nif (!internalAll || !internalAll.data) {\n  throw new Error('internal_all.xlsx file is required');\n}\n\n// Store binary data for XLSX parsing\nconst binaryData = Buffer.from(internalAll.data, 'base64');\n\n// Optional files\nconst imagesAlt = body.images_alt || [];\nconst backlinks = body.backlinks || null;\n\nreturn [{\n  json: {\n    domain,\n    managerEmail,\n    folderUrl,\n    hasImagesAlt: imagesAlt.length > 0,\n    hasBacklinks: !!backlinks\n  },\n  binary: {\n    internal_all: {\n      data: internalAll.data,\n      mimeType: internalAll.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',\n      fileName: internalAll.name || 'internal_all.xlsx'\n    }\n  }\n}];"
+      },
+      "id": "ta-002",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 400]
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import openpyxl\nimport io\nimport base64\nimport json\n\n# Read XLSX binary from input\nbinary_data = _input.first().binary.internal_all\nraw_bytes = base64.b64decode(binary_data['data'])\n\nwb = openpyxl.load_workbook(io.BytesIO(raw_bytes), read_only=True, data_only=True)\n\n# Find the main sheet (usually 'Internal' or first sheet)\nsheet_name = None\nfor name in wb.sheetnames:\n    if 'internal' in name.lower() or name.lower() in ['аркуш1', 'sheet1', 'all']:\n        sheet_name = name\n        break\nif not sheet_name:\n    sheet_name = wb.sheetnames[0]\n\nws = wb[sheet_name]\n\n# Read headers\nheaders = []\nfor cell in next(ws.iter_rows(min_row=1, max_row=1, values_only=True)):\n    headers.append(str(cell) if cell else '')\n\n# Map header names to indices\ncol_map = {}\nfor i, h in enumerate(headers):\n    col_map[h.strip()] = i\n\n# Read all rows into list of dicts\nall_rows = []\nfor row in ws.iter_rows(min_row=2, values_only=True):\n    row_dict = {}\n    for i, val in enumerate(row):\n        if i < len(headers) and headers[i]:\n            row_dict[headers[i].strip()] = str(val) if val is not None else ''\n    if row_dict.get('Address', ''):  # Skip empty rows\n        all_rows.append(row_dict)\n\nwb.close()\n\n# Domain from input\ndomain = _input.first().json.get('domain', '')\n\n# Pre-filter datasets for each agent\n\n# HTML pages only\npages_html = [r for r in all_rows if r.get('Content Type', '') == 'text/html']\n\n# Pages with status 200\npages_200 = [r for r in pages_html if str(r.get('Status Code', '')).startswith('200')]\n\n# Indexable pages\npages_indexable = [r for r in pages_200 if r.get('Indexability', '') == 'Indexable']\n\n# Canonical issues: canonical != address\npages_canonical = [r for r in pages_200 if r.get('Canonical Link Element 1', '') and r.get('Canonical Link Element 1', '') != r.get('Address', '')]\n\n# Multiple H1\npages_multi_h1 = [r for r in pages_200 if r.get('H1-2', '').strip()]\n\n# Missing H1 (indexable html 200 with empty H1)\npages_missing_h1 = [r for r in pages_indexable if not r.get('H1-1', '').strip()]\n\n# 301 redirects\npages_301 = [r for r in all_rows if str(r.get('Status Code', '')).startswith('301')]\n\n# 404 pages\npages_404 = [r for r in all_rows if str(r.get('Status Code', '')).startswith('404')]\n\n# Tag pages\npages_tags = [r for r in pages_indexable if '/tag/' in r.get('Address', '')]\n\n# For structure: indexable pages split EN/UK\npages_en = [r for r in pages_indexable if '/uk/' not in r.get('Address', '')]\npages_uk = [r for r in pages_indexable if '/uk/' in r.get('Address', '')]\n\n# Batch limit — max 500 per agent\ndef limit(lst, n=500):\n    return lst[:n]\n\nresult = {\n    'domain': domain,\n    'total_pages': len(all_rows),\n    'total_html': len(pages_html),\n    'total_indexable': len(pages_indexable),\n    'headers': headers,\n    'pages_canonical': limit(pages_canonical),\n    'pages_canonical_count': len(pages_canonical),\n    'pages_indexable_sample': limit(pages_indexable),\n    'pages_multi_h1': limit(pages_multi_h1),\n    'pages_multi_h1_count': len(pages_multi_h1),\n    'pages_missing_h1': limit(pages_missing_h1),\n    'pages_missing_h1_count': len(pages_missing_h1),\n    'pages_301': limit(pages_301),\n    'pages_301_count': len(pages_301),\n    'pages_404': limit(pages_404),\n    'pages_404_count': len(pages_404),\n    'pages_tags': limit(pages_tags),\n    'pages_tags_count': len(pages_tags),\n    'pages_en': limit(pages_en),\n    'pages_uk': limit(pages_uk),\n    'pages_all_sample': limit(pages_200, 200)\n}\n\nreturn [{'json': result}]"
+      },
+      "id": "ta-003",
+      "name": "Parse XLSX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{ $json.domain }}/robots.txt",
+        "options": {
+          "timeout": 10000,
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "ta-004",
+      "name": "Fetch robots.txt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 100],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 1: Canonicals + Structure\nconst data = $('Parse XLSX').first().json;\n\nconst canonicals = data.pages_canonical.map(p => ({\n  url: p['Address'] || '',\n  canonical: p['Canonical Link Element 1'] || '',\n  correct_canonical: p['Address'] || ''\n}));\n\n// Structure: match EN/UK pairs\nconst enPages = data.pages_en || [];\nconst ukPages = data.pages_uk || [];\n\nconst structure = [];\nfor (const en of enPages) {\n  const enUrl = en['Address'] || '';\n  const title = en['Title 1'] || en['H1-1'] || '';\n  // Expected UK URL: replace domain root with /uk/\n  const ukUrl = enUrl.replace(`https://${data.domain}/`, `https://${data.domain}/uk/`);\n  const ukMatch = ukPages.find(uk => (uk['Address'] || '') === ukUrl);\n  structure.push({\n    name: title,\n    url_en: enUrl,\n    url_uk: ukMatch ? ukMatch['Address'] : ''\n  });\n}\n\nreturn [{\n  json: {\n    canonicals,\n    canonicals_count: data.pages_canonical_count,\n    structure,\n    domain: data.domain\n  }\n}];"
+      },
+      "id": "ta-010",
+      "name": "Agent 1: Canonicals + Structure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 2: Meta Tags Analysis\nconst data = $('Parse XLSX').first().json;\nconst pages = data.pages_indexable_sample || [];\nconst domain = data.domain;\n\n// Group pages by URL pattern for template generation\nconst patterns = {\n  home: [],\n  services: [],\n  blog: [],\n  author: [],\n  contact: [],\n  tag: [],\n  pagination: [],\n  other: []\n};\n\nfor (const p of pages) {\n  const url = p['Address'] || '';\n  const path = url.replace(`https://${domain}`, '').replace(`http://${domain}`, '');\n  \n  if (path === '/' || path === '/uk/' || path === '') patterns.home.push(p);\n  else if (/\\/(services?|category|categories|послуги|категорі)\\//i.test(path)) patterns.services.push(p);\n  else if (/\\/(blog|articles?|статт|новин)\\//i.test(path)) patterns.blog.push(p);\n  else if (/\\/author\\//i.test(path)) patterns.author.push(p);\n  else if (/\\/contact/i.test(path)) patterns.contact.push(p);\n  else if (/\\/tag\\//i.test(path)) patterns.tag.push(p);\n  else if (/\\/page\\/\\d+/i.test(path)) patterns.pagination.push(p);\n  else patterns.other.push(p);\n}\n\n// Pages needing manual meta tags (empty/short/duplicate titles or descriptions)\nconst manualMeta = [];\nconst seenTitles = {};\n\nfor (const p of pages) {\n  const url = p['Address'] || '';\n  const title = p['Title 1'] || '';\n  const titleLen = parseInt(p['Title 1 Length'] || '0');\n  const desc = p['Meta Description 1'] || '';\n  const descLen = parseInt(p['Meta Description 1 Length'] || '0');\n  \n  let needsManual = false;\n  if (!title || titleLen < 30) needsManual = true;\n  if (!desc || descLen < 70) needsManual = true;\n  if (seenTitles[title] && title) needsManual = true;\n  seenTitles[title] = true;\n  \n  if (needsManual) {\n    manualMeta.push({\n      url,\n      title_current: title,\n      title_len: titleLen,\n      desc_current: desc,\n      desc_len: descLen\n    });\n  }\n}\n\nreturn [{\n  json: {\n    patterns,\n    manualMeta: manualMeta.slice(0, 100),\n    manualMetaCount: manualMeta.length,\n    domain\n  }\n}];"
+      },
+      "id": "ta-011",
+      "name": "Agent 2: Meta Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 3: H1 Problems\nconst data = $('Parse XLSX').first().json;\n\nconst multiH1 = (data.pages_multi_h1 || []).map(p => ({\n  url: p['Address'] || '',\n  h1_1: p['H1-1'] || '',\n  h1_2: p['H1-2'] || '',\n  h1_3: p['H1-3'] || ''\n}));\n\nconst missingH1 = (data.pages_missing_h1 || []).map(p => ({\n  url: p['Address'] || '',\n  h1: ''\n}));\n\nreturn [{\n  json: {\n    multiH1,\n    multiH1Count: data.pages_multi_h1_count,\n    missingH1,\n    missingH1Count: data.pages_missing_h1_count\n  }\n}];"
+      },
+      "id": "ta-012",
+      "name": "Agent 3: H1 Problems",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 550]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 4: Redirects and Errors (301 + 404)\nconst data = $('Parse XLSX').first().json;\n\nconst pages301 = (data.pages_301 || []).map(p => ({\n  type: p['Type'] || 'Hyperlink',\n  from: p['Address'] || p['Source'] || '',\n  to: p['Redirect URL'] || p['Redirect URI'] || p['Destination'] || '',\n  anchor: p['Anchor Text'] || '',\n  alt_text: p['Alt Text'] || '',\n  follow: p['Follow'] || '',\n  target: p['Target'] || '',\n  rel: p['Rel'] || '',\n  status_code: '301',\n  status: 'Moved Permanently',\n  path_type: p['Path Type'] || '',\n  link_path: p['Link Path'] || '',\n  link_position: p['Link Position'] || '',\n  link_origin: p['Link Origin'] || ''\n}));\n\nconst pages404 = (data.pages_404 || []).map(p => ({\n  type: p['Type'] || 'Hyperlink',\n  from: p['Address'] || p['Source'] || '',\n  to: p['Redirect URL'] || p['Destination'] || '',\n  anchor: p['Anchor Text'] || '',\n  alt_text: p['Alt Text'] || '',\n  follow: p['Follow'] || '',\n  target: p['Target'] || '',\n  rel: p['Rel'] || '',\n  status_code: '404',\n  status: 'Not Found',\n  path_type: p['Path Type'] || '',\n  link_path: p['Link Path'] || '',\n  link_position: p['Link Position'] || '',\n  link_origin: p['Link Origin'] || ''\n}));\n\nreturn [{\n  json: {\n    pages301,\n    pages301Count: data.pages_301_count,\n    pages404,\n    pages404Count: data.pages_404_count\n  }\n}];"
+      },
+      "id": "ta-013",
+      "name": "Agent 4: Redirects & Errors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 5: ALT Images\n// This reads from optional images_alt files passed in the webhook\n// If not provided, will parse from internal_all data\nconst input = $('Parse Input').first().json;\nconst data = $('Parse XLSX').first().json;\n\nlet altImages = [];\n\n// If we have binary images_alt files, they would need separate parsing\n// For now, extract from internal_all where Content Type contains 'image'\nconst allPages = data.pages_all_sample || [];\n\n// Images without alt — look for image entries in the crawl data\n// The Screaming Frog Images tab data comes from separate files\n// Here we create placeholder for the sheet\n\nreturn [{\n  json: {\n    altImages,\n    altImagesCount: altImages.length,\n    hasImagesAlt: input.hasImagesAlt\n  }\n}];"
+      },
+      "id": "ta-014",
+      "name": "Agent 5: ALT Images",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 850]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 6: Tag Pages\nconst data = $('Parse XLSX').first().json;\nconst domain = data.domain;\n\nconst enTags = (data.pages_tags || []).filter(p => !/\\/uk\\//.test(p['Address'] || ''));\nconst ukTags = (data.pages_tags || []).filter(p => /\\/uk\\//.test(p['Address'] || ''));\n\nconst tagPages = [];\nfor (const en of enTags) {\n  const enUrl = en['Address'] || '';\n  const h1 = en['H1-1'] || '';\n  // Try to find UK equivalent\n  const slug = enUrl.match(/\\/tag\\/([^/]+)/)?.[1] || '';\n  const ukMatch = ukTags.find(uk => {\n    const ukSlug = (uk['Address'] || '').match(/\\/tag\\/([^/]+)/)?.[1] || '';\n    return ukSlug === slug || ukSlug === slug + '-uk';\n  });\n  tagPages.push({\n    en_url: enUrl,\n    uk_url: ukMatch ? ukMatch['Address'] : 'Потрібно додати',\n    h1: h1\n  });\n}\n\nreturn [{\n  json: {\n    tagPages,\n    tagPagesCount: data.pages_tags_count,\n    domain\n  }\n}];"
+      },
+      "id": "ta-015",
+      "name": "Agent 6: Tag Pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 1000]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent 7: Status Tracker — aggregate all issues into task list\nconst canonicals = $('Agent 1: Canonicals + Structure').first().json;\nconst meta = $('Agent 2: Meta Tags').first().json;\nconst h1 = $('Agent 3: H1 Problems').first().json;\nconst redirects = $('Agent 4: Redirects & Errors').first().json;\nconst alt = $('Agent 5: ALT Images').first().json;\nconst tags = $('Agent 6: Tag Pages').first().json;\n\nconst tasks = [];\nconst today = new Date().toISOString().split('T')[0];\n\nfunction addTask(name, priority, impact, count) {\n  if (count > 0) {\n    tasks.push({\n      task: name,\n      priority: priority,\n      impact: impact,\n      status: 'Потрібно виправити',\n      date_set: today,\n      deadline: '',\n      assignee: '',\n      date_check: '',\n      date_done: '',\n      comment_exec: '',\n      comment_seo: `Знайдено ${count} проблем(и)`,\n      count: count\n    });\n  }\n}\n\naddTask('Canonicals — некоректні canonical-теги', 5, 3, canonicals.canonicals_count);\naddTask('Множественні H1', 4, 2, h1.multiH1Count);\naddTask('Відсутні H1', 4, 3, h1.missingH1Count);\naddTask('301 редиректи — внутрішні посилання', 4, 2, redirects.pages301Count);\naddTask('404 помилки — биті посилання', 5, 3, redirects.pages404Count);\naddTask('ALT-атрибути — зображення без alt', 3, 1, alt.altImagesCount);\naddTask('Сторінки тегів — без UK-версії', 3, 2, tags.tagPagesCount);\n\n// Meta tag issues\nconst metaIssues = meta.manualMetaCount || 0;\naddTask('Мета-теги — потребують оптимізації', 4, 3, metaIssues);\n\nreturn [{\n  json: {\n    tasks,\n    summary: {\n      total_tasks: tasks.length,\n      critical: tasks.filter(t => t.priority >= 5).length,\n      high: tasks.filter(t => t.priority === 4).length,\n      medium: tasks.filter(t => t.priority === 3).length\n    }\n  }\n}];"
+      },
+      "id": "ta-016",
+      "name": "Agent 7: Status Tracker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process robots.txt response\nconst response = $input.first();\nlet robotsLines = [];\n\ntry {\n  const body = response.json.data || response.json.body || '';\n  if (typeof body === 'string' && body.trim()) {\n    robotsLines = body.split('\\n').map(line => ({ line: line.trim() })).filter(l => l.line);\n  }\n} catch(e) {\n  robotsLines = [{ line: 'robots.txt не знайдено' }];\n}\n\nif (robotsLines.length === 0) {\n  robotsLines = [{ line: 'robots.txt не знайдено' }];\n}\n\nreturn [{ json: { robotsLines } }];"
+      },
+      "id": "ta-017",
+      "name": "Parse robots.txt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 100]
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import openpyxl\nfrom openpyxl.styles import Font, PatternFill, Alignment, Border, Side\nfrom openpyxl.utils import get_column_letter\nimport io\nimport base64\nimport json\n\n# Gather all agent results\ncanonicals_data = _input.first().json.get('canonicals', {})\nmeta_data = _input.first().json.get('meta', {})\nh1_data = _input.first().json.get('h1', {})\nredirects_data = _input.first().json.get('redirects', {})\nalt_data = _input.first().json.get('alt', {})\ntags_data = _input.first().json.get('tags', {})\nstatus_data = _input.first().json.get('status', {})\nrobots_data = _input.first().json.get('robots', {})\nstructure_data = _input.first().json.get('structure', {})\ndomain = _input.first().json.get('domain', '')\n\n# Styles\nheader_font = Font(bold=True, color='FFFFFF', size=11)\nheader_fill = PatternFill(start_color='1F3864', end_color='1F3864', fill_type='solid')\nalt_fill = PatternFill(start_color='F5F8FF', end_color='F5F8FF', fill_type='solid')\nthin_border = Border(\n    left=Side(style='thin', color='E2E8F0'),\n    right=Side(style='thin', color='E2E8F0'),\n    top=Side(style='thin', color='E2E8F0'),\n    bottom=Side(style='thin', color='E2E8F0')\n)\n\ndef style_header(ws, ncols):\n    for col in range(1, ncols + 1):\n        cell = ws.cell(row=1, column=col)\n        cell.font = header_font\n        cell.fill = header_fill\n        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)\n        cell.border = thin_border\n    ws.freeze_panes = 'A2'\n\ndef auto_width(ws, max_width=80):\n    for col in ws.columns:\n        max_len = 0\n        col_letter = get_column_letter(col[0].column)\n        for cell in col:\n            if cell.value:\n                max_len = max(max_len, min(len(str(cell.value)), max_width))\n        ws.column_dimensions[col_letter].width = max(max_len + 2, 12)\n\ndef alt_rows(ws, start_row, end_row, ncols):\n    for r in range(start_row, end_row + 1):\n        if r % 2 == 0:\n            for c in range(1, ncols + 1):\n                ws.cell(row=r, column=c).fill = alt_fill\n        for c in range(1, ncols + 1):\n            ws.cell(row=r, column=c).border = thin_border\n\ndef write_rows(ws, headers, rows, start_row=1):\n    for i, h in enumerate(headers, 1):\n        ws.cell(row=start_row, column=i, value=h)\n    for r_idx, row in enumerate(rows, start_row + 1):\n        for c_idx, val in enumerate(row, 1):\n            ws.cell(row=r_idx, column=c_idx, value=val)\n    style_header(ws, len(headers))\n    alt_rows(ws, start_row + 1, start_row + len(rows), len(headers))\n    auto_width(ws)\n    if len(rows) == 0:\n        ws.cell(row=2, column=1, value='Дані відсутні або не знайдено проблем')\n\nwb = openpyxl.Workbook()\n\n# ===== Sheet 1: Статуси =====\nws1 = wb.active\nws1.title = 'Статуси'\nstatus_headers = ['Задача', 'Пріоритет', 'Вплив на КРІ', 'Статус', 'Дата постановки', 'DL', 'Виконавець', 'Дата перевірки', 'Дата впровадження', 'Коментар виконавця', 'Коментар SEO']\ntasks = status_data.get('tasks', [])\ntask_rows = [[t.get('task',''), t.get('priority',''), t.get('impact',''), t.get('status',''), t.get('date_set',''), '', '', '', '', '', t.get('comment_seo','')] for t in tasks]\nwrite_rows(ws1, status_headers, task_rows)\n\n# ===== Sheet 2: Canonicals =====\nws2 = wb.create_sheet('Canonicals')\ncan_headers = ['URL', 'Canonical ', 'Correct canonical']\ncan_list = canonicals_data.get('canonicals', [])\ncan_rows = [[c.get('url',''), c.get('canonical',''), c.get('correct_canonical','')] for c in can_list]\nwrite_rows(ws2, can_headers, can_rows)\n\n# ===== Sheet 3: Аркуш22 (highlighted canonical issues) =====\nws3 = wb.create_sheet('Аркуш22')\nark_headers = ['URL', 'Canonical зараз', 'Canonical коректний']\n# Take first 10 most problematic canonicals as examples\nark_rows = can_rows[:10]\nwrite_rows(ws3, ark_headers, ark_rows)\n\n# ===== Sheet 4: Структура наявна =====\nws4 = wb.create_sheet('Структура наявна')\nstruct_headers = ['Назва сторінки', 'URL EN', 'URL UK']\nstruct_list = structure_data.get('structure', canonicals_data.get('structure', []))\nstruct_rows = [[s.get('name',''), s.get('url_en',''), s.get('url_uk','')] for s in struct_list]\nwrite_rows(ws4, struct_headers, struct_rows)\n\n# ===== Sheet 5: Структура рекомендована =====\nws5 = wb.create_sheet('Структура рекомендована')\nrec_headers = ['1 рівень вкладеності', '2 рівень вкладеності', '3 рівень вкладеності', '4 рівень вкладеності', 'Наявність сторінки']\nwrite_rows(ws5, rec_headers, [])  # AI fills this later or manually\n\n# ===== Sheet 6: Шаблони мета-тегів =====\nws6 = wb.create_sheet('Шаблони мета-тегів')\ntpl_headers = ['Title', 'Description', 'Title приклад', 'Description приклад']\nwrite_rows(ws6, tpl_headers, [])\n\n# ===== Sheet 7: Ручні мета-теги =====\nws7 = wb.create_sheet('Ручні мета-теги')\nmanual_headers = ['URL UK', 'Title UK', 'LEN', 'Description UK', 'LEN', 'URL EN', 'Title EN', 'LEN', 'Description EN', 'LEN']\nmanual_list = meta_data.get('manualMeta', [])\nmanual_rows = [[m.get('url',''), '', '', '', '', '', m.get('title_current',''), m.get('title_len',''), m.get('desc_current',''), m.get('desc_len','')] for m in manual_list]\nwrite_rows(ws7, manual_headers, manual_rows)\n\n# ===== Sheet 8: Декілька Н1 =====\nws8 = wb.create_sheet('Декілька Н1')\nmulti_headers = ['URL', 'H1-1', 'H1-2']\nmulti_list = h1_data.get('multiH1', [])\nmulti_rows = [[m.get('url',''), m.get('h1_1',''), m.get('h1_2','')] for m in multi_list]\n# Add H1-3 column if any have it\nhas_h1_3 = any(m.get('h1_3','') for m in multi_list)\nif has_h1_3:\n    multi_headers.append('H1-3')\n    multi_rows = [[m.get('url',''), m.get('h1_1',''), m.get('h1_2',''), m.get('h1_3','')] for m in multi_list]\nwrite_rows(ws8, multi_headers, multi_rows)\n\n# ===== Sheet 9: Відсутні Н1 =====\nws9 = wb.create_sheet('Відсутні Н1')\nmiss_headers = ['URL', 'H1 заголовок']\nmiss_list = h1_data.get('missingH1', [])\nmiss_rows = [[m.get('url',''), m.get('h1','')] for m in miss_list]\nwrite_rows(ws9, miss_headers, miss_rows)\n\n# ===== Sheet 10: Robots.txt =====\nws10 = wb.create_sheet('Robots.txt')\nrobots_lines = robots_data.get('robotsLines', [{'line': 'robots.txt не знайдено'}])\nfor i, rl in enumerate(robots_lines, 1):\n    ws10.cell(row=i, column=1, value=rl.get('line', ''))\nauto_width(ws10)\n\n# ===== Sheet 11: 301 сторінки =====\nws11 = wb.create_sheet('301 сторінки')\nlink_headers = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin']\np301 = redirects_data.get('pages301', [])\np301_rows = [[p.get('type',''), p.get('from',''), p.get('to',''), p.get('anchor',''), p.get('alt_text',''), p.get('follow',''), p.get('target',''), p.get('rel',''), p.get('status_code',''), p.get('status',''), p.get('path_type',''), p.get('link_path',''), p.get('link_position',''), p.get('link_origin','')] for p in p301]\nwrite_rows(ws11, link_headers, p301_rows)\n\n# ===== Sheet 12: 404 сторінки =====\nws12 = wb.create_sheet('404 сторінки')\np404 = redirects_data.get('pages404', [])\np404_rows = [[p.get('type',''), p.get('from',''), p.get('to',''), p.get('anchor',''), p.get('alt_text',''), p.get('follow',''), p.get('target',''), p.get('rel',''), p.get('status_code',''), p.get('status',''), p.get('path_type',''), p.get('link_path',''), p.get('link_position',''), p.get('link_origin','')] for p in p404]\nwrite_rows(ws12, link_headers, p404_rows)\n\n# ===== Sheet 13: ALT =====\nws13 = wb.create_sheet('ALT')\nalt_img_headers = ['Type', 'From', 'To', 'Anchor Text', 'Alt Text', 'Follow', 'Target', 'Rel', 'Status Code', 'Status', 'Path Type', 'Link Path', 'Link Position', 'Link Origin']\nalt_imgs = alt_data.get('altImages', [])\nalt_rows_data = [[a.get('type',''), a.get('from',''), a.get('to',''), a.get('anchor',''), a.get('alt_text',''), a.get('follow',''), a.get('target',''), a.get('rel',''), a.get('status_code',''), a.get('status',''), a.get('path_type',''), a.get('link_path',''), a.get('link_position',''), a.get('link_origin','')] for a in alt_imgs]\nwrite_rows(ws13, alt_img_headers, alt_rows_data)\n\n# ===== Sheet 14: Посилання =====\nws14 = wb.create_sheet('Посилання')\nbacklinks_headers = ['', 'Referring page title', 'Referring page URL', 'Referring page HTTP code', 'Domain rating', 'UR', 'Domain traffic', 'Referring domains', 'Linked domains', 'External links', 'Page traffic', 'Keywords', 'Target URL', 'Anchor', 'Type', 'Content', 'Nofollow', 'UGC', 'Sponsored', 'Rendered', 'Raw', 'Discovered status']\nwrite_rows(ws14, backlinks_headers, [])  # Backlinks require separate Ahrefs file\n\n# ===== Sheet 15: Сторінки тегів =====\nws15 = wb.create_sheet('Сторінки тегів')\ntag_headers = ['EN сторінка', 'UK сторінка', 'Н1']\ntag_list = tags_data.get('tagPages', [])\ntag_rows = [[t.get('en_url',''), t.get('uk_url',''), t.get('h1','')] for t in tag_list]\nwrite_rows(ws15, tag_headers, tag_rows)\n\n# ===== Sheet 16: Аналіз GMB =====\nws16 = wb.create_sheet('Аналіз GMB')\ngmb_headers = ['Категорія', 'Як у нас зараз', 'Що треба додати / змінити / перевірити', 'Навіщо це потрібно', 'Приклади']\ngmb_categories = [\n    ['URL', '', '', '', ''],\n    ['Назва компанії', '', 'Перевірити на відповідність офіційної назви.', 'Допомагає покращити впізнаваність у пошуку.', ''],\n    ['Категорія бізнесу', '', 'Додати релевантні додаткові категорії.', 'Розширює охоплення у пошуку.', ''],\n    ['Опис бізнесу', '', 'Додати повний опис з ключовими фразами.', 'Покращує позиції у локальній видачі.', ''],\n    ['Фотографії', '', 'Додати обкладинку, логотип, фото офісу.', 'Підвищує довіру та привабливість профілю.', ''],\n    ['Відгуки', '', 'Відповідати на відгуки регулярно.', 'Впливає на рейтинг та довіру.', ''],\n    ['Графік роботи', '', 'Перевірити актуальність.', 'Коректний графік покращує UX.', ''],\n    ['Контактні дані', '', 'Перевірити телефон, email, адресу.', 'Забезпечує коректне відображення.', ''],\n    ['Атрибути', '', 'Додати доступність, особливості.', 'Більше інформації для клієнтів.', ''],\n    ['Запитання та відповіді', '', 'Додати FAQ.', 'Проактивні відповіді зменшують бар\\'єри.', ''],\n    ['Публікації', '', 'Регулярні Google Posts.', 'Показує активність компанії.', '']\n]\nwrite_rows(ws16, gmb_headers, gmb_categories)\n\n# Save to buffer\nbuf = io.BytesIO()\nwb.save(buf)\nbuf.seek(0)\nb64 = base64.b64encode(buf.read()).decode('utf-8')\n\n# Summary for AI analysis\nsummary = status_data.get('summary', {})\n\nreturn [{\n    'json': {\n        'excel_base64': b64,\n        'file_name': f'Додаток до аудиту - {domain}.xlsx',\n        'domain': domain,\n        'summary': summary,\n        'tasks_count': len(tasks)\n    }\n}]"
+      },
+      "id": "ta-020",
+      "name": "Build Excel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all agent results into a single object for Excel builder\nconst canonicals = $('Agent 1: Canonicals + Structure').first().json;\nconst meta = $('Agent 2: Meta Tags').first().json;\nconst h1 = $('Agent 3: H1 Problems').first().json;\nconst redirects = $('Agent 4: Redirects & Errors').first().json;\nconst alt = $('Agent 5: ALT Images').first().json;\nconst tags = $('Agent 6: Tag Pages').first().json;\nconst status = $('Agent 7: Status Tracker').first().json;\nconst robots = $('Parse robots.txt').first().json;\nconst input = $('Parse XLSX').first().json;\n\nreturn [{\n  json: {\n    domain: input.domain,\n    canonicals,\n    meta,\n    h1,\n    redirects,\n    alt,\n    tags,\n    status,\n    robots,\n    structure: canonicals  // Structure data is in canonicals agent\n  }\n}];"
+      },
+      "id": "ta-019",
+      "name": "Merge Agent Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "multipart/related; boundary=boundary_excel",
+        "body": "=--boundary_excel\nContent-Type: application/json; charset=UTF-8\n\n{\"name\": \"{{ $json.file_name }}\", \"mimeType\": \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"}\n--boundary_excel\nContent-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\nContent-Transfer-Encoding: base64\n\n{{ $json.excel_base64 }}\n--boundary_excel--",
+        "options": {}
+      },
+      "id": "ta-021",
+      "name": "Upload Excel to Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1440, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare AI analysis prompt from all agent data\nconst input = $('Parse XLSX').first().json;\nconst status = $('Agent 7: Status Tracker').first().json;\nconst canonicals = $('Agent 1: Canonicals + Structure').first().json;\nconst h1 = $('Agent 3: H1 Problems').first().json;\nconst redirects = $('Agent 4: Redirects & Errors').first().json;\nconst tags = $('Agent 6: Tag Pages').first().json;\nconst meta = $('Agent 2: Meta Tags').first().json;\n\nconst domain = input.domain;\nconst summary = {\n  total_pages: input.total_pages,\n  total_indexable: input.total_indexable,\n  canonical_issues: canonicals.canonicals_count,\n  multi_h1: h1.multiH1Count,\n  missing_h1: h1.missingH1Count,\n  redirects_301: redirects.pages301Count,\n  errors_404: redirects.pages404Count,\n  tag_pages: tags.tagPagesCount,\n  meta_issues: meta.manualMetaCount,\n  tasks: status.tasks\n};\n\nconst prompt = `Ти — SEO-експерт. Проаналізуй результати технічного аудиту сайту ${domain}.\n\nДані аудиту:\n- Всього сторінок проскановано: ${summary.total_pages}\n- Індексованих сторінок: ${summary.total_indexable}\n- Некоректних canonical: ${summary.canonical_issues}\n- Сторінок з кількома H1: ${summary.multi_h1}\n- Сторінок без H1: ${summary.missing_h1}\n- 301 редиректів: ${summary.redirects_301}\n- 404 помилок: ${summary.errors_404}\n- Сторінок тегів: ${summary.tag_pages}\n- Проблем з мета-тегами: ${summary.meta_issues}\n\nЗадачі з пріоритетами:\n${summary.tasks.map(t => \\`- [Пріоритет \\${t.priority}] \\${t.task}: \\${t.comment_seo}\\`).join('\\n')}\n\nСтвори структурований звіт українською мовою з такими розділами:\n1. Загальне резюме аудиту\n2. Аналіз canonical-тегів\n3. Аналіз структури сайту (EN/UK)\n4. Аналіз мета-тегів (Title, Description)\n5. Аналіз заголовків H1\n6. Аналіз редиректів (301) та битих посилань (404)\n7. Аналіз зображень (ALT)\n8. Аналіз сторінок тегів\n9. Аналіз robots.txt\n10. Пріоритезований список задач\n11. Висновки та рекомендації\n\nДля кожного розділу вкажи:\n- Кількість знайдених проблем\n- Конкретні приклади URL (2-3)\n- Рекомендації щодо виправлення\n- Оцінку критичності (Критично / Високо / Середньо / Низько)`;\n\nreturn [{ json: { prompt, domain, summary } }];"
+      },
+      "id": "ta-030",
+      "name": "Prepare AI Report Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 600]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4096,
+          "temperature": 0.3
+        }
+      },
+      "id": "ta-031",
+      "name": "AI Analysis",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [1440, 600],
+      "continueOnFail": true,
+      "credentials": {
+        "anthropicApi": {
+          "id": "anthropic-api",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "operation": "create",
+        "title": "=SEO Тех. аудит — {{ $('Parse XLSX').first().json.domain }} — {{ new Date().toISOString().split('T')[0] }}",
+        "content": "={{ $json.content || $json.message?.content?.[0]?.text || 'Звіт генерується...' }}"
+      },
+      "id": "ta-032",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [1680, 600],
+      "continueOnFail": true,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "google-docs",
+          "name": "Google Docs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final response — send back Excel URL and Doc URL\nconst excelUpload = $('Upload Excel to Drive').first().json;\nconst docCreate = $('Create Google Doc').first().json;\nconst domain = $('Parse XLSX').first().json.domain;\n\nconst excelId = excelUpload.id || '';\nconst docId = docCreate.documentId || docCreate.id || '';\n\nconst excelUrl = excelId ? `https://docs.google.com/spreadsheets/d/${excelId}` : '';\nconst docUrl = docId ? `https://docs.google.com/document/d/${docId}` : '';\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: `Тех. аудит ${domain} завершено`,\n    excelUrl,\n    docUrl,\n    folderUrl: '',\n    domain\n  }\n}];"
+      },
+      "id": "ta-040",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "ta-041",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2140, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "Parse XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse XLSX": {
+      "main": [
+        [
+          {
+            "node": "Fetch robots.txt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 1: Canonicals + Structure",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 2: Meta Tags",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 3: H1 Problems",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 4: Redirects & Errors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 5: ALT Images",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 6: Tag Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch robots.txt": {
+      "main": [
+        [
+          {
+            "node": "Parse robots.txt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1: Canonicals + Structure": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2: Meta Tags": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 3: H1 Problems": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 4: Redirects & Errors": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 5: ALT Images": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 6: Tag Pages": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Status Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 7: Status Tracker": {
+      "main": [
+        [
+          {
+            "node": "Merge Agent Results",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare AI Report Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse robots.txt": {
+      "main": [
+        [
+          {
+            "node": "Merge Agent Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Agent Results": {
+      "main": [
+        [
+          {
+            "node": "Build Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Excel": {
+      "main": [
+        [
+          {
+            "node": "Upload Excel to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Excel to Drive": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Report Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "SEO Audit"
+    },
+    {
+      "name": "Tech Audit"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-03-04T00:00:00.000Z",
+  "versionId": "1"
+}
