@@ -265,6 +265,137 @@
       cursor: pointer;
     }
 
+    /* ===== CHART SUB-TABS ===== */
+    .chart-subtabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+    .chart-subtab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chart-subtab:hover { color: var(--text); background: var(--bg); }
+    .chart-subtab.active {
+      color: var(--primary);
+      background: var(--primary-light);
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-subtab i { font-size: 18px; }
+    .chart-subpanel { display: none; }
+    .chart-subpanel.active { display: block; }
+
+    /* ===== COMPARISON SUMMARY CARDS ===== */
+    .comparison-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .cmp-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      text-align: center;
+      transition: box-shadow 0.15s;
+    }
+    .cmp-card:hover { box-shadow: var(--shadow-md); }
+    .cmp-card .cmp-site {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cmp-card .cmp-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .cmp-card .cmp-change {
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .cmp-change.positive { color: #059669; background: #ECFDF5; }
+    .cmp-change.negative { color: #DC2626; background: #FEF2F2; }
+    .cmp-change.neutral { color: var(--text-secondary); background: var(--bg); }
+    .cmp-card .cmp-prev {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* ===== COMPARISON DETAIL TABLE ===== */
+    .cmp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .cmp-table th {
+      text-align: left;
+      padding: 10px 12px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border-bottom: 2px solid var(--border);
+    }
+    .cmp-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cmp-table tr:hover td { background: #F8FAFC; }
+    .cmp-table .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .change-badge.positive { color: #059669; background: #ECFDF5; }
+    .change-badge.negative { color: #DC2626; background: #FEF2F2; }
+    .change-badge.neutral { color: var(--text-secondary); background: var(--bg); }
+    .cmp-table .site-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .site-badge.client-badge { color: var(--primary); background: var(--primary-light); }
+    .site-badge.competitor-badge { color: var(--text-secondary); background: var(--bg); }
+
     /* ===== BUTTONS ===== */
     .btn {
       display: inline-flex;
@@ -650,6 +781,9 @@
   <button class="tab-btn" data-tab="data">
     <i class="ti ti-chart-bar"></i> Data
   </button>
+  <button class="tab-btn" data-tab="charts">
+    <i class="ti ti-chart-line"></i> Charts
+  </button>
   <button class="tab-btn" data-tab="queue">
     <i class="ti ti-list-check"></i> Queue
     <span class="badge" id="queueBadge">0</span>
@@ -785,48 +919,189 @@
       </div>
     </div>
 
-    <!-- CHART SECTION -->
-    <div class="card" style="margin-top:16px;display:none" id="chartCard">
+  </div>
+
+  <!-- TAB: CHARTS -->
+  <div class="tab-panel" id="tab-charts">
+    <!-- Filters card (shared across all chart views) -->
+    <div class="card" style="margin-bottom:16px">
       <div class="card-header">
-        <div class="card-title"><i class="ti ti-chart-line"></i> Chart</div>
+        <div class="card-title"><i class="ti ti-filter"></i> Filters</div>
       </div>
-      <div class="form-row" style="margin-bottom:12px">
-        <div class="form-group" style="flex:0 0 220px">
-          <label>Metric</label>
-          <select id="chartMetricSelect" onchange="buildChart()">
-            <option value="monthly_visits">Monthly Visits</option>
-            <option value="unique_visitors">Unique Visitors</option>
-            <option value="visits_per_visitor">Visits per Visitor</option>
-            <option value="deduplicated_audience">Deduplicated Audience</option>
-            <option value="page_views">Page Views</option>
-            <option value="visit_duration">Visit Duration</option>
-            <option value="pages_per_visit">Pages per Visit</option>
-            <option value="bounce_rate">Bounce Rate</option>
-            <option value="direct">Direct</option>
-            <option value="organic_search">Organic Search</option>
-            <option value="paid_search">Paid Search</option>
-            <option value="display_ads">Display Ads</option>
-            <option value="social">Social</option>
-            <option value="email">Email</option>
-            <option value="ai_traffic">AI Traffic</option>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client</label>
+          <select id="chartClientSelect" onchange="onChartClientChange()">
+            <option value="">Select client...</option>
           </select>
         </div>
-        <div class="form-group" style="flex:1;position:relative">
-          <label>Competitors</label>
-          <div id="competitorSelectWrap" class="competitor-select-wrap" onclick="toggleCompetitorDropdown(event)">
-            <span id="competitorSelectLabel" class="competitor-select-label">All competitors</span>
-            <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+        <div class="form-group">
+          <label>Period from</label>
+          <div id="chartPeriodFrom"></div>
+        </div>
+        <div class="form-group">
+          <label>Period to</label>
+          <div id="chartPeriodTo"></div>
+        </div>
+        <button class="btn btn-primary" onclick="loadChartsData()">
+          <i class="ti ti-search"></i> Load
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-tab navigation -->
+    <div class="chart-subtabs">
+      <button class="chart-subtab active" data-subtab="trend" onclick="switchChartSubtab('trend')">
+        <i class="ti ti-chart-line"></i> Trend
+      </button>
+      <button class="chart-subtab" data-subtab="mom" onclick="switchChartSubtab('mom')">
+        <i class="ti ti-arrows-exchange"></i> Month vs Month
+      </button>
+      <button class="chart-subtab" data-subtab="yoy" onclick="switchChartSubtab('yoy')">
+        <i class="ti ti-calendar-stats"></i> Year vs Year
+      </button>
+    </div>
+
+    <!-- SUB-TAB: TREND (original chart) -->
+    <div class="chart-subpanel active" id="subtab-trend" style="display:none">
+      <div class="card" id="chartCard">
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="flex:0 0 220px">
+            <label>Metric</label>
+            <select id="chartMetricSelect" onchange="buildChart()">
+              <option value="monthly_visits">Monthly Visits</option>
+              <option value="unique_visitors">Unique Visitors</option>
+              <option value="visits_per_visitor">Visits per Visitor</option>
+              <option value="deduplicated_audience">Deduplicated Audience</option>
+              <option value="page_views">Page Views</option>
+              <option value="visit_duration">Visit Duration</option>
+              <option value="pages_per_visit">Pages per Visit</option>
+              <option value="bounce_rate">Bounce Rate</option>
+              <option value="direct">Direct</option>
+              <option value="organic_search">Organic Search</option>
+              <option value="paid_search">Paid Search</option>
+              <option value="display_ads">Display Ads</option>
+              <option value="social">Social</option>
+              <option value="email">Email</option>
+              <option value="ai_traffic">AI Traffic</option>
+            </select>
           </div>
-          <div id="competitorDropdown" class="competitor-dropdown" style="display:none">
-            <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
-              <input type="checkbox" id="competitorSelectAll" onchange="toggleAllCompetitors(this.checked)"> <strong>Select All</strong>
-            </label>
-            <div id="competitorCheckboxes"></div>
+          <div class="form-group" style="flex:1;position:relative">
+            <label>Competitors</label>
+            <div id="competitorSelectWrap" class="competitor-select-wrap" onclick="toggleCompetitorDropdown(event)">
+              <span id="competitorSelectLabel" class="competitor-select-label">All competitors</span>
+              <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+            </div>
+            <div id="competitorDropdown" class="competitor-dropdown" style="display:none">
+              <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
+                <input type="checkbox" id="competitorSelectAll" onchange="toggleAllCompetitors(this.checked)"> <strong>Select All</strong>
+              </label>
+              <div id="competitorCheckboxes"></div>
+            </div>
           </div>
         </div>
+        <div id="chartWrap" style="position:relative;width:100%;min-height:400px">
+          <canvas id="dataChart"></canvas>
+        </div>
       </div>
-      <div id="chartWrap" style="position:relative;width:100%;min-height:400px">
-        <canvas id="dataChart"></canvas>
+    </div>
+
+    <!-- SUB-TAB: MONTH vs MONTH -->
+    <div class="chart-subpanel" id="subtab-mom" style="display:none">
+      <div class="card">
+        <div class="form-row" style="margin-bottom:12px;align-items:flex-end">
+          <div class="form-group" style="flex:0 0 220px">
+            <label>Metric</label>
+            <select id="momMetricSelect" onchange="buildMomChart()">
+              <option value="monthly_visits">Monthly Visits</option>
+              <option value="unique_visitors">Unique Visitors</option>
+              <option value="visits_per_visitor">Visits per Visitor</option>
+              <option value="deduplicated_audience">Deduplicated Audience</option>
+              <option value="page_views">Page Views</option>
+              <option value="visit_duration">Visit Duration</option>
+              <option value="pages_per_visit">Pages per Visit</option>
+              <option value="bounce_rate">Bounce Rate</option>
+              <option value="direct">Direct</option>
+              <option value="organic_search">Organic Search</option>
+              <option value="paid_search">Paid Search</option>
+              <option value="display_ads">Display Ads</option>
+              <option value="social">Social</option>
+              <option value="email">Email</option>
+              <option value="ai_traffic">AI Traffic</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;position:relative">
+            <label>Competitors</label>
+            <div id="momCompetitorWrap" class="competitor-select-wrap" onclick="toggleMomCompetitorDropdown(event)">
+              <span id="momCompetitorLabel" class="competitor-select-label">All competitors</span>
+              <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+            </div>
+            <div id="momCompetitorDropdown" class="competitor-dropdown" style="display:none">
+              <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
+                <input type="checkbox" id="momSelectAll" onchange="toggleMomAllCompetitors(this.checked)"> <strong>Select All</strong>
+              </label>
+              <div id="momCompetitorCheckboxes"></div>
+            </div>
+          </div>
+        </div>
+        <!-- MoM Summary Cards -->
+        <div id="momSummaryCards" class="comparison-summary" style="display:none"></div>
+        <!-- MoM Bar Chart -->
+        <div id="momChartWrap" style="position:relative;width:100%;min-height:420px">
+          <canvas id="momChart"></canvas>
+        </div>
+        <!-- MoM Details Table -->
+        <div id="momTableWrap" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- SUB-TAB: YEAR vs YEAR -->
+    <div class="chart-subpanel" id="subtab-yoy" style="display:none">
+      <div class="card">
+        <div class="form-row" style="margin-bottom:12px;align-items:flex-end">
+          <div class="form-group" style="flex:0 0 220px">
+            <label>Metric</label>
+            <select id="yoyMetricSelect" onchange="buildYoyChart()">
+              <option value="monthly_visits">Monthly Visits</option>
+              <option value="unique_visitors">Unique Visitors</option>
+              <option value="visits_per_visitor">Visits per Visitor</option>
+              <option value="deduplicated_audience">Deduplicated Audience</option>
+              <option value="page_views">Page Views</option>
+              <option value="visit_duration">Visit Duration</option>
+              <option value="pages_per_visit">Pages per Visit</option>
+              <option value="bounce_rate">Bounce Rate</option>
+              <option value="direct">Direct</option>
+              <option value="organic_search">Organic Search</option>
+              <option value="paid_search">Paid Search</option>
+              <option value="display_ads">Display Ads</option>
+              <option value="social">Social</option>
+              <option value="email">Email</option>
+              <option value="ai_traffic">AI Traffic</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Site</label>
+            <select id="yoySiteSelect" onchange="buildYoyChart()">
+              <option value="">Client only</option>
+            </select>
+          </div>
+        </div>
+        <!-- YoY Summary Cards -->
+        <div id="yoySummaryCards" class="comparison-summary" style="display:none"></div>
+        <!-- YoY Line Chart (overlaid years) -->
+        <div id="yoyChartWrap" style="position:relative;width:100%;min-height:420px">
+          <canvas id="yoyChart"></canvas>
+        </div>
+        <!-- YoY Details Table -->
+        <div id="yoyTableWrap" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- Empty state when no data loaded -->
+    <div id="chartsEmptyState" class="card" style="margin-top:16px">
+      <div class="empty-state">
+        <i class="ti ti-chart-dots"></i>
+        <p>Select a client and period, then click Load to view charts</p>
       </div>
     </div>
   </div>
@@ -1177,6 +1452,7 @@ function switchTab(tabId) {
   if (tabId === 'dashboard') loadDashboard();
   if (tabId === 'clients') { clientsCache = []; loadClients(); }
   if (tabId === 'data') { populateClientSelects(); loadPeriods(); }
+  if (tabId === 'charts') { populateChartClientSelect(); loadChartPeriods(); }
   if (tabId === 'queue') { populateClientSelects(); loadQueue(); }
   if (tabId === 'logs') loadLogs();
   if (tabId === 'settings') loadConfig();
@@ -1553,7 +1829,6 @@ function loadDataForClient() {
   if (!clientId) {
     document.getElementById('dataTableWrap').innerHTML =
       '<div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a client to view comparison data</p></div>';
-    document.getElementById('chartCard').style.display = 'none';
     return;
   }
 
@@ -1563,9 +1838,6 @@ function loadDataForClient() {
   google.script.run
     .withSuccessHandler(function(rows) {
       renderDataTable(rows);
-      // Show chart card if we have data
-      document.getElementById('chartCard').style.display = (rows && rows.length) ? 'block' : 'none';
-      if (rows && rows.length) { populateCompetitorCheckboxes(); buildChart(); }
     })
     .withFailureHandler(function(err) {
       document.getElementById('dataTableWrap').innerHTML =
@@ -1925,6 +2197,652 @@ function buildChart() {
   });
 }
 
+// ===== CHARTS TAB =====
+var mpChartFrom, mpChartTo;
+var _chartsDataRows = null;
+var momChartInstance = null;
+var yoyChartInstance = null;
+var _momDropdownOpen = false;
+
+var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function switchChartSubtab(subtabId) {
+  document.querySelectorAll('.chart-subtab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.chart-subpanel').forEach(function(p) { p.classList.remove('active'); p.style.display = 'none'; });
+  var btn = document.querySelector('[data-subtab="' + subtabId + '"]');
+  if (btn) btn.classList.add('active');
+  var panel = document.getElementById('subtab-' + subtabId);
+  if (panel) { panel.classList.add('active'); if (_chartsDataRows && _chartsDataRows.length) panel.style.display = 'block'; }
+
+  if (_chartsDataRows && _chartsDataRows.length) {
+    if (subtabId === 'trend') buildChart();
+    if (subtabId === 'mom') buildMomChart();
+    if (subtabId === 'yoy') buildYoyChart();
+  }
+}
+
+function populateChartClientSelect() {
+  google.script.run
+    .withSuccessHandler(function(clients) {
+      var sel = document.getElementById('chartClientSelect');
+      var current = sel.value;
+      sel.innerHTML = '<option value="">Select client...</option>';
+      if (clients && clients.length) {
+        for (var i = 0; i < clients.length; i++) {
+          sel.innerHTML += '<option value="' + clients[i].id + '">' + escHtml(clients[i].client_site) + '</option>';
+        }
+      }
+      if (current) sel.value = current;
+    })
+    .getClients();
+}
+
+function onChartClientChange() {
+  var clientId = document.getElementById('chartClientSelect').value;
+  if (!clientId) return;
+  google.script.run
+    .withSuccessHandler(function(periods) {
+      if (!periods || !periods.length) return;
+      periods.sort();
+      var from = periods[0];
+      var to = periods[periods.length - 1];
+      if (mpChartFrom && from) mpChartFrom.val(from.replace('.', '-'));
+      if (mpChartTo && to) mpChartTo.val(to.replace('.', '-'));
+    })
+    .getClientPeriods(clientId);
+}
+
+function loadChartPeriods() {
+  // periods are loaded on client change
+}
+
+function loadChartsData() {
+  var clientId = document.getElementById('chartClientSelect').value;
+  var periodFrom = monthToPeriod(mpChartFrom.val());
+  var periodTo = monthToPeriod(mpChartTo.val());
+  if (!clientId) { toast('Select a client first', 'error'); return; }
+
+  // Show loading in active sub-panel
+  document.getElementById('chartsEmptyState').style.display = 'none';
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      _chartsDataRows = rows;
+      window._lastDataRows = rows;
+      if (rows && rows.length) {
+        populateCompetitorCheckboxes();
+        populateMomCompetitorCheckboxes();
+        populateYoySiteSelect();
+
+        // Show active sub-panel, hide empty state
+        document.querySelectorAll('.chart-subpanel').forEach(function(p) {
+          p.style.display = p.classList.contains('active') ? 'block' : 'none';
+        });
+
+        var activeSubtab = document.querySelector('.chart-subtab.active');
+        var subtabId = activeSubtab ? activeSubtab.dataset.subtab : 'trend';
+        if (subtabId === 'trend') buildChart();
+        else if (subtabId === 'mom') buildMomChart();
+        else if (subtabId === 'yoy') buildYoyChart();
+      } else {
+        document.getElementById('chartsEmptyState').style.display = 'block';
+        document.getElementById('chartsEmptyState').querySelector('.empty-state p').textContent = 'No data for selected filters';
+      }
+    })
+    .withFailureHandler(function(err) {
+      toast(err.message, 'error');
+    })
+    .getSimilarwebData(clientId, periodFrom || null, periodTo || null);
+}
+
+// ===== MoM COMPETITOR DROPDOWN =====
+function populateMomCompetitorCheckboxes() {
+  var rows = _chartsDataRows;
+  if (!rows) return;
+  var competitors = [];
+  var seen = {};
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].site_type === 'competitor' && !seen[rows[i].site]) {
+      seen[rows[i].site] = true;
+      competitors.push(rows[i].site);
+    }
+  }
+  competitors.sort();
+  var html = '';
+  for (var c = 0; c < competitors.length; c++) {
+    html += '<label class="competitor-option"><input type="checkbox" class="mom-competitor-cb" value="' + escHtml(competitors[c]) + '" checked onchange="onMomCompetitorToggle()"> ' + escHtml(competitors[c]) + '</label>';
+  }
+  document.getElementById('momCompetitorCheckboxes').innerHTML = html;
+  document.getElementById('momSelectAll').checked = true;
+  updateMomCompetitorLabel();
+}
+
+function toggleMomCompetitorDropdown(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('momCompetitorDropdown');
+  _momDropdownOpen = !_momDropdownOpen;
+  dd.style.display = _momDropdownOpen ? 'block' : 'none';
+}
+
+function toggleMomAllCompetitors(checked) {
+  var cbs = document.querySelectorAll('.mom-competitor-cb');
+  for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
+  updateMomCompetitorLabel();
+  buildMomChart();
+}
+
+function onMomCompetitorToggle() {
+  var cbs = document.querySelectorAll('.mom-competitor-cb');
+  var allChecked = true;
+  for (var i = 0; i < cbs.length; i++) { if (!cbs[i].checked) { allChecked = false; break; } }
+  document.getElementById('momSelectAll').checked = allChecked;
+  updateMomCompetitorLabel();
+  buildMomChart();
+}
+
+function getMomSelectedCompetitors() {
+  var cbs = document.querySelectorAll('.mom-competitor-cb:checked');
+  var sel = [];
+  for (var i = 0; i < cbs.length; i++) sel.push(cbs[i].value);
+  return sel;
+}
+
+function updateMomCompetitorLabel() {
+  var total = document.querySelectorAll('.mom-competitor-cb').length;
+  var selected = document.querySelectorAll('.mom-competitor-cb:checked').length;
+  var label = document.getElementById('momCompetitorLabel');
+  if (selected === 0) label.textContent = 'No competitors';
+  else if (selected === total) label.textContent = 'All competitors (' + total + ')';
+  else label.textContent = selected + ' of ' + total + ' selected';
+}
+
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('momCompetitorWrap');
+  var dd = document.getElementById('momCompetitorDropdown');
+  if (wrap && dd && !wrap.contains(e.target) && !dd.contains(e.target)) {
+    _momDropdownOpen = false;
+    dd.style.display = 'none';
+  }
+});
+
+// ===== YoY SITE SELECT =====
+function populateYoySiteSelect() {
+  var rows = _chartsDataRows;
+  if (!rows) return;
+  var sel = document.getElementById('yoySiteSelect');
+  var sites = {};
+  for (var i = 0; i < rows.length; i++) sites[rows[i].site] = rows[i].site_type;
+  sel.innerHTML = '';
+  var sortedSites = Object.keys(sites).sort(function(a,b) {
+    if (sites[a] === 'client') return -1;
+    if (sites[b] === 'client') return 1;
+    return a.localeCompare(b);
+  });
+  for (var s = 0; s < sortedSites.length; s++) {
+    var isClient = sites[sortedSites[s]] === 'client';
+    sel.innerHTML += '<option value="' + escHtml(sortedSites[s]) + '">' + escHtml(sortedSites[s]) + (isClient ? ' (client)' : '') + '</option>';
+  }
+}
+
+// ===== HELPER: Format values =====
+function formatMetricValue(v) {
+  if (v === null || v === undefined || isNaN(v)) return 'N/A';
+  if (v >= 1000000) return (v / 1000000).toFixed(2) + 'M';
+  if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
+  if (v % 1 !== 0) return v.toFixed(2);
+  return v.toLocaleString();
+}
+
+function calcChange(current, previous) {
+  if (!previous || previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+function changeClass(pct) {
+  if (pct === null || pct === undefined) return 'neutral';
+  return pct > 0 ? 'positive' : pct < 0 ? 'negative' : 'neutral';
+}
+
+function changeIcon(pct) {
+  if (pct === null || pct === undefined) return '';
+  return pct > 0 ? '&#x25B2;' : pct < 0 ? '&#x25BC;' : '&#x2022;';
+}
+
+function formatPct(pct) {
+  if (pct === null || pct === undefined) return '—';
+  var sign = pct > 0 ? '+' : '';
+  return sign + pct.toFixed(1) + '%';
+}
+
+// ===== MONTH-OVER-MONTH CHART =====
+function buildMomChart() {
+  var rows = _chartsDataRows;
+  if (!rows || rows.length === 0) return;
+
+  var metricKey = document.getElementById('momMetricSelect').value;
+  var metricLabel = document.getElementById('momMetricSelect').selectedOptions[0].textContent;
+  var selectedCompetitors = getMomSelectedCompetitors();
+
+  // Collect all periods sorted
+  var periodsSet = {};
+  for (var i = 0; i < rows.length; i++) periodsSet[rows[i].period] = true;
+  var periods = Object.keys(periodsSet).sort();
+
+  if (periods.length < 2) {
+    document.getElementById('momSummaryCards').style.display = 'none';
+    document.getElementById('momTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>Need at least 2 periods for MoM comparison</p></div>';
+    return;
+  }
+
+  var currentPeriod = periods[periods.length - 1];
+  var prevPeriod = periods[periods.length - 2];
+
+  // Filter sites
+  var clientSite = null;
+  for (var i = 0; i < rows.length; i++) { if (rows[i].site_type === 'client') { clientSite = rows[i].site; break; } }
+
+  // Build lookup: site -> period -> value
+  var lookup = {};
+  var siteTypes = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (r.site_type === 'client' || selectedCompetitors.indexOf(r.site) !== -1) {
+      if (!lookup[r.site]) lookup[r.site] = {};
+      lookup[r.site][r.period] = parseNumericValue(r[metricKey]);
+      siteTypes[r.site] = r.site_type;
+    }
+  }
+
+  var sites = Object.keys(lookup).sort(function(a,b) {
+    if (siteTypes[a] === 'client') return -1;
+    if (siteTypes[b] === 'client') return 1;
+    return a.localeCompare(b);
+  });
+
+  // Build summary cards
+  var cardsHtml = '';
+  var tableRows = [];
+  for (var s = 0; s < sites.length; s++) {
+    var site = sites[s];
+    var isClient = siteTypes[site] === 'client';
+    var curr = lookup[site][currentPeriod] || 0;
+    var prev = lookup[site][prevPeriod] || 0;
+    var pct = calcChange(curr, prev);
+    var cls = changeClass(pct);
+
+    cardsHtml += '<div class="cmp-card' + (isClient ? '" style="border-color:var(--primary-border);background:var(--primary-light)' : '') + '">';
+    cardsHtml += '<div class="cmp-site">' + escHtml(site) + (isClient ? ' <span class="site-badge client-badge">client</span>' : '') + '</div>';
+    cardsHtml += '<div class="cmp-value">' + formatMetricValue(curr) + '</div>';
+    cardsHtml += '<div class="cmp-change ' + cls + '">' + changeIcon(pct) + ' ' + formatPct(pct) + '</div>';
+    cardsHtml += '<div class="cmp-prev">prev: ' + formatMetricValue(prev) + '</div>';
+    cardsHtml += '</div>';
+
+    tableRows.push({ site: site, isClient: isClient, current: curr, previous: prev, change: pct });
+  }
+
+  document.getElementById('momSummaryCards').innerHTML = cardsHtml;
+  document.getElementById('momSummaryCards').style.display = sites.length ? 'grid' : 'none';
+
+  // Build grouped bar chart
+  var barLabels = [];
+  var currentData = [];
+  var previousData = [];
+  for (var s = 0; s < sites.length; s++) {
+    barLabels.push(sites[s]);
+    currentData.push(lookup[sites[s]][currentPeriod] || 0);
+    previousData.push(lookup[sites[s]][prevPeriod] || 0);
+  }
+
+  if (momChartInstance) { momChartInstance.destroy(); momChartInstance = null; }
+  var canvas = document.getElementById('momChart');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 420;
+
+  momChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: barLabels,
+      datasets: [
+        {
+          label: prevPeriod,
+          data: previousData,
+          backgroundColor: '#CBD5E1',
+          borderColor: '#94A3B8',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        },
+        {
+          label: currentPeriod,
+          data: currentData,
+          backgroundColor: '#3B82F6',
+          borderColor: '#2563EB',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { padding: 16, usePointStyle: true, pointStyle: 'rectRounded', font: { family: 'Inter', size: 12 } }
+        },
+        title: {
+          display: true,
+          text: metricLabel + ' — Month over Month',
+          font: { family: 'Inter', size: 16, weight: '600' },
+          padding: { bottom: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y);
+            },
+            afterBody: function(items) {
+              if (items.length >= 2) {
+                var prev = items[0].parsed.y;
+                var curr = items[1].parsed.y;
+                var pct = calcChange(curr, prev);
+                return ['Change: ' + formatPct(pct)];
+              }
+              return [];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: 'Inter', size: 11 }, maxRotation: 45 }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            callback: function(v) {
+              if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+              if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+              return v;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Build detail table
+  var tHtml = '<table class="cmp-table"><thead><tr>';
+  tHtml += '<th>Site</th><th>' + escHtml(prevPeriod) + '</th><th>' + escHtml(currentPeriod) + '</th><th>Change</th>';
+  tHtml += '</tr></thead><tbody>';
+  for (var r = 0; r < tableRows.length; r++) {
+    var row = tableRows[r];
+    tHtml += '<tr>';
+    tHtml += '<td><strong>' + escHtml(row.site) + '</strong>';
+    tHtml += row.isClient ? ' <span class="site-badge client-badge">client</span>' : ' <span class="site-badge competitor-badge">competitor</span>';
+    tHtml += '</td>';
+    tHtml += '<td>' + formatMetricValue(row.previous) + '</td>';
+    tHtml += '<td><strong>' + formatMetricValue(row.current) + '</strong></td>';
+    tHtml += '<td><span class="change-badge ' + changeClass(row.change) + '">' + changeIcon(row.change) + ' ' + formatPct(row.change) + '</span></td>';
+    tHtml += '</tr>';
+  }
+  tHtml += '</tbody></table>';
+  document.getElementById('momTableWrap').innerHTML = tHtml;
+}
+
+// ===== YEAR-OVER-YEAR CHART =====
+function buildYoyChart() {
+  var rows = _chartsDataRows;
+  if (!rows || rows.length === 0) return;
+
+  var metricKey = document.getElementById('yoyMetricSelect').value;
+  var metricLabel = document.getElementById('yoyMetricSelect').selectedOptions[0].textContent;
+  var selectedSite = document.getElementById('yoySiteSelect').value;
+
+  if (!selectedSite) return;
+
+  // Filter rows for selected site
+  var siteRows = [];
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].site === selectedSite) siteRows.push(rows[i]);
+  }
+
+  if (siteRows.length === 0) return;
+
+  // Group by year: { year: { month: value } }
+  var yearData = {};
+  for (var i = 0; i < siteRows.length; i++) {
+    var parts = siteRows[i].period.split('.');
+    var year = parts[0];
+    var month = parseInt(parts[1]);
+    if (!yearData[year]) yearData[year] = {};
+    yearData[year][month] = parseNumericValue(siteRows[i][metricKey]);
+  }
+
+  var years = Object.keys(yearData).sort();
+
+  if (years.length < 2) {
+    document.getElementById('yoySummaryCards').style.display = 'none';
+    document.getElementById('yoyTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>Need at least 2 years of data for YoY comparison. Try selecting a wider date range.</p></div>';
+    if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
+
+    // Still show the line chart for single year
+    var monthLabels = MONTH_NAMES;
+    var datasets = [];
+    var yearColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+    for (var y = 0; y < years.length; y++) {
+      var data = [];
+      for (var m = 1; m <= 12; m++) {
+        data.push(yearData[years[y]][m] !== undefined ? yearData[years[y]][m] : null);
+      }
+      datasets.push({
+        label: years[y],
+        data: data,
+        borderColor: yearColors[y % yearColors.length],
+        backgroundColor: yearColors[y % yearColors.length] + '18',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: yearColors[y % yearColors.length],
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        tension: 0.3,
+        fill: false,
+        spanGaps: true
+      });
+    }
+
+    if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
+    var canvas = document.getElementById('yoyChart');
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 420;
+
+    yoyChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: { labels: monthLabels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 12 } } },
+          title: { display: true, text: metricLabel + ' — ' + escHtml(selectedSite) + ' by Year', font: { family: 'Inter', size: 16, weight: '600' }, padding: { bottom: 16 } },
+          tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 12 } } },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { font: { family: 'Inter', size: 11 }, callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } }
+          }
+        }
+      }
+    });
+    return;
+  }
+
+  // Build month-by-month comparison line chart
+  var monthLabels = MONTH_NAMES;
+  var yearColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+  var datasets = [];
+
+  for (var y = 0; y < years.length; y++) {
+    var data = [];
+    for (var m = 1; m <= 12; m++) {
+      data.push(yearData[years[y]][m] !== undefined ? yearData[years[y]][m] : null);
+    }
+    datasets.push({
+      label: years[y],
+      data: data,
+      borderColor: yearColors[y % yearColors.length],
+      backgroundColor: yearColors[y % yearColors.length] + '18',
+      borderWidth: y === years.length - 1 ? 3 : 2,
+      pointRadius: y === years.length - 1 ? 5 : 4,
+      pointHoverRadius: 7,
+      pointBackgroundColor: yearColors[y % yearColors.length],
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      tension: 0.3,
+      fill: false,
+      spanGaps: true
+    });
+  }
+
+  if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
+  var canvas = document.getElementById('yoyChart');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = 420;
+
+  yoyChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: { labels: monthLabels, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 13, weight: '500' } }
+        },
+        title: {
+          display: true,
+          text: metricLabel + ' — ' + escHtml(selectedSite) + ' Year over Year',
+          font: { family: 'Inter', size: 16, weight: '600' },
+          padding: { bottom: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { family: 'Inter', size: 12 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            callback: function(v) {
+              if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+              if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+              return v;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Build YoY summary cards — compare last two years
+  var currYear = years[years.length - 1];
+  var prevYear = years[years.length - 2];
+  var summaryHtml = '';
+  var tableHtml = '<table class="cmp-table"><thead><tr><th>Month</th><th>' + escHtml(prevYear) + '</th><th>' + escHtml(currYear) + '</th><th>Change</th></tr></thead><tbody>';
+  var hasAnyData = false;
+
+  for (var m = 1; m <= 12; m++) {
+    var curr = yearData[currYear][m];
+    var prev = yearData[prevYear][m];
+    if (curr === undefined && prev === undefined) continue;
+    hasAnyData = true;
+    var pct = calcChange(curr || 0, prev || 0);
+    tableHtml += '<tr>';
+    tableHtml += '<td><strong>' + MONTH_NAMES[m-1] + '</strong></td>';
+    tableHtml += '<td>' + (prev !== undefined ? formatMetricValue(prev) : '—') + '</td>';
+    tableHtml += '<td><strong>' + (curr !== undefined ? formatMetricValue(curr) : '—') + '</strong></td>';
+    tableHtml += '<td><span class="change-badge ' + changeClass(pct) + '">' + changeIcon(pct) + ' ' + formatPct(pct) + '</span></td>';
+    tableHtml += '</tr>';
+  }
+
+  tableHtml += '</tbody></table>';
+
+  // Overall summary cards for the two years
+  var totalCurr = 0, totalPrev = 0, countCurr = 0, countPrev = 0;
+  for (var m = 1; m <= 12; m++) {
+    if (yearData[currYear][m] !== undefined) { totalCurr += yearData[currYear][m]; countCurr++; }
+    if (yearData[prevYear][m] !== undefined) { totalPrev += yearData[prevYear][m]; countPrev++; }
+  }
+  var totalPct = calcChange(totalCurr, totalPrev);
+  var avgCurr = countCurr ? totalCurr / countCurr : 0;
+  var avgPrev = countPrev ? totalPrev / countPrev : 0;
+  var avgPct = calcChange(avgCurr, avgPrev);
+
+  summaryHtml += '<div class="cmp-card" style="border-color:var(--primary-border);background:var(--primary-light)">';
+  summaryHtml += '<div class="cmp-site">Total ' + escHtml(currYear) + '</div>';
+  summaryHtml += '<div class="cmp-value">' + formatMetricValue(totalCurr) + '</div>';
+  summaryHtml += '<div class="cmp-change ' + changeClass(totalPct) + '">' + changeIcon(totalPct) + ' ' + formatPct(totalPct) + ' vs ' + escHtml(prevYear) + '</div>';
+  summaryHtml += '<div class="cmp-prev">' + escHtml(prevYear) + ': ' + formatMetricValue(totalPrev) + '</div>';
+  summaryHtml += '</div>';
+
+  summaryHtml += '<div class="cmp-card">';
+  summaryHtml += '<div class="cmp-site">Avg / Month ' + escHtml(currYear) + '</div>';
+  summaryHtml += '<div class="cmp-value">' + formatMetricValue(avgCurr) + '</div>';
+  summaryHtml += '<div class="cmp-change ' + changeClass(avgPct) + '">' + changeIcon(avgPct) + ' ' + formatPct(avgPct) + ' vs ' + escHtml(prevYear) + '</div>';
+  summaryHtml += '<div class="cmp-prev">' + escHtml(prevYear) + ' avg: ' + formatMetricValue(avgPrev) + '</div>';
+  summaryHtml += '</div>';
+
+  // Best and worst month in current year
+  var bestMonth = null, bestVal = -Infinity, worstMonth = null, worstVal = Infinity;
+  for (var m = 1; m <= 12; m++) {
+    if (yearData[currYear][m] !== undefined) {
+      if (yearData[currYear][m] > bestVal) { bestVal = yearData[currYear][m]; bestMonth = m; }
+      if (yearData[currYear][m] < worstVal) { worstVal = yearData[currYear][m]; worstMonth = m; }
+    }
+  }
+  if (bestMonth !== null) {
+    summaryHtml += '<div class="cmp-card" style="border-color:#BBF7D0;background:#F0FDF4">';
+    summaryHtml += '<div class="cmp-site">Best Month ' + escHtml(currYear) + '</div>';
+    summaryHtml += '<div class="cmp-value">' + formatMetricValue(bestVal) + '</div>';
+    summaryHtml += '<div class="cmp-change positive">' + MONTH_NAMES[bestMonth - 1] + '</div>';
+    summaryHtml += '</div>';
+  }
+  if (worstMonth !== null && worstMonth !== bestMonth) {
+    summaryHtml += '<div class="cmp-card" style="border-color:#FECACA;background:#FEF2F2">';
+    summaryHtml += '<div class="cmp-site">Lowest Month ' + escHtml(currYear) + '</div>';
+    summaryHtml += '<div class="cmp-value">' + formatMetricValue(worstVal) + '</div>';
+    summaryHtml += '<div class="cmp-change negative">' + MONTH_NAMES[worstMonth - 1] + '</div>';
+    summaryHtml += '</div>';
+  }
+
+  document.getElementById('yoySummaryCards').innerHTML = summaryHtml;
+  document.getElementById('yoySummaryCards').style.display = 'grid';
+  document.getElementById('yoyTableWrap').innerHTML = hasAnyData ? tableHtml : '';
+}
+
 // ===== QUEUE =====
 function loadQueue() {
   var status = document.getElementById('queueStatusFilter').value;
@@ -2164,6 +3082,13 @@ function markErrorResolved(errorId) {
   mpQueue = new MonthPicker(document.getElementById('queuePeriod'), {
     placeholder: 'Select period...',
     value: y + '-' + m
+  });
+
+  mpChartFrom = new MonthPicker(document.getElementById('chartPeriodFrom'), {
+    placeholder: 'From...'
+  });
+  mpChartTo = new MonthPicker(document.getElementById('chartPeriodTo'), {
+    placeholder: 'To...'
   });
 })();
 
