@@ -1263,6 +1263,7 @@ function MonthPicker(el, opts) {
   this._val = opts.value || '';
   this._min = null;
   this._max = null;
+  this._allowed = null; // Set of allowed YYYY-MM strings; if set, only these months are enabled
   this._onChange = opts.onChange || null;
   this._placeholder = opts.placeholder || 'Select month...';
   this._open = false;
@@ -1370,12 +1371,41 @@ MonthPicker.prototype._renderGrid = function() {
     if (mv === this._val) cls += ' selected';
     else if (this._viewYear === this._todayYear && m === this._todayMonth) cls += ' today';
     var disabled = false;
-    if (this._min && mv < this._min) disabled = true;
-    if (this._max && mv > this._max) disabled = true;
+    if (this._allowed) {
+      disabled = !this._allowed.has(mv);
+    } else {
+      if (this._min && mv < this._min) disabled = true;
+      if (this._max && mv > this._max) disabled = true;
+    }
     if (disabled) cls += ' disabled';
     html += '<button type="button" class="' + cls + '" data-mv="' + mv + '"' + (disabled ? ' disabled' : '') + '>' + MONTH_ABBR[m] + '</button>';
   }
   this._grid.innerHTML = html;
+
+  // Disable year nav buttons when no allowed months exist in prev/next year
+  if (this._allowed) {
+    var prevYear = this._viewYear - 1;
+    var nextYear = this._viewYear + 1;
+    var hasPrev = false, hasNext = false;
+    this._allowed.forEach(function(mv) {
+      var y = parseInt(mv.split('-')[0]);
+      if (y <= prevYear) hasPrev = true;
+      if (y >= nextYear) hasNext = true;
+    });
+    var prevBtn = this.el.querySelector('.mp-prev-btn');
+    var nextBtn = this.el.querySelector('.mp-next-btn');
+    prevBtn.disabled = !hasPrev;
+    prevBtn.style.opacity = hasPrev ? '' : '0.3';
+    nextBtn.disabled = !hasNext;
+    nextBtn.style.opacity = hasNext ? '' : '0.3';
+  } else {
+    var prevBtn = this.el.querySelector('.mp-prev-btn');
+    var nextBtn = this.el.querySelector('.mp-next-btn');
+    prevBtn.disabled = false;
+    prevBtn.style.opacity = '';
+    nextBtn.disabled = false;
+    nextBtn.style.opacity = '';
+  }
 
   var self = this;
   var cells = this._grid.querySelectorAll('.mp-cell:not(.disabled)');
@@ -1416,6 +1446,17 @@ MonthPicker.prototype.setRange = function(min, max) {
   this._min = min || null;
   this._max = max || null;
   if (this._open) this._renderGrid();
+};
+
+MonthPicker.prototype.setAllowedMonths = function(months) {
+  if (months && months.length) {
+    this._allowed = new Set(months);
+    this._min = null;
+    this._max = null;
+  } else {
+    this._allowed = null;
+  }
+  this._renderGrid();
 };
 
 document.addEventListener('click', function() { MonthPicker._closeAll(); });
@@ -1800,11 +1841,9 @@ function monthToPeriod(m) { return m ? m.replace('-', '.') : ''; }
 
 function fillPeriodSelects(periods) {
   if (!periods || periods.length === 0) return;
-  var sorted = periods.slice().sort();
-  var minMonth = periodToMonth(sorted[0]);
-  var maxMonth = periodToMonth(sorted[sorted.length - 1]);
-  if (mpDataFrom) mpDataFrom.setRange(minMonth, maxMonth);
-  if (mpDataTo) mpDataTo.setRange(minMonth, maxMonth);
+  var months = periods.map(function(p) { return periodToMonth(p); });
+  if (mpDataFrom) mpDataFrom.setAllowedMonths(months);
+  if (mpDataTo) mpDataTo.setAllowedMonths(months);
 }
 
 // ===== DATA =====
@@ -1812,8 +1851,8 @@ function onDataClientChange() {
   var clientId = document.getElementById('dataClientSelect').value;
   mpDataFrom.clear();
   mpDataTo.clear();
-  mpDataFrom.setRange(null, null);
-  mpDataTo.setRange(null, null);
+  mpDataFrom.setAllowedMonths(null);
+  mpDataTo.setAllowedMonths(null);
   if (clientId) {
     loadClientPeriods(clientId);
   } else {
@@ -2239,11 +2278,20 @@ function populateChartClientSelect() {
 
 function onChartClientChange() {
   var clientId = document.getElementById('chartClientSelect').value;
-  if (!clientId) return;
+  if (!clientId) {
+    if (mpChartFrom) mpChartFrom.setAllowedMonths(null);
+    if (mpChartTo) mpChartTo.setAllowedMonths(null);
+    mpChartFrom.clear();
+    mpChartTo.clear();
+    return;
+  }
   google.script.run
     .withSuccessHandler(function(periods) {
       if (!periods || !periods.length) return;
       periods.sort();
+      var months = periods.map(function(p) { return p.replace('.', '-'); });
+      if (mpChartFrom) mpChartFrom.setAllowedMonths(months);
+      if (mpChartTo) mpChartTo.setAllowedMonths(months);
       var from = periods[0];
       var to = periods[periods.length - 1];
       if (mpChartFrom && from) mpChartFrom.val(from.replace('.', '-'));
