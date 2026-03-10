@@ -1,5 +1,4 @@
 {
-  "name": "Comparing SimilarWeb",
   "nodes": [
     {
       "parameters": {
@@ -58,7 +57,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -90,7 +89,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -157,14 +156,14 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
     },
     {
       "parameters": {
-        "chatId": "-5155756736",
+        "chatId": "-1003503638426",
         "text": "=📋 <b>Проверка полноты данных</b>\n\nДобавлено задач в очередь: {{ $json.length || 1 }}\n\nПериоды: последние 13 месяцев\n\n⚡ Оптимизация: макс. 4 сайта на запрос",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -202,7 +201,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -296,7 +295,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -483,7 +482,7 @@
     },
     {
       "parameters": {
-        "chatId": "-5155756736",
+        "chatId": "-1003503638426",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -584,14 +583,14 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
     },
     {
       "parameters": {
-        "chatId": "-5155756736",
+        "chatId": "-1003503638426",
         "text": "=❌ <b>Ошибка робота</b>\n\n🤖 Робот: {{ $json.robotType }}\n📅 Период: {{ $json.period }}\n🌐 Сайты: {{ $json.sites }}\n\n⚠️ Статус: {{ $json.taskStatus }}\n📝 Ошибка: {{ $json.errorMessage }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -668,7 +667,7 @@
     },
     {
       "parameters": {
-        "chatId": "-5155756736",
+        "chatId": "-1003503638426",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -732,7 +731,7 @@
     },
     {
       "parameters": {
-        "chatId": "-5155756736",
+        "chatId": "-1003503638426",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -770,7 +769,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -791,7 +790,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       }
@@ -844,6 +843,7 @@
         -80,
         112
       ],
+      "webhookId": "e74fbc3c-c634-4cec-a3da-6ab781b997d4",
       "credentials": {
         "telegramApi": {
           "id": "mHbM43fsaWN90avF",
@@ -867,7 +867,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       },
@@ -889,7 +889,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       },
@@ -911,14 +911,31 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "supabasePgCred",
+          "id": "Vew3cjknhnKa16N5",
           "name": "Supabase - Postgres account"
         }
       },
       "notes": "Merge-upsert AI Traffic данных в Supabase через RPC"
+    },
+    {
+      "parameters": {
+        "path": "27adbc76-58fa-4b6e-a6ea-3b6516c65712",
+        "httpMethod": "GET",
+        "responseMode": "onReceived",
+        "options": {},
+        "responseData": "allEntries"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2604,
+        -762
+      ],
+      "id": "webhook-build-queue-001",
+      "name": "Webhook: Build Queue",
+      "webhookId": "27adbc76-58fa-4b6e-a6ea-3b6516c65712"
     }
   ],
-  "pinData": {},
   "connections": {
     "Cron: Проверка полноты (2x в день)": {
       "main": [
@@ -1358,22 +1375,30 @@
           }
         ]
       ]
+    },
+    "Webhook: Build Queue": {
+      "main": [
+        [
+          {
+            "node": "Читаем всех конкурентов",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Читаем очередь (проверка)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "name": "Comparing SimilarWeb - supa base",
+  "id": "0CBCcR9vJbKc3kdH",
   "settings": {
     "executionOrder": "v1",
+    "availableInMCP": false,
     "timeSavedMode": "fixed",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": true,
-    "errorWorkflow": "QQu2DVSfdVpU9Rhw",
-    "timeSavedPerExecution": 500
-  },
-  "versionId": "e9d0289d-30c9-452c-af9c-bbc8523ca562",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "9d17d52227a4e309d92bfdb193ff498ba1e95c0c0bc8ff19ed6534df76683725"
-  },
-  "id": "C5gcCnSahblLUIjZ",
-  "tags": []
+    "callerPolicy": "workflowsFromSameOwner"
+  }
 }
