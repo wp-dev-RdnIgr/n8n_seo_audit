@@ -787,9 +787,12 @@
       font-weight: 600;
     }
     .mp-cell.disabled {
-      color: var(--border-hover);
-      cursor: default;
+      color: var(--border-hover) !important;
+      background: var(--bg) !important;
+      cursor: default !important;
       opacity: 0.35;
+      pointer-events: none;
+      border-color: transparent !important;
     }
   </style>
 </head>
@@ -1023,12 +1026,8 @@
         <!-- YoY dates -->
         <div class="chart-dates" id="yoyDates" style="display:none">
           <div class="form-group" style="flex:0 0 180px">
-            <label>Period from</label>
-            <div id="yoyPeriodFrom"></div>
-          </div>
-          <div class="form-group" style="flex:0 0 180px">
-            <label>Period to</label>
-            <div id="yoyPeriodTo"></div>
+            <label>Month to compare</label>
+            <div id="yoyMonth"></div>
           </div>
           <button class="btn btn-primary" onclick="loadChartsData()">
             <i class="ti ti-search"></i> Load
@@ -1150,12 +1149,6 @@
               <option value="social">Social</option>
               <option value="email">Email</option>
               <option value="ai_traffic">AI Traffic</option>
-            </select>
-          </div>
-          <div class="form-group" style="flex:0 0 180px">
-            <label>Site</label>
-            <select id="yoySiteSelect" onchange="buildYoyChart()">
-              <option value="">Client only</option>
             </select>
           </div>
         </div>
@@ -2312,7 +2305,7 @@ function buildChart() {
 // ===== CHARTS TAB =====
 var mpChartFrom, mpChartTo;
 var mpMomA, mpMomB;
-var mpYoyFrom, mpYoyTo;
+var mpYoyMonth;
 var _chartsDataRows = null;
 var momChartInstance = null;
 var yoyChartInstance = null;
@@ -2360,36 +2353,49 @@ function populateChartClientSelect() {
 
 function onChartClientChange() {
   var clientId = document.getElementById('chartClientSelect').value;
-  var allPickers = [mpChartFrom, mpChartTo, mpMomA, mpMomB, mpYoyFrom, mpYoyTo];
+  var allPickers = [mpChartFrom, mpChartTo, mpMomA, mpMomB, mpYoyMonth];
   if (!clientId) {
     allPickers.forEach(function(mp) { if (mp) { mp.setAllowedMonths(null); mp.clear(); } });
     return;
   }
   google.script.run
-    .withSuccessHandler(function(periods) {
-      if (!periods || !periods.length) return;
+    .withSuccessHandler(function(rawPeriods) {
+      if (!rawPeriods || !rawPeriods.length) return;
+      // Handle both string arrays and object arrays (e.g. [{period:"2025.02"}])
+      var periods = rawPeriods.map(function(p) {
+        if (typeof p === 'string') return p;
+        if (p && p.period) return p.period;
+        return String(p);
+      });
       periods.sort();
-      var months = periods.map(function(p) { return p.replace('.', '-'); });
-      // Set allowed months on all date pickers
-      allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
-      var from = periods[0];
-      var to = periods[periods.length - 1];
-      // Set defaults for Trend
-      if (mpChartFrom && from) mpChartFrom.val(from.replace('.', '-'));
-      if (mpChartTo && to) mpChartTo.val(to.replace('.', '-'));
-      // Set defaults for MoM: last 2 months
-      if (periods.length >= 2) {
-        if (mpMomA) mpMomA.val(periods[periods.length - 2].replace('.', '-'));
-        if (mpMomB) mpMomB.val(periods[periods.length - 1].replace('.', '-'));
-      } else {
-        if (mpMomA) mpMomA.val(periods[0].replace('.', '-'));
-        if (mpMomB) mpMomB.val(periods[0].replace('.', '-'));
-      }
-      // Set defaults for YoY: full range
-      if (mpYoyFrom && from) mpYoyFrom.val(from.replace('.', '-'));
-      if (mpYoyTo && to) mpYoyTo.val(to.replace('.', '-'));
+      _applyAllowedMonths(periods, allPickers);
+    })
+    .withFailureHandler(function(err) {
+      console.error('Failed to load periods:', err);
     })
     .getClientPeriods(clientId);
+}
+
+function _applyAllowedMonths(periods, allPickers) {
+  if (!periods || !periods.length) return;
+  var months = periods.map(function(p) { return p.replace('.', '-'); });
+  // Set allowed months on all date pickers
+  allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
+  var from = periods[0];
+  var to = periods[periods.length - 1];
+  // Set defaults for Trend
+  if (mpChartFrom && from) mpChartFrom.val(from.replace('.', '-'));
+  if (mpChartTo && to) mpChartTo.val(to.replace('.', '-'));
+  // Set defaults for MoM: last 2 months
+  if (periods.length >= 2) {
+    if (mpMomA) mpMomA.val(periods[periods.length - 2].replace('.', '-'));
+    if (mpMomB) mpMomB.val(periods[periods.length - 1].replace('.', '-'));
+  } else {
+    if (mpMomA) mpMomA.val(periods[0].replace('.', '-'));
+    if (mpMomB) mpMomB.val(periods[0].replace('.', '-'));
+  }
+  // Set default for YoY: latest month
+  if (mpYoyMonth && to) mpYoyMonth.val(to.replace('.', '-'));
 }
 
 function loadChartPeriods() {
@@ -2409,8 +2415,13 @@ function loadChartsData() {
     // Ensure From <= To
     if (periodFrom > periodTo) { var tmp = periodFrom; periodFrom = periodTo; periodTo = tmp; }
   } else if (_activeChartSubtab === 'yoy') {
-    periodFrom = monthToPeriod(mpYoyFrom.val());
-    periodTo = monthToPeriod(mpYoyTo.val());
+    var yoyVal = mpYoyMonth.val();
+    if (!yoyVal) { toast('Select a month to compare', 'error'); return; }
+    var yoyParts = yoyVal.split('-');
+    var yoyYear = parseInt(yoyParts[0]);
+    var yoyMon = yoyParts[1];
+    periodFrom = (yoyYear - 1) + '.' + yoyMon; // same month, previous year
+    periodTo = yoyYear + '.' + yoyMon;          // selected month
   } else {
     periodFrom = monthToPeriod(mpChartFrom.val());
     periodTo = monthToPeriod(mpChartTo.val());
@@ -2424,9 +2435,22 @@ function loadChartsData() {
       _chartsDataRows = rows;
       window._lastDataRows = rows;
       if (rows && rows.length) {
+        // Derive allowed months from loaded data as fallback
+        var allPickers = [mpChartFrom, mpChartTo, mpMomA, mpMomB, mpYoyMonth];
+        var periodSet = {};
+        for (var r = 0; r < rows.length; r++) {
+          if (rows[r].period) periodSet[rows[r].period] = true;
+        }
+        var derivedPeriods = Object.keys(periodSet).sort();
+        if (derivedPeriods.length) {
+          var derivedMonths = derivedPeriods.map(function(p) { return p.replace('.', '-'); });
+          allPickers.forEach(function(mp) {
+            if (mp && !mp._allowed) mp.setAllowedMonths(derivedMonths);
+          });
+        }
+
         populateCompetitorCheckboxes();
         populateMomCompetitorCheckboxes();
-        populateYoySiteSelect();
 
         // Show active sub-panel, hide empty state
         document.querySelectorAll('.chart-subpanel').forEach(function(p) {
@@ -2519,24 +2543,8 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ===== YoY SITE SELECT =====
-function populateYoySiteSelect() {
-  var rows = _chartsDataRows;
-  if (!rows) return;
-  var sel = document.getElementById('yoySiteSelect');
-  var sites = {};
-  for (var i = 0; i < rows.length; i++) sites[rows[i].site] = rows[i].site_type;
-  sel.innerHTML = '';
-  var sortedSites = Object.keys(sites).sort(function(a,b) {
-    if (sites[a] === 'client') return -1;
-    if (sites[b] === 'client') return 1;
-    return a.localeCompare(b);
-  });
-  for (var s = 0; s < sortedSites.length; s++) {
-    var isClient = sites[sortedSites[s]] === 'client';
-    sel.innerHTML += '<option value="' + escHtml(sortedSites[s]) + '">' + escHtml(sortedSites[s]) + (isClient ? ' (client)' : '') + '</option>';
-  }
-}
+// ===== YoY SITE SELECT (deprecated — YoY now shows all sites) =====
+function populateYoySiteSelect() { }
 
 // ===== HELPER: Format values =====
 function formatMetricValue(v) {
@@ -2760,125 +2768,78 @@ function buildYoyChart() {
 
   var metricKey = document.getElementById('yoyMetricSelect').value;
   var metricLabel = document.getElementById('yoyMetricSelect').selectedOptions[0].textContent;
-  var selectedSite = document.getElementById('yoySiteSelect').value;
 
-  if (!selectedSite) return;
+  // Determine selected month from the picker
+  var yoyVal = mpYoyMonth ? mpYoyMonth.val() : '';
+  if (!yoyVal) return;
+  var yoyParts = yoyVal.split('-');
+  var currYear = yoyParts[0];
+  var monthNum = parseInt(yoyParts[1]);
+  var prevYear = String(parseInt(currYear) - 1);
+  var currPeriod = currYear + '.' + yoyParts[1];
+  var prevPeriod = prevYear + '.' + yoyParts[1];
+  var monthName = MONTH_NAMES[monthNum - 1];
 
-  // Filter rows for selected site
-  var siteRows = [];
+  // Collect all sites
+  var siteMap = {}; // site -> { curr: value, prev: value, type: 'client'|'competitor' }
   for (var i = 0; i < rows.length; i++) {
-    if (rows[i].site === selectedSite) siteRows.push(rows[i]);
+    var r = rows[i];
+    if (!siteMap[r.site]) siteMap[r.site] = { curr: null, prev: null, type: r.site_type };
+    if (r.period === currPeriod) siteMap[r.site].curr = parseNumericValue(r[metricKey]);
+    if (r.period === prevPeriod) siteMap[r.site].prev = parseNumericValue(r[metricKey]);
   }
 
-  if (siteRows.length === 0) return;
+  // Sort: client first, then by current value descending
+  var sites = Object.keys(siteMap).sort(function(a, b) {
+    if (siteMap[a].type === 'client') return -1;
+    if (siteMap[b].type === 'client') return 1;
+    return (siteMap[b].curr || 0) - (siteMap[a].curr || 0);
+  });
 
-  // Group by year: { year: { month: value } }
-  var yearData = {};
-  for (var i = 0; i < siteRows.length; i++) {
-    var parts = siteRows[i].period.split('.');
-    var year = parts[0];
-    var month = parseInt(parts[1]);
-    if (!yearData[year]) yearData[year] = {};
-    yearData[year][month] = parseNumericValue(siteRows[i][metricKey]);
+  if (sites.length === 0) return;
+
+  var labels = [];
+  var prevData = [];
+  var currData = [];
+  for (var s = 0; s < sites.length; s++) {
+    var label = sites[s];
+    if (siteMap[sites[s]].type === 'client') label += ' *';
+    labels.push(label);
+    prevData.push(siteMap[sites[s]].prev);
+    currData.push(siteMap[sites[s]].curr);
   }
 
-  var years = Object.keys(yearData).sort();
-
-  if (years.length < 2) {
-    document.getElementById('yoySummaryCards').style.display = 'none';
-    document.getElementById('yoyTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>Need at least 2 years of data for YoY comparison. Try selecting a wider date range.</p></div>';
-    if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
-
-    // Still show the line chart for single year
-    var monthLabels = MONTH_NAMES;
-    var datasets = [];
-    var yearColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-    for (var y = 0; y < years.length; y++) {
-      var data = [];
-      for (var m = 1; m <= 12; m++) {
-        data.push(yearData[years[y]][m] !== undefined ? yearData[years[y]][m] : null);
-      }
-      datasets.push({
-        label: years[y],
-        data: data,
-        borderColor: yearColors[y % yearColors.length],
-        backgroundColor: yearColors[y % yearColors.length] + '18',
-        borderWidth: 2.5,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointBackgroundColor: yearColors[y % yearColors.length],
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        tension: 0.3,
-        fill: false,
-        spanGaps: true
-      });
-    }
-
-    if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
-    var canvas = document.getElementById('yoyChart');
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 420;
-
-    yoyChartInstance = new Chart(canvas, {
-      type: 'line',
-      data: { labels: monthLabels, datasets: datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 12 } } },
-          title: { display: true, text: metricLabel + ' — ' + escHtml(selectedSite) + ' by Year', font: { family: 'Inter', size: 16, weight: '600' }, padding: { bottom: 16 } },
-          tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
-        },
-        scales: {
-          x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 12 } } },
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { font: { family: 'Inter', size: 11 }, callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } }
-          }
-        }
-      }
-    });
-    return;
-  }
-
-  // Build month-by-month comparison line chart
-  var monthLabels = MONTH_NAMES;
-  var yearColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-  var datasets = [];
-
-  for (var y = 0; y < years.length; y++) {
-    var data = [];
-    for (var m = 1; m <= 12; m++) {
-      data.push(yearData[years[y]][m] !== undefined ? yearData[years[y]][m] : null);
-    }
-    datasets.push({
-      label: years[y],
-      data: data,
-      borderColor: yearColors[y % yearColors.length],
-      backgroundColor: yearColors[y % yearColors.length] + '18',
-      borderWidth: y === years.length - 1 ? 3 : 2,
-      pointRadius: y === years.length - 1 ? 5 : 4,
-      pointHoverRadius: 7,
-      pointBackgroundColor: yearColors[y % yearColors.length],
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2,
-      tension: 0.3,
-      fill: false,
-      spanGaps: true
-    });
-  }
-
+  // Build grouped bar chart
   if (yoyChartInstance) { yoyChartInstance.destroy(); yoyChartInstance = null; }
   var canvas = document.getElementById('yoyChart');
   canvas.width = canvas.parentElement.clientWidth;
   canvas.height = 420;
 
   yoyChartInstance = new Chart(canvas, {
-    type: 'line',
-    data: { labels: monthLabels, datasets: datasets },
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: monthName + ' ' + prevYear,
+          data: prevData,
+          backgroundColor: '#CBD5E1',
+          borderColor: '#94A3B8',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7
+        },
+        {
+          label: monthName + ' ' + currYear,
+          data: currData,
+          backgroundColor: '#3B82F6',
+          borderColor: '#2563EB',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.7
+        }
+      ]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -2890,7 +2851,7 @@ function buildYoyChart() {
         },
         title: {
           display: true,
-          text: metricLabel + ' — ' + escHtml(selectedSite) + ' Year over Year',
+          text: metricLabel + ' — ' + monthName + ' ' + currYear + ' vs ' + monthName + ' ' + prevYear,
           font: { family: 'Inter', size: 16, weight: '600' },
           padding: { bottom: 16 }
         },
@@ -2898,14 +2859,23 @@ function buildYoyChart() {
           callbacks: {
             label: function(ctx) {
               return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y);
+            },
+            afterBody: function(items) {
+              if (items.length >= 2) {
+                var prev = items[0].parsed.y;
+                var curr = items[1].parsed.y;
+                var pct = calcChange(curr, prev);
+                if (pct !== null) return ['Change: ' + formatPct(pct)];
+              }
+              return [];
             }
           }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.05)' },
-          ticks: { font: { family: 'Inter', size: 12 } }
+          grid: { display: false },
+          ticks: { font: { family: 'Inter', size: 11 }, maxRotation: 45, minRotation: 0 }
         },
         y: {
           beginAtZero: true,
@@ -2923,80 +2893,40 @@ function buildYoyChart() {
     }
   });
 
-  // Build YoY summary cards — compare last two years
-  var currYear = years[years.length - 1];
-  var prevYear = years[years.length - 2];
+  // Build summary cards for each site
   var summaryHtml = '';
-  var tableHtml = '<table class="cmp-table"><thead><tr><th>Month</th><th>' + escHtml(prevYear) + '</th><th>' + escHtml(currYear) + '</th><th>Change</th></tr></thead><tbody>';
-  var hasAnyData = false;
+  for (var s = 0; s < sites.length; s++) {
+    var site = sites[s];
+    var d = siteMap[site];
+    var pct = calcChange(d.curr, d.prev);
+    var isClient = d.type === 'client';
+    var cardStyle = isClient ? ' style="border-color:var(--primary-border);background:var(--primary-light)"' : '';
+    summaryHtml += '<div class="cmp-card"' + cardStyle + '>';
+    summaryHtml += '<div class="cmp-site">' + escHtml(site) + (isClient ? ' (client)' : '') + '</div>';
+    summaryHtml += '<div class="cmp-value">' + (d.curr !== null ? formatMetricValue(d.curr) : 'N/A') + '</div>';
+    summaryHtml += '<div class="cmp-change ' + changeClass(pct) + '">' + changeIcon(pct) + ' ' + formatPct(pct) + '</div>';
+    summaryHtml += '<div class="cmp-prev">' + monthName + ' ' + prevYear + ': ' + (d.prev !== null ? formatMetricValue(d.prev) : 'N/A') + '</div>';
+    summaryHtml += '</div>';
+  }
+  document.getElementById('yoySummaryCards').innerHTML = summaryHtml;
+  document.getElementById('yoySummaryCards').style.display = 'grid';
 
-  for (var m = 1; m <= 12; m++) {
-    var curr = yearData[currYear][m];
-    var prev = yearData[prevYear][m];
-    if (curr === undefined && prev === undefined) continue;
-    hasAnyData = true;
-    var pct = calcChange(curr || 0, prev || 0);
-    tableHtml += '<tr>';
-    tableHtml += '<td><strong>' + MONTH_NAMES[m-1] + '</strong></td>';
-    tableHtml += '<td>' + (prev !== undefined ? formatMetricValue(prev) : '—') + '</td>';
-    tableHtml += '<td><strong>' + (curr !== undefined ? formatMetricValue(curr) : '—') + '</strong></td>';
+  // Build details table
+  var tableHtml = '<table class="cmp-table"><thead><tr><th>Site</th><th>' + escHtml(monthName + ' ' + prevYear) + '</th><th>' + escHtml(monthName + ' ' + currYear) + '</th><th>Change</th></tr></thead><tbody>';
+  for (var s = 0; s < sites.length; s++) {
+    var site = sites[s];
+    var d = siteMap[site];
+    var pct = calcChange(d.curr, d.prev);
+    var isClient = d.type === 'client';
+    tableHtml += '<tr' + (isClient ? ' style="background:var(--primary-light)"' : '') + '>';
+    tableHtml += '<td><strong>' + escHtml(site) + '</strong>' + (isClient ? ' <span style="color:var(--primary);font-size:11px">(client)</span>' : '') + '</td>';
+    tableHtml += '<td>' + (d.prev !== null ? formatMetricValue(d.prev) : 'N/A') + '</td>';
+    tableHtml += '<td><strong>' + (d.curr !== null ? formatMetricValue(d.curr) : 'N/A') + '</strong></td>';
     tableHtml += '<td><span class="change-badge ' + changeClass(pct) + '">' + changeIcon(pct) + ' ' + formatPct(pct) + '</span></td>';
     tableHtml += '</tr>';
   }
-
   tableHtml += '</tbody></table>';
-
-  // Overall summary cards for the two years
-  var totalCurr = 0, totalPrev = 0, countCurr = 0, countPrev = 0;
-  for (var m = 1; m <= 12; m++) {
-    if (yearData[currYear][m] !== undefined) { totalCurr += yearData[currYear][m]; countCurr++; }
-    if (yearData[prevYear][m] !== undefined) { totalPrev += yearData[prevYear][m]; countPrev++; }
-  }
-  var totalPct = calcChange(totalCurr, totalPrev);
-  var avgCurr = countCurr ? totalCurr / countCurr : 0;
-  var avgPrev = countPrev ? totalPrev / countPrev : 0;
-  var avgPct = calcChange(avgCurr, avgPrev);
-
-  summaryHtml += '<div class="cmp-card" style="border-color:var(--primary-border);background:var(--primary-light)">';
-  summaryHtml += '<div class="cmp-site">Total ' + escHtml(currYear) + '</div>';
-  summaryHtml += '<div class="cmp-value">' + formatMetricValue(totalCurr) + '</div>';
-  summaryHtml += '<div class="cmp-change ' + changeClass(totalPct) + '">' + changeIcon(totalPct) + ' ' + formatPct(totalPct) + ' vs ' + escHtml(prevYear) + '</div>';
-  summaryHtml += '<div class="cmp-prev">' + escHtml(prevYear) + ': ' + formatMetricValue(totalPrev) + '</div>';
-  summaryHtml += '</div>';
-
-  summaryHtml += '<div class="cmp-card">';
-  summaryHtml += '<div class="cmp-site">Avg / Month ' + escHtml(currYear) + '</div>';
-  summaryHtml += '<div class="cmp-value">' + formatMetricValue(avgCurr) + '</div>';
-  summaryHtml += '<div class="cmp-change ' + changeClass(avgPct) + '">' + changeIcon(avgPct) + ' ' + formatPct(avgPct) + ' vs ' + escHtml(prevYear) + '</div>';
-  summaryHtml += '<div class="cmp-prev">' + escHtml(prevYear) + ' avg: ' + formatMetricValue(avgPrev) + '</div>';
-  summaryHtml += '</div>';
-
-  // Best and worst month in current year
-  var bestMonth = null, bestVal = -Infinity, worstMonth = null, worstVal = Infinity;
-  for (var m = 1; m <= 12; m++) {
-    if (yearData[currYear][m] !== undefined) {
-      if (yearData[currYear][m] > bestVal) { bestVal = yearData[currYear][m]; bestMonth = m; }
-      if (yearData[currYear][m] < worstVal) { worstVal = yearData[currYear][m]; worstMonth = m; }
-    }
-  }
-  if (bestMonth !== null) {
-    summaryHtml += '<div class="cmp-card" style="border-color:#BBF7D0;background:#F0FDF4">';
-    summaryHtml += '<div class="cmp-site">Best Month ' + escHtml(currYear) + '</div>';
-    summaryHtml += '<div class="cmp-value">' + formatMetricValue(bestVal) + '</div>';
-    summaryHtml += '<div class="cmp-change positive">' + MONTH_NAMES[bestMonth - 1] + '</div>';
-    summaryHtml += '</div>';
-  }
-  if (worstMonth !== null && worstMonth !== bestMonth) {
-    summaryHtml += '<div class="cmp-card" style="border-color:#FECACA;background:#FEF2F2">';
-    summaryHtml += '<div class="cmp-site">Lowest Month ' + escHtml(currYear) + '</div>';
-    summaryHtml += '<div class="cmp-value">' + formatMetricValue(worstVal) + '</div>';
-    summaryHtml += '<div class="cmp-change negative">' + MONTH_NAMES[worstMonth - 1] + '</div>';
-    summaryHtml += '</div>';
-  }
-
-  document.getElementById('yoySummaryCards').innerHTML = summaryHtml;
-  document.getElementById('yoySummaryCards').style.display = 'grid';
-  document.getElementById('yoyTableWrap').innerHTML = hasAnyData ? tableHtml : '';
+  document.getElementById('yoyTableWrap').innerHTML = tableHtml;
 }
 
 // ===== QUEUE =====
@@ -3252,11 +3182,8 @@ function markErrorResolved(errorId) {
   mpMomB = new MonthPicker(document.getElementById('momPeriodB'), {
     placeholder: 'Month B...'
   });
-  mpYoyFrom = new MonthPicker(document.getElementById('yoyPeriodFrom'), {
-    placeholder: 'From...'
-  });
-  mpYoyTo = new MonthPicker(document.getElementById('yoyPeriodTo'), {
-    placeholder: 'To...'
+  mpYoyMonth = new MonthPicker(document.getElementById('yoyMonth'), {
+    placeholder: 'Select month...'
   });
 })();
 
