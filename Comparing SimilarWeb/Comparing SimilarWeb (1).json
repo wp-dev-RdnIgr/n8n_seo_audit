@@ -164,7 +164,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "=📋 <b>Проверка полноты данных</b>\n\nДобавлено задач в очередь: {{ $json.length || 1 }}\n\nПериоды: последние 13 месяцев\n\n⚡ Оптимизация: макс. 4 сайта на запрос",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -483,7 +483,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -591,7 +591,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "=❌ <b>Ошибка робота</b>\n\n🤖 Робот: {{ $json.robotType }}\n📅 Период: {{ $json.period }}\n🌐 Сайты: {{ $json.sites }}\n\n⚠️ Статус: {{ $json.taskStatus }}\n📝 Ошибка: {{ $json.errorMessage }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -668,7 +668,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -732,7 +732,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "={{ $json.report }}",
         "additionalFields": {
           "parse_mode": "HTML"
@@ -830,7 +830,7 @@
     },
     {
       "parameters": {
-        "chatId": "-1003503638426",
+        "chatId": "-5155756736",
         "text": "=✅ <b>Все задачи клиента завершены!</b>\n\n🌐 Клиент: <b>{{ $json.client_site }}</b>\n📊 Задач выполнено: {{ $json.done }} / {{ $json.total }}\n\n🎉 Данные Performance собраны полностью.",
         "additionalFields": {
           "parse_mode": "HTML"
