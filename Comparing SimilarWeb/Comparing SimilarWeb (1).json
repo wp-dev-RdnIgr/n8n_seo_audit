@@ -778,6 +778,82 @@
     {
       "parameters": {
         "operation": "executeQuery",
+        "query": "=SELECT c.client_site, COUNT(*) FILTER (WHERE tq.status IN ('pending', 'processing')) AS remaining, COUNT(*) AS total, COUNT(*) FILTER (WHERE tq.status = 'done') AS done FROM task_queue tq JOIN clients c ON c.id = tq.client_id WHERE tq.client_id = (SELECT client_id FROM task_queue WHERE queue_id = '{{ $json.queue_id }}' LIMIT 1) GROUP BY c.client_site",
+        "options": {}
+      },
+      "id": "check-all-done-001",
+      "name": "Проверка: все задачи клиента done?",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -528,
+        112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "supabasePgCred",
+          "name": "Supabase - Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-remaining-zero",
+              "leftValue": "={{ $json.remaining }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-all-done-001",
+      "name": "IF: Все задачи done",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-1003503638426",
+        "text": "=✅ <b>Все задачи клиента завершены!</b>\n\n🌐 Клиент: <b>{{ $json.client_site }}</b>\n📊 Задач выполнено: {{ $json.done }} / {{ $json.total }}\n\n🎉 Данные Performance собраны полностью.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "tg-client-complete-001",
+      "name": "Telegram: Клиент завершён",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        112
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
         "query": "=SELECT upsert_similarweb_data(\n  p_client_site := '{{ $json.client_site }}',\n  p_site := '{{ $json.site }}',\n  p_site_type := '{{ $json.type }}',\n  p_period := '{{ $json.period }}',\n  p_monthly_visits := '{{ $json[\"Monthly Visits\"] }}',\n  p_unique_visitors := '{{ $json[\"Unique Visitors\"] }}',\n  p_visit_duration := '{{ $json[\"Visit Duration\"] }}',\n  p_pages_per_visit := '{{ $json[\"Pages/Visit\"] }}',\n  p_bounce_rate := '{{ $json[\"Bounce Rate\"] }}',\n  p_visits_per_visitor := '{{ $json[\"Visits Per Visitor\"] }}',\n  p_deduplicated_audience := '{{ $json[\"Deduplicated Audience\"] }}',\n  p_page_views := '{{ $json[\"Page Views\"] }}',\n  p_task_id := '{{ $json[\"Task ID\"] }}',\n  p_queue_id := '{{ $json[\"Queue ID\"] }}'\n);",
         "options": {}
       },
@@ -1135,6 +1211,39 @@
         [
           {
             "node": "Обновляем статус очереди: done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обновляем статус очереди: done": {
+      "main": [
+        [
+          {
+            "node": "Проверка: все задачи клиента done?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка: все задачи клиента done?": {
+      "main": [
+        [
+          {
+            "node": "IF: Все задачи done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Все задачи done": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Клиент завершён",
             "type": "main",
             "index": 0
           }
