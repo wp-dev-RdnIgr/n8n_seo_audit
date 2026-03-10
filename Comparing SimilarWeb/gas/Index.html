@@ -1383,20 +1383,31 @@
       <!-- ===== REVIEW TAB 1: CLIENT OVERVIEW ===== -->
       <div class="review-panel active" id="rpanel-overview">
 
-        <!-- Month selector for MoM / YoY -->
-        <div class="review-filters">
-          <div class="form-group" style="flex:0 0 180px">
-            <label>Month</label>
-            <div id="reviewMonthPicker"></div>
-          </div>
-          <button class="btn btn-primary" onclick="loadReviewOverview()">
-            <i class="ti ti-refresh"></i> Update
-          </button>
-        </div>
-
         <!-- MoM Section -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-arrows-exchange" style="color:var(--primary)"></i> Month over Month Changes</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>Month</label>
+              <div id="reviewMomPicker"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 200px;position:relative">
+              <label>Metrics</label>
+              <div class="competitor-select-wrap" onclick="toggleReviewMetricDropdown('mom', event)">
+                <span id="momMetricLabel" class="competitor-select-label">All metrics</span>
+                <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+              </div>
+              <div id="momMetricDropdown" class="competitor-dropdown" style="display:none">
+                <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
+                  <input type="checkbox" id="momMetricSelectAll" checked onchange="toggleAllReviewMetrics('mom', this.checked)"> <strong>Select All</strong>
+                </label>
+                <div id="momMetricCheckboxes"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="applyReviewMom()">
+              <i class="ti ti-refresh"></i> Apply
+            </button>
+          </div>
           <div class="section-subtitle" id="momSectionLabel"><i class="ti ti-calendar"></i> Select a month above to see changes</div>
           <div id="reviewMomTable"></div>
         </div>
@@ -1404,6 +1415,28 @@
         <!-- YoY Section -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-calendar-stats" style="color:var(--primary)"></i> Year over Year Changes</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>Month</label>
+              <div id="reviewYoyPicker"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 200px;position:relative">
+              <label>Metrics</label>
+              <div class="competitor-select-wrap" onclick="toggleReviewMetricDropdown('yoy', event)">
+                <span id="yoyMetricLabel" class="competitor-select-label">All metrics</span>
+                <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+              </div>
+              <div id="yoyMetricDropdown" class="competitor-dropdown" style="display:none">
+                <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
+                  <input type="checkbox" id="yoyMetricSelectAll" checked onchange="toggleAllReviewMetrics('yoy', this.checked)"> <strong>Select All</strong>
+                </label>
+                <div id="yoyMetricCheckboxes"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="applyReviewYoy()">
+              <i class="ti ti-refresh"></i> Apply
+            </button>
+          </div>
           <div class="section-subtitle" id="yoySectionLabel"><i class="ti ti-calendar"></i> Select a month above to see changes</div>
           <div id="reviewYoyTable"></div>
         </div>
@@ -1420,7 +1453,20 @@
               <label>To</label>
               <div id="reviewDataTo"></div>
             </div>
-            <button class="btn btn-secondary" onclick="loadReviewRawData()">
+            <div class="form-group" style="flex:0 0 200px;position:relative">
+              <label>Metrics</label>
+              <div class="competitor-select-wrap" onclick="toggleReviewMetricDropdown('raw', event)">
+                <span id="rawMetricLabel" class="competitor-select-label">All metrics</span>
+                <i class="ti ti-chevron-down" style="font-size:14px;color:var(--text-secondary)"></i>
+              </div>
+              <div id="rawMetricDropdown" class="competitor-dropdown" style="display:none">
+                <label class="competitor-option" style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px">
+                  <input type="checkbox" id="rawMetricSelectAll" checked onchange="toggleAllReviewMetrics('raw', this.checked)"> <strong>Select All</strong>
+                </label>
+                <div id="rawMetricCheckboxes"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="loadReviewRawData()">
               <i class="ti ti-search"></i> Filter
             </button>
           </div>
@@ -3499,9 +3545,12 @@ var _reviewCompData = null;   // competitor trend data cache
 var _reviewInfo = null;       // client + competitors info
 
 // Review MonthPicker references
-var mpReviewMonth, mpReviewDataFrom, mpReviewDataTo;
+var mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo;
 var mpReviewCompPeriod, mpReviewCompTrendFrom, mpReviewCompTrendTo;
 var mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo;
+
+// Metric dropdown state
+var _reviewMetricDropdownOpen = { mom: false, yoy: false, raw: false };
 
 // Chart instances
 var _compTrendChart = null;
@@ -3584,11 +3633,12 @@ function openReview(clientId) {
       var periods = rawPeriods.map(function(p) { return typeof p === 'string' ? p : (p.period || String(p)); });
       periods.sort();
       var months = periods.map(function(p) { return p.replace('.', '-'); });
-      var allPickers = [mpReviewMonth, mpReviewDataFrom, mpReviewDataTo, mpReviewCompPeriod, mpReviewCompTrendFrom, mpReviewCompTrendTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo];
+      var allPickers = [mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo, mpReviewCompPeriod, mpReviewCompTrendFrom, mpReviewCompTrendTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo];
       allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
       var latest = periods[periods.length - 1].replace('.', '-');
       var earliest = periods[0].replace('.', '-');
-      if (mpReviewMonth) mpReviewMonth.val(latest);
+      if (mpReviewMom) mpReviewMom.val(latest);
+      if (mpReviewYoy) mpReviewYoy.val(latest);
       if (mpReviewDataFrom) mpReviewDataFrom.val(earliest);
       if (mpReviewDataTo) mpReviewDataTo.val(latest);
       if (mpReviewCompPeriod) mpReviewCompPeriod.val(latest);
@@ -3598,8 +3648,11 @@ function openReview(clientId) {
       if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(earliest);
       if (mpReviewSourcesTrendTo) mpReviewSourcesTrendTo.val(latest);
 
+      // Build metric filter checkboxes
+      initReviewMetricCheckboxes();
       // Auto-load overview
-      loadReviewOverview();
+      applyReviewMom();
+      applyReviewYoy();
     })
     .withFailureHandler(function(err) { console.error('Failed to load review periods', err); })
     .getClientPeriods(clientId);
@@ -3628,54 +3681,135 @@ function switchReviewTab(tabId) {
 
 // ===== REVIEW TAB 1: CLIENT OVERVIEW =====
 
-function loadReviewOverview() {
+// --- Metric filter dropdown ---
+function getAllReviewMetrics() {
+  return REVIEW_METRICS.concat(TRAFFIC_SOURCES.map(function(s) {
+    return { key: s.key, label: s.label, icon: 'ti-route', format: 'number' };
+  }));
+}
+
+function initReviewMetricCheckboxes() {
+  var allMetrics = getAllReviewMetrics();
+  ['mom', 'yoy', 'raw'].forEach(function(prefix) {
+    var container = document.getElementById(prefix + 'MetricCheckboxes');
+    if (!container) return;
+    var html = '';
+    for (var i = 0; i < allMetrics.length; i++) {
+      html += '<label class="competitor-option"><input type="checkbox" class="' + prefix + '-metric-cb" value="' + allMetrics[i].key + '" checked onchange="updateReviewMetricLabel(\'' + prefix + '\')"> ' + escHtml(allMetrics[i].label) + '</label>';
+    }
+    container.innerHTML = html;
+    updateReviewMetricLabel(prefix);
+  });
+}
+
+function toggleReviewMetricDropdown(prefix, e) {
+  e.stopPropagation();
+  var dd = document.getElementById(prefix + 'MetricDropdown');
+  _reviewMetricDropdownOpen[prefix] = !_reviewMetricDropdownOpen[prefix];
+  dd.style.display = _reviewMetricDropdownOpen[prefix] ? 'block' : 'none';
+}
+
+function toggleAllReviewMetrics(prefix, checked) {
+  var cbs = document.querySelectorAll('.' + prefix + '-metric-cb');
+  for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
+  updateReviewMetricLabel(prefix);
+}
+
+function updateReviewMetricLabel(prefix) {
+  var cbs = document.querySelectorAll('.' + prefix + '-metric-cb');
+  var total = cbs.length;
+  var checked = 0;
+  for (var i = 0; i < cbs.length; i++) { if (cbs[i].checked) checked++; }
+  var label = document.getElementById(prefix + 'MetricLabel');
+  var selectAll = document.getElementById(prefix + 'MetricSelectAll');
+  if (selectAll) selectAll.checked = checked === total;
+  if (label) label.textContent = checked === total ? 'All metrics (' + total + ')' : checked + ' of ' + total + ' selected';
+}
+
+function getSelectedReviewMetrics(prefix) {
+  var cbs = document.querySelectorAll('.' + prefix + '-metric-cb:checked');
+  var keys = {};
+  for (var i = 0; i < cbs.length; i++) keys[cbs[i].value] = true;
+  return keys;
+}
+
+// Close metric dropdowns on outside click
+document.addEventListener('click', function() {
+  ['mom', 'yoy', 'raw'].forEach(function(prefix) {
+    if (_reviewMetricDropdownOpen[prefix]) {
+      _reviewMetricDropdownOpen[prefix] = false;
+      var dd = document.getElementById(prefix + 'MetricDropdown');
+      if (dd) dd.style.display = 'none';
+    }
+  });
+});
+
+// --- MoM Apply ---
+function applyReviewMom() {
   if (!_reviewClientId) return;
-  var monthVal = mpReviewMonth ? mpReviewMonth.val() : '';
-  if (!monthVal) { toast('Select a month', 'error'); return; }
+  var monthVal = mpReviewMom ? mpReviewMom.val() : '';
+  if (!monthVal) { toast('Select a month for MoM comparison', 'error'); return; }
 
   var parts = monthVal.split('-');
   var year = parseInt(parts[0]);
   var mon = parts[1];
   var currPeriod = year + '.' + mon;
-  var prevPeriod = (year) + '.' + String(parseInt(mon) - 1).padStart(2, '0');
+  var prevPeriod = year + '.' + String(parseInt(mon) - 1).padStart(2, '0');
   if (parseInt(mon) === 1) { prevPeriod = (year - 1) + '.12'; }
-  var yoyPeriod = (year - 1) + '.' + mon;
 
-  // Load data for: prevMonth, currentMonth, yoyMonth
-  var periodsNeeded = [prevPeriod, currPeriod, yoyPeriod];
-  var fromP = periodsNeeded.slice().sort()[0];
-  var toP = periodsNeeded.slice().sort().pop();
+  var fromP = prevPeriod < currPeriod ? prevPeriod : currPeriod;
+  var toP = prevPeriod < currPeriod ? currPeriod : prevPeriod;
 
   google.script.run
     .withSuccessHandler(function(rows) {
       if (!rows || !rows.length) {
         document.getElementById('reviewMomTable').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
-        document.getElementById('reviewYoyTable').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
         return;
       }
-      _reviewData = rows;
-
-      // Filter for client rows only
       var clientRows = {};
       for (var i = 0; i < rows.length; i++) {
         if (rows[i].site_type === 'client') clientRows[rows[i].period] = rows[i];
       }
-
       var currRow = clientRows[currPeriod];
       var prevRow = clientRows[prevPeriod];
-      var yoyRow = clientRows[yoyPeriod];
-
-      // Build MoM table
       var mName = MONTH_NAMES[parseInt(mon) - 1];
       document.getElementById('momSectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(prevRow ? getPeriodLabel(prevPeriod) : 'previous month');
-      document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(currRow, prevRow, mName + ' ' + year, prevRow ? getPeriodLabel(prevPeriod) : 'N/A');
+      document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(currRow, prevRow, mName + ' ' + year, prevRow ? getPeriodLabel(prevPeriod) : 'N/A', 'mom');
+    })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .getClientReviewData(_reviewClientId, fromP, toP);
+}
 
-      // Build YoY table
+// --- YoY Apply ---
+function applyReviewYoy() {
+  if (!_reviewClientId) return;
+  var monthVal = mpReviewYoy ? mpReviewYoy.val() : '';
+  if (!monthVal) { toast('Select a month for YoY comparison', 'error'); return; }
+
+  var parts = monthVal.split('-');
+  var year = parseInt(parts[0]);
+  var mon = parts[1];
+  var currPeriod = year + '.' + mon;
+  var yoyPeriod = (year - 1) + '.' + mon;
+
+  var fromP = yoyPeriod;
+  var toP = currPeriod;
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('reviewYoyTable').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
+        return;
+      }
+      var clientRows = {};
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].site_type === 'client') clientRows[rows[i].period] = rows[i];
+      }
+      var currRow = clientRows[currPeriod];
+      var yoyRow = clientRows[yoyPeriod];
+      var mName = MONTH_NAMES[parseInt(mon) - 1];
       document.getElementById('yoySectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(mName + ' ' + (year - 1));
-      document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(currRow, yoyRow, mName + ' ' + year, mName + ' ' + (year - 1));
-
-      // Auto-load raw data
-      loadReviewRawData();
+      document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(currRow, yoyRow, mName + ' ' + year, mName + ' ' + (year - 1), 'yoy');
     })
     .withFailureHandler(function(err) { toast(err.message, 'error'); })
     .getClientReviewData(_reviewClientId, fromP, toP);
@@ -3686,10 +3820,9 @@ function getPeriodLabel(period) {
   return MONTH_NAMES[parseInt(parts[1]) - 1] + ' ' + parts[0];
 }
 
-function buildMetricComparisonTable(currRow, prevRow, currLabel, prevLabel) {
-  var allMetrics = REVIEW_METRICS.concat(TRAFFIC_SOURCES.map(function(s) {
-    return { key: s.key, label: s.label, icon: 'ti-route', format: 'number' };
-  }));
+function buildMetricComparisonTable(currRow, prevRow, currLabel, prevLabel, filterPrefix) {
+  var allMetrics = getAllReviewMetrics();
+  var selectedKeys = filterPrefix ? getSelectedReviewMetrics(filterPrefix) : null;
 
   var html = '<table class="metric-cmp-table"><thead><tr>';
   html += '<th style="width:40%">Metric</th>';
@@ -3700,11 +3833,10 @@ function buildMetricComparisonTable(currRow, prevRow, currLabel, prevLabel) {
 
   for (var i = 0; i < allMetrics.length; i++) {
     var m = allMetrics[i];
+    if (selectedKeys && !selectedKeys[m.key]) continue;
     var currVal = currRow ? parseNumericValue(currRow[m.key]) : null;
     var prevVal = prevRow ? parseNumericValue(prevRow[m.key]) : null;
     var pct = calcChange(currVal, prevVal);
-
-    // For bounce_rate, lower is better
     var isInverse = m.key === 'bounce_rate';
 
     html += '<tr>';
@@ -3754,12 +3886,15 @@ function loadReviewRawData() {
         document.getElementById('reviewRawDataTable').innerHTML = '<div class="empty-state"><p>No data</p></div>';
         return;
       }
-      // Filter client rows only
       var clientRows = rows.filter(function(r) { return r.site_type === 'client'; });
       clientRows.sort(function(a, b) { return a.period < b.period ? -1 : 1; });
 
-      var cols = ['period'].concat(REVIEW_METRICS.map(function(m) { return m.key; })).concat(TRAFFIC_SOURCES.map(function(s) { return s.key; }));
-      var labels = ['Period'].concat(REVIEW_METRICS.map(function(m) { return m.label; })).concat(TRAFFIC_SOURCES.map(function(s) { return s.label; }));
+      var allMetrics = getAllReviewMetrics();
+      var selectedKeys = getSelectedReviewMetrics('raw');
+
+      var filteredMetrics = allMetrics.filter(function(m) { return selectedKeys[m.key]; });
+      var cols = ['period'].concat(filteredMetrics.map(function(m) { return m.key; }));
+      var labels = ['Period'].concat(filteredMetrics.map(function(m) { return m.label; }));
 
       var html = '<table class="metric-cmp-table"><thead><tr>';
       for (var h = 0; h < labels.length; h++) {
@@ -4306,7 +4441,8 @@ function buildSourcesDetailTable(rows, period) {
   });
 
   // Review page pickers
-  mpReviewMonth = new MonthPicker(document.getElementById('reviewMonthPicker'), { placeholder: 'Select month...' });
+  mpReviewMom = new MonthPicker(document.getElementById('reviewMomPicker'), { placeholder: 'Select month...' });
+  mpReviewYoy = new MonthPicker(document.getElementById('reviewYoyPicker'), { placeholder: 'Select month...' });
   mpReviewDataFrom = new MonthPicker(document.getElementById('reviewDataFrom'), { placeholder: 'From...' });
   mpReviewDataTo = new MonthPicker(document.getElementById('reviewDataTo'), { placeholder: 'To...' });
   mpReviewCompPeriod = new MonthPicker(document.getElementById('reviewCompPeriod'), { placeholder: 'Select month...' });
