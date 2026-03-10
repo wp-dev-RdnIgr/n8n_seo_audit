@@ -302,6 +302,45 @@
     .chart-subpanel { display: none; }
     .chart-subpanel.active { display: block; }
 
+    /* Chart subtabs container with date controls */
+    .chart-subtabs-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-subtabs-container .chart-subtabs { margin-bottom: 0; }
+    .chart-date-controls {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .chart-dates {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    /* Medal icons */
+    .medal { font-size: 18px; margin-right: 4px; vertical-align: middle; }
+    .medal-gold { color: #F59E0B; }
+    .medal-silver { color: #94A3B8; }
+    .medal-bronze { color: #CD7F32; }
+
+    /* Client row highlight in comparison table */
+    .cmp-table tr.client-row td {
+      background: var(--primary-light);
+      font-weight: 600;
+    }
+    .cmp-table tr.client-row:hover td {
+      background: #DBEAFE;
+    }
+    .client-site-name {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
     /* ===== COMPARISON SUMMARY CARDS ===== */
     .comparison-summary {
       display: grid;
@@ -923,43 +962,79 @@
 
   <!-- TAB: CHARTS -->
   <div class="tab-panel" id="tab-charts">
-    <!-- Filters card (shared across all chart views) -->
+    <!-- Filters card (client only) -->
     <div class="card" style="margin-bottom:16px">
       <div class="card-header">
         <div class="card-title"><i class="ti ti-filter"></i> Filters</div>
       </div>
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" style="flex:0 0 280px">
           <label>Client</label>
           <select id="chartClientSelect" onchange="onChartClientChange()">
             <option value="">Select client...</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Period from</label>
-          <div id="chartPeriodFrom"></div>
-        </div>
-        <div class="form-group">
-          <label>Period to</label>
-          <div id="chartPeriodTo"></div>
-        </div>
-        <button class="btn btn-primary" onclick="loadChartsData()">
-          <i class="ti ti-search"></i> Load
-        </button>
       </div>
     </div>
 
-    <!-- Sub-tab navigation -->
-    <div class="chart-subtabs">
-      <button class="chart-subtab active" data-subtab="trend" onclick="switchChartSubtab('trend')">
-        <i class="ti ti-chart-line"></i> Trend
-      </button>
-      <button class="chart-subtab" data-subtab="mom" onclick="switchChartSubtab('mom')">
-        <i class="ti ti-arrows-exchange"></i> Month vs Month
-      </button>
-      <button class="chart-subtab" data-subtab="yoy" onclick="switchChartSubtab('yoy')">
-        <i class="ti ti-calendar-stats"></i> Year vs Year
-      </button>
+    <!-- Sub-tab navigation with integrated date controls -->
+    <div class="chart-subtabs-container">
+      <div class="chart-subtabs">
+        <button class="chart-subtab active" data-subtab="trend" onclick="switchChartSubtab('trend')">
+          <i class="ti ti-chart-line"></i> Trend
+        </button>
+        <button class="chart-subtab" data-subtab="mom" onclick="switchChartSubtab('mom')">
+          <i class="ti ti-arrows-exchange"></i> Month vs Month
+        </button>
+        <button class="chart-subtab" data-subtab="yoy" onclick="switchChartSubtab('yoy')">
+          <i class="ti ti-calendar-stats"></i> Year vs Year
+        </button>
+      </div>
+      <!-- Date controls row (changes per subtab) -->
+      <div class="chart-date-controls" id="chartDateControls">
+        <!-- Trend dates -->
+        <div class="chart-dates" id="trendDates">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period from</label>
+            <div id="chartPeriodFrom"></div>
+          </div>
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period to</label>
+            <div id="chartPeriodTo"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadChartsData()">
+            <i class="ti ti-search"></i> Load
+          </button>
+        </div>
+        <!-- MoM dates -->
+        <div class="chart-dates" id="momDates" style="display:none">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Month A (previous)</label>
+            <div id="momPeriodA"></div>
+          </div>
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Month B (current)</label>
+            <div id="momPeriodB"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadChartsData()">
+            <i class="ti ti-search"></i> Load
+          </button>
+        </div>
+        <!-- YoY dates -->
+        <div class="chart-dates" id="yoyDates" style="display:none">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period from</label>
+            <div id="yoyPeriodFrom"></div>
+          </div>
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period to</label>
+            <div id="yoyPeriodTo"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadChartsData()">
+            <i class="ti ti-search"></i> Load
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- SUB-TAB: TREND (original chart) -->
@@ -1044,8 +1119,6 @@
             </div>
           </div>
         </div>
-        <!-- MoM Summary Cards -->
-        <div id="momSummaryCards" class="comparison-summary" style="display:none"></div>
         <!-- MoM Bar Chart -->
         <div id="momChartWrap" style="position:relative;width:100%;min-height:420px">
           <canvas id="momChart"></canvas>
@@ -2238,20 +2311,29 @@ function buildChart() {
 
 // ===== CHARTS TAB =====
 var mpChartFrom, mpChartTo;
+var mpMomA, mpMomB;
+var mpYoyFrom, mpYoyTo;
 var _chartsDataRows = null;
 var momChartInstance = null;
 var yoyChartInstance = null;
 var _momDropdownOpen = false;
+var _activeChartSubtab = 'trend';
 
 var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function switchChartSubtab(subtabId) {
+  _activeChartSubtab = subtabId;
   document.querySelectorAll('.chart-subtab').forEach(function(b) { b.classList.remove('active'); });
   document.querySelectorAll('.chart-subpanel').forEach(function(p) { p.classList.remove('active'); p.style.display = 'none'; });
   var btn = document.querySelector('[data-subtab="' + subtabId + '"]');
   if (btn) btn.classList.add('active');
   var panel = document.getElementById('subtab-' + subtabId);
   if (panel) { panel.classList.add('active'); if (_chartsDataRows && _chartsDataRows.length) panel.style.display = 'block'; }
+
+  // Show/hide appropriate date controls
+  document.getElementById('trendDates').style.display = subtabId === 'trend' ? 'flex' : 'none';
+  document.getElementById('momDates').style.display = subtabId === 'mom' ? 'flex' : 'none';
+  document.getElementById('yoyDates').style.display = subtabId === 'yoy' ? 'flex' : 'none';
 
   if (_chartsDataRows && _chartsDataRows.length) {
     if (subtabId === 'trend') buildChart();
@@ -2278,11 +2360,9 @@ function populateChartClientSelect() {
 
 function onChartClientChange() {
   var clientId = document.getElementById('chartClientSelect').value;
+  var allPickers = [mpChartFrom, mpChartTo, mpMomA, mpMomB, mpYoyFrom, mpYoyTo];
   if (!clientId) {
-    if (mpChartFrom) mpChartFrom.setAllowedMonths(null);
-    if (mpChartTo) mpChartTo.setAllowedMonths(null);
-    mpChartFrom.clear();
-    mpChartTo.clear();
+    allPickers.forEach(function(mp) { if (mp) { mp.setAllowedMonths(null); mp.clear(); } });
     return;
   }
   google.script.run
@@ -2290,12 +2370,24 @@ function onChartClientChange() {
       if (!periods || !periods.length) return;
       periods.sort();
       var months = periods.map(function(p) { return p.replace('.', '-'); });
-      if (mpChartFrom) mpChartFrom.setAllowedMonths(months);
-      if (mpChartTo) mpChartTo.setAllowedMonths(months);
+      // Set allowed months on all date pickers
+      allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
       var from = periods[0];
       var to = periods[periods.length - 1];
+      // Set defaults for Trend
       if (mpChartFrom && from) mpChartFrom.val(from.replace('.', '-'));
       if (mpChartTo && to) mpChartTo.val(to.replace('.', '-'));
+      // Set defaults for MoM: last 2 months
+      if (periods.length >= 2) {
+        if (mpMomA) mpMomA.val(periods[periods.length - 2].replace('.', '-'));
+        if (mpMomB) mpMomB.val(periods[periods.length - 1].replace('.', '-'));
+      } else {
+        if (mpMomA) mpMomA.val(periods[0].replace('.', '-'));
+        if (mpMomB) mpMomB.val(periods[0].replace('.', '-'));
+      }
+      // Set defaults for YoY: full range
+      if (mpYoyFrom && from) mpYoyFrom.val(from.replace('.', '-'));
+      if (mpYoyTo && to) mpYoyTo.val(to.replace('.', '-'));
     })
     .getClientPeriods(clientId);
 }
@@ -2306,9 +2398,23 @@ function loadChartPeriods() {
 
 function loadChartsData() {
   var clientId = document.getElementById('chartClientSelect').value;
-  var periodFrom = monthToPeriod(mpChartFrom.val());
-  var periodTo = monthToPeriod(mpChartTo.val());
   if (!clientId) { toast('Select a client first', 'error'); return; }
+
+  // Determine period range based on active subtab
+  var periodFrom, periodTo;
+  if (_activeChartSubtab === 'mom') {
+    periodFrom = monthToPeriod(mpMomA.val());
+    periodTo = monthToPeriod(mpMomB.val());
+    if (!periodFrom || !periodTo) { toast('Select both months for comparison', 'error'); return; }
+    // Ensure From <= To
+    if (periodFrom > periodTo) { var tmp = periodFrom; periodFrom = periodTo; periodTo = tmp; }
+  } else if (_activeChartSubtab === 'yoy') {
+    periodFrom = monthToPeriod(mpYoyFrom.val());
+    periodTo = monthToPeriod(mpYoyTo.val());
+  } else {
+    periodFrom = monthToPeriod(mpChartFrom.val());
+    periodTo = monthToPeriod(mpChartTo.val());
+  }
 
   // Show loading in active sub-panel
   document.getElementById('chartsEmptyState').style.display = 'none';
@@ -2471,19 +2577,26 @@ function buildMomChart() {
   var metricLabel = document.getElementById('momMetricSelect').selectedOptions[0].textContent;
   var selectedCompetitors = getMomSelectedCompetitors();
 
+  // Determine comparison months from MoM pickers
+  var momAVal = mpMomA ? monthToPeriod(mpMomA.val()) : '';
+  var momBVal = mpMomB ? monthToPeriod(mpMomB.val()) : '';
+
   // Collect all periods sorted
   var periodsSet = {};
   for (var i = 0; i < rows.length; i++) periodsSet[rows[i].period] = true;
   var periods = Object.keys(periodsSet).sort();
 
   if (periods.length < 2) {
-    document.getElementById('momSummaryCards').style.display = 'none';
     document.getElementById('momTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>Need at least 2 periods for MoM comparison</p></div>';
     return;
   }
 
-  var currentPeriod = periods[periods.length - 1];
-  var prevPeriod = periods[periods.length - 2];
+  // Use picker values if available, otherwise default to last 2 periods
+  var currentPeriod = momBVal && periodsSet[momBVal] ? momBVal : periods[periods.length - 1];
+  var prevPeriod = momAVal && periodsSet[momAVal] ? momAVal : periods[periods.length - 2];
+
+  // Ensure prevPeriod < currentPeriod
+  if (prevPeriod > currentPeriod) { var tmp = prevPeriod; prevPeriod = currentPeriod; currentPeriod = tmp; }
 
   // Filter sites
   var clientSite = null;
@@ -2501,14 +2614,14 @@ function buildMomChart() {
     }
   }
 
+  // Sort by current period value descending
   var sites = Object.keys(lookup).sort(function(a,b) {
-    if (siteTypes[a] === 'client') return -1;
-    if (siteTypes[b] === 'client') return 1;
-    return a.localeCompare(b);
+    var valA = lookup[a][currentPeriod] || 0;
+    var valB = lookup[b][currentPeriod] || 0;
+    return valB - valA;
   });
 
-  // Build summary cards
-  var cardsHtml = '';
+  // Build table rows sorted by value desc with medals
   var tableRows = [];
   for (var s = 0; s < sites.length; s++) {
     var site = sites[s];
@@ -2516,22 +2629,10 @@ function buildMomChart() {
     var curr = lookup[site][currentPeriod] || 0;
     var prev = lookup[site][prevPeriod] || 0;
     var pct = calcChange(curr, prev);
-    var cls = changeClass(pct);
-
-    cardsHtml += '<div class="cmp-card' + (isClient ? '" style="border-color:var(--primary-border);background:var(--primary-light)' : '') + '">';
-    cardsHtml += '<div class="cmp-site">' + escHtml(site) + (isClient ? ' <span class="site-badge client-badge">client</span>' : '') + '</div>';
-    cardsHtml += '<div class="cmp-value">' + formatMetricValue(curr) + '</div>';
-    cardsHtml += '<div class="cmp-change ' + cls + '">' + changeIcon(pct) + ' ' + formatPct(pct) + '</div>';
-    cardsHtml += '<div class="cmp-prev">prev: ' + formatMetricValue(prev) + '</div>';
-    cardsHtml += '</div>';
-
-    tableRows.push({ site: site, isClient: isClient, current: curr, previous: prev, change: pct });
+    tableRows.push({ site: site, isClient: isClient, current: curr, previous: prev, change: pct, rank: s + 1 });
   }
 
-  document.getElementById('momSummaryCards').innerHTML = cardsHtml;
-  document.getElementById('momSummaryCards').style.display = sites.length ? 'grid' : 'none';
-
-  // Build grouped bar chart
+  // Build grouped bar chart — sort by value desc for bars too
   var barLabels = [];
   var currentData = [];
   var previousData = [];
@@ -2626,14 +2727,21 @@ function buildMomChart() {
     }
   });
 
-  // Build detail table
+  // Build detail table — sorted by value desc with medals and client highlight
   var tHtml = '<table class="cmp-table"><thead><tr>';
-  tHtml += '<th>Site</th><th>' + escHtml(prevPeriod) + '</th><th>' + escHtml(currentPeriod) + '</th><th>Change</th>';
+  tHtml += '<th style="width:40px">#</th><th>Site</th><th>' + escHtml(prevPeriod) + '</th><th>' + escHtml(currentPeriod) + '</th><th>Change</th>';
   tHtml += '</tr></thead><tbody>';
   for (var r = 0; r < tableRows.length; r++) {
     var row = tableRows[r];
-    tHtml += '<tr>';
-    tHtml += '<td><strong>' + escHtml(row.site) + '</strong>';
+    var medalHtml = '';
+    if (row.rank === 1) medalHtml = '<span class="medal medal-gold" title="1st place">&#x1F947;</span>';
+    else if (row.rank === 2) medalHtml = '<span class="medal medal-silver" title="2nd place">&#x1F948;</span>';
+    else if (row.rank === 3) medalHtml = '<span class="medal medal-bronze" title="3rd place">&#x1F949;</span>';
+    else medalHtml = '<span style="color:var(--text-secondary);font-size:13px;padding-left:4px">' + row.rank + '</span>';
+
+    tHtml += '<tr class="' + (row.isClient ? 'client-row' : '') + '">';
+    tHtml += '<td style="text-align:center">' + medalHtml + '</td>';
+    tHtml += '<td>' + (row.isClient ? '<span class="client-site-name">' : '<strong>') + escHtml(row.site) + (row.isClient ? '</span>' : '</strong>');
     tHtml += row.isClient ? ' <span class="site-badge client-badge">client</span>' : ' <span class="site-badge competitor-badge">competitor</span>';
     tHtml += '</td>';
     tHtml += '<td>' + formatMetricValue(row.previous) + '</td>';
@@ -3136,6 +3244,18 @@ function markErrorResolved(errorId) {
     placeholder: 'From...'
   });
   mpChartTo = new MonthPicker(document.getElementById('chartPeriodTo'), {
+    placeholder: 'To...'
+  });
+  mpMomA = new MonthPicker(document.getElementById('momPeriodA'), {
+    placeholder: 'Month A...'
+  });
+  mpMomB = new MonthPicker(document.getElementById('momPeriodB'), {
+    placeholder: 'Month B...'
+  });
+  mpYoyFrom = new MonthPicker(document.getElementById('yoyPeriodFrom'), {
+    placeholder: 'From...'
+  });
+  mpYoyTo = new MonthPicker(document.getElementById('yoyPeriodTo'), {
     placeholder: 'To...'
   });
 })();
