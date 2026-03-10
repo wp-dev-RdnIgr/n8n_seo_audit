@@ -9,6 +9,12 @@
 ## n8n Folder Structure
 - Workflows are in: Personal > Cloude Folder > Comparing SimilarWeb
 
+## Supabase Direct Access
+- Project URL: https://utvoegofnctfwrjdxjvf.supabase.co
+- Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0dm9lZ29mbmN0ZndyamR4anZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMzI1MjUsImV4cCI6MjA4NzYwODUyNX0.omrJJnkJLpR6eWcF4V7U4KuUhsuoeXemegL5u2UwZkk
+- Publishable Key: sb_publishable_AIkq07p2eR64JWB8e2kfvg_EQ5ilj41
+- Secret Key: stored locally, not committed (GitHub push protection)
+
 ## Key Credentials in n8n
 - Postgres (Supabase): id=pMaO4BlxABjfSxvT, name="Postgres - supabase [ SimmilarWebCompair]"
 - Telegram: id=mHbM43fsaWN90avF, name="I.Redin - ws tg log"
