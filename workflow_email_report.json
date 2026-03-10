@@ -1,0 +1,277 @@
+{
+  "name": "Monthly Email Report - SimilarWeb",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-01",
+      "name": "Cron: 1-е число месяца",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-600, 300],
+      "notes": "Каждое 1-е число месяца в 09:00 запускает рассылку email-отчётов"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (period) period FROM similarweb_data ORDER BY period DESC LIMIT 1",
+        "options": {}
+      },
+      "id": "get-latest-period",
+      "name": "Последний период",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-360, 300],
+      "credentials": {
+        "postgres": {
+          "id": "pMaO4BlxABjfSxvT",
+          "name": "Postgres - supabase [ SimmilarWebCompair]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id as client_id, c.client_site, c.employee_email, array_agg(comp.competitor_site) as competitors FROM clients c LEFT JOIN competitors comp ON comp.client_id = c.id WHERE c.client_status = 'active' AND c.employee_email IS NOT NULL AND c.employee_email != '' GROUP BY c.id, c.client_site, c.employee_email",
+        "options": {}
+      },
+      "id": "get-clients",
+      "name": "Активные клиенты с email",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-360, 520],
+      "credentials": {
+        "postgres": {
+          "id": "pMaO4BlxABjfSxvT",
+          "name": "Postgres - supabase [ SimmilarWebCompair]"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "merge-period-clients",
+      "name": "Merge: период + клиенты",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [-120, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine period with each client\nconst periodItems = $input.first().json;\nconst period = $('Последний период').first().json.period;\nconst clients = $('Активные клиенты с email').all();\n\nreturn clients.map(c => ({\n  json: {\n    ...c.json,\n    period: period\n  }\n}));"
+      },
+      "id": "prepare-loop",
+      "name": "Подготовка данных",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, 400]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "loop-clients",
+      "name": "Loop: по клиентам",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [280, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = '${$json.period}'\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
+        "options": {}
+      },
+      "id": "get-sw-data",
+      "name": "Данные SimilarWeb за период",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [500, 400],
+      "credentials": {
+        "postgres": {
+          "id": "pMaO4BlxABjfSxvT",
+          "name": "Postgres - supabase [ SimmilarWebCompair]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = (\n      SELECT period FROM similarweb_data \n      WHERE client_id = '${$json.client_id}' \n        AND period < '${$json.period}'\n      ORDER BY period DESC LIMIT 1\n    )\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
+        "options": {}
+      },
+      "id": "get-prev-data",
+      "name": "Данные за предыдущий период",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [500, 620],
+      "credentials": {
+        "postgres": {
+          "id": "pMaO4BlxABjfSxvT",
+          "name": "Postgres - supabase [ SimmilarWebCompair]"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "merge-periods",
+      "name": "Merge: текущий + пред. период",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [720, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML email report\nconst currentData = $('Данные SimilarWeb за период').all().map(i => i.json);\nconst prevData = $('Данные за предыдущий период').all().map(i => i.json);\nconst clientInfo = $('Loop: по клиентам').first().json;\n\nconst period = clientInfo.period;\nconst clientSite = clientInfo.client_site;\nconst email = clientInfo.employee_email;\n\n// Helper: format number\nfunction fmtNum(n) {\n  if (n == null || n === '') return '—';\n  const num = Number(n);\n  if (isNaN(num)) return String(n);\n  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';\n  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';\n  return num.toFixed(1);\n}\n\n// Helper: format percentage\nfunction fmtPct(n) {\n  if (n == null || n === '') return '—';\n  return Number(n).toFixed(1) + '%';\n}\n\n// Helper: format duration (seconds → m:ss)\nfunction fmtDur(n) {\n  if (n == null || n === '') return '—';\n  const s = Number(n);\n  const m = Math.floor(s / 60);\n  const sec = Math.floor(s % 60);\n  return `${m}:${sec.toString().padStart(2, '0')}`;\n}\n\n// Helper: calculate change\nfunction calcChange(curr, prev) {\n  if (!curr || !prev || Number(prev) === 0) return '';\n  const change = ((Number(curr) - Number(prev)) / Number(prev)) * 100;\n  const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→';\n  const color = change > 0 ? '#27ae60' : change < 0 ? '#e74c3c' : '#7f8c8d';\n  return `<span style=\"color:${color};font-size:12px;\">${arrow}${Math.abs(change).toFixed(1)}%</span>`;\n}\n\n// Build prev data lookup: site → data\nconst prevMap = {};\nfor (const row of prevData) {\n  prevMap[row.site] = row;\n}\n\n// Separate client and competitors\nconst clientRow = currentData.find(r => r.site_type === 'client');\nconst competitorRows = currentData.filter(r => r.site_type === 'competitor');\nconst allRows = clientRow ? [clientRow, ...competitorRows] : competitorRows;\n\n// Build engagement table rows\nlet engagementRows = '';\nfor (const row of allRows) {\n  const prev = prevMap[row.site] || {};\n  const isClient = row.site_type === 'client';\n  const bgColor = isClient ? '#eaf6ff' : '#fff';\n  const fontWeight = isClient ? 'bold' : 'normal';\n  \n  engagementRows += `\n    <tr style=\"background:${bgColor};\">\n      <td style=\"padding:8px 12px;border:1px solid #ddd;font-weight:${fontWeight};\">\n        ${row.site}${isClient ? ' ⭐' : ''}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtNum(row.monthly_visits)} ${calcChange(row.monthly_visits, prev.monthly_visits)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtNum(row.unique_visitors)} ${calcChange(row.unique_visitors, prev.unique_visitors)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtDur(row.visit_duration)} ${calcChange(row.visit_duration, prev.visit_duration)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtNum(row.pages_per_visit)} ${calcChange(row.pages_per_visit, prev.pages_per_visit)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.bounce_rate)} ${calcChange(row.bounce_rate, prev.bounce_rate)}\n      </td>\n    </tr>`;\n}\n\n// Build channels table rows\nlet channelsRows = '';\nfor (const row of allRows) {\n  const prev = prevMap[row.site] || {};\n  const isClient = row.site_type === 'client';\n  const bgColor = isClient ? '#eaf6ff' : '#fff';\n  const fontWeight = isClient ? 'bold' : 'normal';\n  \n  channelsRows += `\n    <tr style=\"background:${bgColor};\">\n      <td style=\"padding:8px 12px;border:1px solid #ddd;font-weight:${fontWeight};\">\n        ${row.site}${isClient ? ' ⭐' : ''}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.direct)} ${calcChange(row.direct, prev.direct)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.organic_search)} ${calcChange(row.organic_search, prev.organic_search)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.paid_search)} ${calcChange(row.paid_search, prev.paid_search)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.display_ads)} ${calcChange(row.display_ads, prev.display_ads)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.social)} ${calcChange(row.social, prev.social)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.email_channel)} ${calcChange(row.email_channel, prev.email_channel)}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">\n        ${fmtPct(row.ai_traffic)} ${calcChange(row.ai_traffic, prev.ai_traffic)}\n      </td>\n    </tr>`;\n}\n\n// Position comparison (rank by monthly visits)\nconst sorted = [...allRows].sort((a, b) => Number(b.monthly_visits || 0) - Number(a.monthly_visits || 0));\nlet positionRows = '';\nsorted.forEach((row, idx) => {\n  const isClient = row.site_type === 'client';\n  const bgColor = isClient ? '#eaf6ff' : '#fff';\n  const fontWeight = isClient ? 'bold' : 'normal';\n  positionRows += `\n    <tr style=\"background:${bgColor};\">\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:center;font-weight:bold;\">${idx + 1}</td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;font-weight:${fontWeight};\">\n        ${row.site}${isClient ? ' ⭐' : ''}\n      </td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">${fmtNum(row.monthly_visits)}</td>\n      <td style=\"padding:8px 12px;border:1px solid #ddd;text-align:right;\">${fmtPct(row.organic_search)}</td>\n    </tr>`;\n});\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"></head>\n<body style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:900px;margin:0 auto;background:#f5f5f5;padding:20px;\">\n  <div style=\"background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);\">\n    \n    <!-- Header -->\n    <div style=\"background:linear-gradient(135deg,#2c3e50,#3498db);padding:30px;text-align:center;\">\n      <h1 style=\"color:#fff;margin:0;font-size:24px;\">📊 Щомісячний звіт SimilarWeb</h1>\n      <p style=\"color:#ecf0f1;margin:8px 0 0;font-size:16px;\">${clientSite} — період ${period}</p>\n    </div>\n\n    <div style=\"padding:24px;\">\n      \n      <!-- Section 1: Engagement -->\n      <h2 style=\"color:#2c3e50;border-bottom:2px solid #3498db;padding-bottom:8px;margin-top:0;\">\n        📈 Поведінкові метрики\n      </h2>\n      <div style=\"overflow-x:auto;\">\n        <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n          <thead>\n            <tr style=\"background:#34495e;color:#fff;\">\n              <th style=\"padding:10px 12px;text-align:left;\">Сайт</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Візити</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Унікальні</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Тривалість</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Стор./візит</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Bounce Rate</th>\n            </tr>\n          </thead>\n          <tbody>${engagementRows}</tbody>\n        </table>\n      </div>\n\n      <!-- Section 2: Marketing Channels -->\n      <h2 style=\"color:#2c3e50;border-bottom:2px solid #e67e22;padding-bottom:8px;margin-top:28px;\">\n        🎯 Маркетингові канали\n      </h2>\n      <div style=\"overflow-x:auto;\">\n        <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n          <thead>\n            <tr style=\"background:#34495e;color:#fff;\">\n              <th style=\"padding:10px 12px;text-align:left;\">Сайт</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Direct</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Organic</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Paid</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Display</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Social</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Email</th>\n              <th style=\"padding:10px 12px;text-align:right;\">AI</th>\n            </tr>\n          </thead>\n          <tbody>${channelsRows}</tbody>\n        </table>\n      </div>\n\n      <!-- Section 3: Position Comparison -->\n      <h2 style=\"color:#2c3e50;border-bottom:2px solid #27ae60;padding-bottom:8px;margin-top:28px;\">\n        🏆 Рейтинг за трафіком\n      </h2>\n      <div style=\"overflow-x:auto;\">\n        <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n          <thead>\n            <tr style=\"background:#34495e;color:#fff;\">\n              <th style=\"padding:10px 12px;text-align:center;\">Позиція</th>\n              <th style=\"padding:10px 12px;text-align:left;\">Сайт</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Візити/міс.</th>\n              <th style=\"padding:10px 12px;text-align:right;\">Organic %</th>\n            </tr>\n          </thead>\n          <tbody>${positionRows}</tbody>\n        </table>\n      </div>\n\n      <!-- Footer -->\n      <div style=\"margin-top:28px;padding-top:16px;border-top:1px solid #eee;text-align:center;color:#7f8c8d;font-size:12px;\">\n        <p>Стрілки показують динаміку відносно попереднього періоду<br>\n        <span style=\"color:#27ae60;\">↑ покращення</span> · \n        <span style=\"color:#e74c3c;\">↓ погіршення</span> · \n        <span style=\"color:#7f8c8d;\">→ без змін</span></p>\n        <p>Дані: SimilarWeb | Звіт згенеровано автоматично</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    to: email,\n    subject: `📊 SimilarWeb звіт: ${clientSite} — ${period}`,\n    html: html,\n    client_site: clientSite,\n    period: period\n  }\n}];"
+      },
+      "id": "build-html",
+      "name": "Генерация HTML-отчёта",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 500]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Отправка Email",
+      "type": "n8n-nodes-base.sendEmail",
+      "typeVersion": 2.1,
+      "position": [1160, 400],
+      "notes": "⚠️ Нужно настроить SMTP credentials в n8n (Gmail SMTP или другой SMTP-сервер)"
+    },
+    {
+      "parameters": {
+        "chatId": "",
+        "text": "={{ `✅ Email-отчёт отправлен\\n📧 ${$json.to}\\n🌐 ${$json.client_site}\\n📅 Период: ${$json.period}` }}",
+        "additionalFields": {}
+      },
+      "id": "tg-log",
+      "name": "Telegram: Лог отправки",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1160, 600],
+      "credentials": {
+        "telegramApi": {
+          "id": "mHbM43fsaWN90avF",
+          "name": "I.Redin - ws tg log"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "back-to-loop",
+      "name": "Следующий клиент",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1380, 400]
+    }
+  ],
+  "connections": {
+    "Cron: 1-е число месяца": {
+      "main": [
+        [
+          { "node": "Последний период", "type": "main", "index": 0 },
+          { "node": "Активные клиенты с email", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Последний период": {
+      "main": [
+        [
+          { "node": "Merge: период + клиенты", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Активные клиенты с email": {
+      "main": [
+        [
+          { "node": "Merge: период + клиенты", "type": "main", "index": 1 }
+        ]
+      ]
+    },
+    "Merge: период + клиенты": {
+      "main": [
+        [
+          { "node": "Подготовка данных", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Подготовка данных": {
+      "main": [
+        [
+          { "node": "Loop: по клиентам", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Loop: по клиентам": {
+      "main": [
+        null,
+        [
+          { "node": "Данные SimilarWeb за период", "type": "main", "index": 0 },
+          { "node": "Данные за предыдущий период", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Данные SimilarWeb за период": {
+      "main": [
+        [
+          { "node": "Merge: текущий + пред. период", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Данные за предыдущий период": {
+      "main": [
+        [
+          { "node": "Merge: текущий + пред. период", "type": "main", "index": 1 }
+        ]
+      ]
+    },
+    "Merge: текущий + пред. период": {
+      "main": [
+        [
+          { "node": "Генерация HTML-отчёта", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Генерация HTML-отчёта": {
+      "main": [
+        [
+          { "node": "Отправка Email", "type": "main", "index": 0 },
+          { "node": "Telegram: Лог отправки", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Отправка Email": {
+      "main": [
+        [
+          { "node": "Следующий клиент", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Следующий клиент": {
+      "main": [
+        [
+          { "node": "Loop: по клиентам", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
