@@ -1040,6 +1040,16 @@
         <button class="btn btn-warning" id="buildQueueBtn" onclick="buildQueue()"><i class="ti ti-playlist-add"></i> Build Queue</button>
       </div>
     </div>
+
+    <!-- Client Reviews list on Dashboard -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
+      </div>
+      <div id="dashboardClientsTable">
+        <div class="empty-state"><i class="ti ti-loader"></i><p>Loading clients...</p></div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: CLIENTS -->
@@ -3775,6 +3785,8 @@ function loadReviewClients() {
     .withSuccessHandler(function(clients) {
       if (!clients || !clients.length) {
         document.getElementById('reviewClientsTable').innerHTML = '<div class="empty-state"><i class="ti ti-users-minus"></i><p>No clients found</p></div>';
+        var dashEl = document.getElementById('dashboardClientsTable');
+        if (dashEl) dashEl.innerHTML = '<div class="empty-state"><i class="ti ti-users-minus"></i><p>No clients found</p></div>';
         return;
       }
       var html = '<div class="table-wrap"><table><thead><tr><th>Client Site</th><th>Email</th><th>Status</th><th>Action</th></tr></thead><tbody>';
@@ -3789,8 +3801,29 @@ function loadReviewClients() {
       }
       html += '</tbody></table></div>';
       document.getElementById('reviewClientsTable').innerHTML = html;
+      // Also populate dashboard table with Review buttons that switch to Reviews tab first
+      var dashEl = document.getElementById('dashboardClientsTable');
+      if (dashEl) {
+        var dHtml = '<div class="table-wrap"><table><thead><tr><th>Client Site</th><th>Email</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+        for (var i = 0; i < clients.length; i++) {
+          var c = clients[i];
+          dHtml += '<tr>';
+          dHtml += '<td><strong>' + escHtml(c.client_site) + '</strong></td>';
+          dHtml += '<td style="color:var(--text-secondary);font-size:12px">' + escHtml(c.employee_email || '—') + '</td>';
+          dHtml += '<td><span class="badge-status badge-' + c.client_status + '">' + escHtml(c.client_status) + '</span></td>';
+          dHtml += '<td><button class="btn btn-primary btn-sm" onclick="openReviewFromDashboard(\'' + c.id + '\')"><i class="ti ti-report-analytics"></i> Review</button></td>';
+          dHtml += '</tr>';
+        }
+        dHtml += '</tbody></table></div>';
+        dashEl.innerHTML = dHtml;
+      }
     })
     .getClients();
+}
+
+function openReviewFromDashboard(clientId) {
+  switchTab('reviews');
+  openReview(clientId);
 }
 
 function openReview(clientId) {
@@ -5274,6 +5307,7 @@ function buildSourcesDetailTable(rows, period) {
 (function init() {
   loadConfig();
   loadDashboard();
+  loadReviewClients();
 
   // Initialize month pickers
   var now = new Date();
