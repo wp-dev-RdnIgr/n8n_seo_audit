@@ -794,6 +794,107 @@
       pointer-events: none;
       border-color: transparent !important;
     }
+
+    /* ===== REVIEW PAGE ===== */
+    .review-page { display: none; }
+    .review-page.active { display: block; }
+    .review-back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+    }
+    .review-back-btn:hover { color: var(--primary); border-color: var(--primary-border); }
+    .review-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 20px; padding: 20px;
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      border-radius: var(--radius-lg); color: #fff;
+    }
+    .review-header .site-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--primary); display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .review-header .site-name { font-size: 20px; font-weight: 700; }
+    .review-header .site-meta { font-size: 13px; color: #94A3B8; margin-top: 2px; }
+    .review-tabs {
+      display: flex; gap: 0; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .review-tab {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 16px; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); background: transparent;
+      border: none; border-bottom: 3px solid transparent;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .review-tab:hover { color: var(--text); background: var(--bg); }
+    .review-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+    .review-panel { display: none; }
+    .review-panel.active { display: block; }
+
+    /* Metric comparison table */
+    .metric-cmp-table { width: 100%; border-collapse: collapse; }
+    .metric-cmp-table th, .metric-cmp-table td {
+      padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .metric-cmp-table th { font-weight: 600; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg); }
+    .metric-cmp-table td { font-weight: 500; }
+    .metric-cmp-table tr:hover { background: var(--primary-light); }
+    .metric-icon { display: inline-flex; align-items: center; gap: 8px; }
+    .metric-icon i { font-size: 16px; color: var(--text-secondary); }
+    .val-winner { font-weight: 700; color: var(--text); }
+    .trophy { color: #F59E0B; font-size: 14px; margin-left: 4px; }
+    .change-up { color: #10B981; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+    .change-down { color: #EF4444; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+    .change-flat { color: #6B7280; font-weight: 500; }
+
+    /* Traffic bar comparison */
+    .traffic-bar-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .traffic-bar-row:last-child { border-bottom: none; }
+    .traffic-bar-domain { width: 160px; font-size: 13px; font-weight: 500; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    .traffic-bar-wrap { flex: 1; height: 28px; background: #F1F5F9; border-radius: 6px; overflow: hidden; position: relative; }
+    .traffic-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+    .traffic-bar-value { width: 80px; text-align: right; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .domain-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Channel tabs */
+    .channel-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 16px;
+    }
+    .channel-tab {
+      padding: 8px 16px; font-size: 13px; font-weight: 500;
+      color: var(--text-secondary); background: none; border: none;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .channel-tab:hover { color: var(--text); }
+    .channel-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+    /* Section headers */
+    .section-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .section-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-subtitle i { font-size: 14px; }
+
+    /* Review filter bar */
+    .review-filters {
+      display: flex; align-items: flex-end; gap: 12px;
+      padding: 16px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 16px;
+    }
+
+    /* Chart legend sidebar */
+    .chart-with-legend { display: flex; gap: 20px; align-items: flex-start; }
+    .chart-with-legend .chart-area { flex: 1; min-width: 0; }
+    .chart-legend { width: 200px; flex-shrink: 0; }
+    .chart-legend-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+    .chart-legend-item .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+    .chart-legend-item .legend-value { margin-left: auto; font-weight: 700; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -825,6 +926,9 @@
   </button>
   <button class="tab-btn" data-tab="charts">
     <i class="ti ti-chart-line"></i> Charts
+  </button>
+  <button class="tab-btn" data-tab="reviews">
+    <i class="ti ti-report-analytics"></i> Reviews
   </button>
   <button class="tab-btn" data-tab="queue">
     <i class="ti ti-list-check"></i> Queue
@@ -1235,6 +1339,242 @@
     </div>
   </div>
 
+  <!-- TAB: REVIEWS -->
+  <div class="tab-panel" id="tab-reviews">
+    <!-- Client list view -->
+    <div id="reviewClientList">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
+        </div>
+        <div id="reviewClientsTable">
+          <div class="empty-state"><i class="ti ti-loader"></i><p>Loading clients...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review detail page (hidden by default) -->
+    <div id="reviewDetailPage" class="review-page">
+      <button class="review-back-btn" onclick="closeReview()">
+        <i class="ti ti-arrow-left"></i> Back to clients
+      </button>
+
+      <div class="review-header" id="reviewHeader">
+        <div class="site-icon"><i class="ti ti-world"></i></div>
+        <div>
+          <div class="site-name" id="reviewSiteName">—</div>
+          <div class="site-meta" id="reviewSiteMeta">—</div>
+        </div>
+      </div>
+
+      <!-- Review sub-tabs -->
+      <div class="review-tabs" id="reviewTabs">
+        <button class="review-tab active" data-rtab="overview" onclick="switchReviewTab('overview')">
+          <i class="ti ti-chart-pie"></i> Client Overview
+        </button>
+        <button class="review-tab" data-rtab="competitors" onclick="switchReviewTab('competitors')">
+          <i class="ti ti-users-group"></i> Competitor Comparison
+        </button>
+        <button class="review-tab" data-rtab="sources" onclick="switchReviewTab('sources')">
+          <i class="ti ti-route"></i> Traffic Sources
+        </button>
+      </div>
+
+      <!-- ===== REVIEW TAB 1: CLIENT OVERVIEW ===== -->
+      <div class="review-panel active" id="rpanel-overview">
+
+        <!-- Month selector for MoM / YoY -->
+        <div class="review-filters">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Month</label>
+            <div id="reviewMonthPicker"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadReviewOverview()">
+            <i class="ti ti-refresh"></i> Update
+          </button>
+        </div>
+
+        <!-- MoM Section -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-arrows-exchange" style="color:var(--primary)"></i> Month over Month Changes</div>
+          <div class="section-subtitle" id="momSectionLabel"><i class="ti ti-calendar"></i> Select a month above to see changes</div>
+          <div id="reviewMomTable"></div>
+        </div>
+
+        <!-- YoY Section -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-calendar-stats" style="color:var(--primary)"></i> Year over Year Changes</div>
+          <div class="section-subtitle" id="yoySectionLabel"><i class="ti ti-calendar"></i> Select a month above to see changes</div>
+          <div id="reviewYoyTable"></div>
+        </div>
+
+        <!-- Raw data table -->
+        <div class="card">
+          <div class="section-title"><i class="ti ti-table" style="color:var(--primary)"></i> All Metrics Data</div>
+          <div class="review-filters" style="margin-top:12px;border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>From</label>
+              <div id="reviewDataFrom"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>To</label>
+              <div id="reviewDataTo"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="loadReviewRawData()">
+              <i class="ti ti-search"></i> Filter
+            </button>
+          </div>
+          <div id="reviewRawDataTable" style="overflow-x:auto"></div>
+        </div>
+      </div>
+
+      <!-- ===== REVIEW TAB 2: COMPETITOR COMPARISON ===== -->
+      <div class="review-panel" id="rpanel-competitors">
+
+        <div class="review-filters">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period</label>
+            <div id="reviewCompPeriod"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadReviewCompetitors()">
+            <i class="ti ti-refresh"></i> Update
+          </button>
+        </div>
+
+        <!-- Traffic & Engagement table (SimilarWeb style) -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-bar" style="color:var(--primary)"></i> Traffic & Engagement</div>
+          <div class="section-subtitle" id="compEngagementLabel"><i class="ti ti-calendar"></i> —</div>
+          <!-- Traffic bars -->
+          <div id="compTrafficBars" style="margin-bottom:20px"></div>
+          <!-- Engagement table -->
+          <div id="compEngagementTable"></div>
+        </div>
+
+        <!-- Traffic over time line chart -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-line" style="color:var(--primary)"></i> Traffic Over Time</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>From</label>
+              <div id="reviewCompTrendFrom"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>To</label>
+              <div id="reviewCompTrendTo"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>Metric</label>
+              <select id="compTrendMetric" onchange="buildCompTrendChart()">
+                <option value="monthly_visits">Monthly Visits</option>
+                <option value="unique_visitors">Unique Visitors</option>
+                <option value="page_views">Page Views</option>
+                <option value="visit_duration">Visit Duration</option>
+                <option value="pages_per_visit">Pages per Visit</option>
+                <option value="bounce_rate">Bounce Rate</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary" onclick="loadCompTrendData()">
+              <i class="ti ti-search"></i> Load
+            </button>
+          </div>
+          <div class="chart-with-legend">
+            <div class="chart-area" style="position:relative;min-height:380px">
+              <canvas id="compTrendCanvas"></canvas>
+            </div>
+            <div class="chart-legend" id="compTrendLegend"></div>
+          </div>
+        </div>
+
+        <!-- Channel traffic with tabs -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-route" style="color:var(--primary)"></i> Channel Traffic</div>
+          <div class="channel-tabs" id="channelTabs">
+            <button class="channel-tab active" data-channel="direct" onclick="switchChannel('direct')">Direct</button>
+            <button class="channel-tab" data-channel="organic_search" onclick="switchChannel('organic_search')">Organic Search</button>
+            <button class="channel-tab" data-channel="paid_search" onclick="switchChannel('paid_search')">Paid Search</button>
+            <button class="channel-tab" data-channel="display_ads" onclick="switchChannel('display_ads')">Display Ads</button>
+            <button class="channel-tab" data-channel="social" onclick="switchChannel('social')">Social</button>
+            <button class="channel-tab" data-channel="email" onclick="switchChannel('email')">Email</button>
+            <button class="channel-tab" data-channel="ai_traffic" onclick="switchChannel('ai_traffic')">AI Traffic</button>
+          </div>
+          <div class="chart-with-legend">
+            <div class="chart-area" style="position:relative;min-height:350px">
+              <canvas id="channelCanvas"></canvas>
+            </div>
+            <div class="chart-legend" id="channelLegend"></div>
+          </div>
+        </div>
+
+        <!-- AI Traffic bar comparison -->
+        <div class="card">
+          <div class="section-title"><i class="ti ti-robot" style="color:var(--primary)"></i> AI Traffic Distribution</div>
+          <div class="section-subtitle" id="aiTrafficLabel"><i class="ti ti-calendar"></i> —</div>
+          <div class="chart-with-legend">
+            <div class="chart-area" style="position:relative;min-height:300px">
+              <canvas id="aiTrafficCanvas"></canvas>
+            </div>
+            <div class="chart-legend" id="aiTrafficLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== REVIEW TAB 3: TRAFFIC SOURCES ===== -->
+      <div class="review-panel" id="rpanel-sources">
+
+        <div class="review-filters">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period</label>
+            <div id="reviewSourcesPeriod"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadReviewSources()">
+            <i class="ti ti-refresh"></i> Update
+          </button>
+        </div>
+
+        <!-- Traffic source distribution (donut chart) -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-donut" style="color:var(--primary)"></i> Traffic Source Distribution</div>
+          <div class="section-subtitle" id="sourcesDistLabel"><i class="ti ti-calendar"></i> —</div>
+          <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+            <div style="position:relative;width:300px;height:300px">
+              <canvas id="sourcesDonutCanvas"></canvas>
+            </div>
+            <div id="sourcesDonutLegend" style="flex:1;min-width:200px"></div>
+          </div>
+        </div>
+
+        <!-- Source trends over time (stacked area chart) -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-area-line" style="color:var(--primary)"></i> Source Trends Over Time</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>From</label>
+              <div id="reviewSourcesTrendFrom"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>To</label>
+              <div id="reviewSourcesTrendTo"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="loadSourcesTrend()">
+              <i class="ti ti-search"></i> Load
+            </button>
+          </div>
+          <div style="position:relative;min-height:380px">
+            <canvas id="sourcesTrendCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Source comparison table -->
+        <div class="card">
+          <div class="section-title"><i class="ti ti-table" style="color:var(--primary)"></i> Source Details</div>
+          <div id="sourcesDetailTable"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- TAB: SETTINGS -->
   <div class="tab-panel" id="tab-settings">
     <div class="card">
@@ -1561,6 +1901,7 @@ function switchTab(tabId) {
   if (tabId === 'data') { populateClientSelects(); loadPeriods(); }
   if (tabId === 'charts') { populateChartClientSelect(); loadChartPeriods(); }
   if (tabId === 'queue') { populateClientSelects(); loadQueue(); }
+  if (tabId === 'reviews') loadReviewClients();
   if (tabId === 'logs') loadLogs();
   if (tabId === 'settings') loadConfig();
 }
@@ -3147,6 +3488,784 @@ function markErrorResolved(errorId) {
     .resolveError(errorId);
 }
 
+// ===================================================================
+// ===== REVIEWS PAGE =====
+// ===================================================================
+
+var _reviewClientId = null;
+var _reviewClientSite = '';
+var _reviewData = null;       // all data for current client
+var _reviewCompData = null;   // competitor trend data cache
+var _reviewInfo = null;       // client + competitors info
+
+// Review MonthPicker references
+var mpReviewMonth, mpReviewDataFrom, mpReviewDataTo;
+var mpReviewCompPeriod, mpReviewCompTrendFrom, mpReviewCompTrendTo;
+var mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo;
+
+// Chart instances
+var _compTrendChart = null;
+var _channelChart = null;
+var _aiTrafficChart = null;
+var _sourcesDonutChart = null;
+var _sourcesTrendChart = null;
+
+var _activeChannel = 'direct';
+
+var REVIEW_METRICS = [
+  { key: 'monthly_visits', label: 'Monthly Visits', icon: 'ti-calendar-event', format: 'number' },
+  { key: 'unique_visitors', label: 'Unique Visitors', icon: 'ti-user', format: 'number' },
+  { key: 'visits_per_visitor', label: 'Visits / Unique Visitors', icon: 'ti-users', format: 'decimal' },
+  { key: 'deduplicated_audience', label: 'Deduplicated Audience', icon: 'ti-users-group', format: 'number' },
+  { key: 'page_views', label: 'Page Views', icon: 'ti-file-text', format: 'number' },
+  { key: 'visit_duration', label: 'Visit Duration', icon: 'ti-clock', format: 'duration' },
+  { key: 'pages_per_visit', label: 'Pages per Visit', icon: 'ti-files', format: 'decimal' },
+  { key: 'bounce_rate', label: 'Bounce Rate', icon: 'ti-arrow-bounce', format: 'percent' }
+];
+
+var TRAFFIC_SOURCES = [
+  { key: 'direct', label: 'Direct', color: '#3B82F6' },
+  { key: 'organic_search', label: 'Organic Search', color: '#10B981' },
+  { key: 'paid_search', label: 'Paid Search', color: '#F59E0B' },
+  { key: 'display_ads', label: 'Display Ads', color: '#8B5CF6' },
+  { key: 'social', label: 'Social', color: '#EC4899' },
+  { key: 'email', label: 'Email', color: '#06B6D4' },
+  { key: 'ai_traffic', label: 'AI Traffic', color: '#EF4444' }
+];
+
+var COMP_COLORS = ['#1E3A5F', '#F97316', '#10B981', '#EF4444', '#8B5CF6', '#EC4899', '#F59E0B', '#06B6D4'];
+
+function loadReviewClients() {
+  google.script.run
+    .withSuccessHandler(function(clients) {
+      if (!clients || !clients.length) {
+        document.getElementById('reviewClientsTable').innerHTML = '<div class="empty-state"><i class="ti ti-users-minus"></i><p>No clients found</p></div>';
+        return;
+      }
+      var html = '<div class="table-wrap"><table><thead><tr><th>Client Site</th><th>Email</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+      for (var i = 0; i < clients.length; i++) {
+        var c = clients[i];
+        html += '<tr>';
+        html += '<td><strong>' + escHtml(c.client_site) + '</strong></td>';
+        html += '<td style="color:var(--text-secondary);font-size:12px">' + escHtml(c.employee_email || '—') + '</td>';
+        html += '<td><span class="badge-status badge-' + c.client_status + '">' + escHtml(c.client_status) + '</span></td>';
+        html += '<td><button class="btn btn-primary btn-sm" onclick="openReview(\'' + c.id + '\')"><i class="ti ti-report-analytics"></i> Review</button></td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('reviewClientsTable').innerHTML = html;
+    })
+    .getClients();
+}
+
+function openReview(clientId) {
+  _reviewClientId = clientId;
+  document.getElementById('reviewClientList').style.display = 'none';
+  document.getElementById('reviewDetailPage').style.display = 'block';
+  document.getElementById('reviewDetailPage').classList.add('active');
+
+  // Load client info
+  google.script.run
+    .withSuccessHandler(function(info) {
+      _reviewInfo = info;
+      if (info.client) {
+        _reviewClientSite = info.client.client_site;
+        document.getElementById('reviewSiteName').textContent = info.client.client_site;
+        var compCount = info.competitors ? info.competitors.length : 0;
+        document.getElementById('reviewSiteMeta').textContent = info.client.employee_email + ' | ' + compCount + ' competitors | ' + info.client.client_status;
+      }
+    })
+    .getClientWithCompetitors(clientId);
+
+  // Load periods for this client
+  google.script.run
+    .withSuccessHandler(function(rawPeriods) {
+      if (!rawPeriods || !rawPeriods.length) return;
+      var periods = rawPeriods.map(function(p) { return typeof p === 'string' ? p : (p.period || String(p)); });
+      periods.sort();
+      var months = periods.map(function(p) { return p.replace('.', '-'); });
+      var allPickers = [mpReviewMonth, mpReviewDataFrom, mpReviewDataTo, mpReviewCompPeriod, mpReviewCompTrendFrom, mpReviewCompTrendTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo];
+      allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
+      var latest = periods[periods.length - 1].replace('.', '-');
+      var earliest = periods[0].replace('.', '-');
+      if (mpReviewMonth) mpReviewMonth.val(latest);
+      if (mpReviewDataFrom) mpReviewDataFrom.val(earliest);
+      if (mpReviewDataTo) mpReviewDataTo.val(latest);
+      if (mpReviewCompPeriod) mpReviewCompPeriod.val(latest);
+      if (mpReviewCompTrendFrom) mpReviewCompTrendFrom.val(earliest);
+      if (mpReviewCompTrendTo) mpReviewCompTrendTo.val(latest);
+      if (mpReviewSourcesPeriod) mpReviewSourcesPeriod.val(latest);
+      if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(earliest);
+      if (mpReviewSourcesTrendTo) mpReviewSourcesTrendTo.val(latest);
+
+      // Auto-load overview
+      loadReviewOverview();
+    })
+    .withFailureHandler(function(err) { console.error('Failed to load review periods', err); })
+    .getClientPeriods(clientId);
+}
+
+function closeReview() {
+  document.getElementById('reviewDetailPage').style.display = 'none';
+  document.getElementById('reviewDetailPage').classList.remove('active');
+  document.getElementById('reviewClientList').style.display = 'block';
+  _reviewClientId = null;
+  _reviewData = null;
+  _reviewCompData = null;
+}
+
+function switchReviewTab(tabId) {
+  document.querySelectorAll('.review-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.review-panel').forEach(function(p) { p.classList.remove('active'); });
+  var btn = document.querySelector('[data-rtab="' + tabId + '"]');
+  if (btn) btn.classList.add('active');
+  var panel = document.getElementById('rpanel-' + tabId);
+  if (panel) panel.classList.add('active');
+
+  if (tabId === 'competitors') loadReviewCompetitors();
+  if (tabId === 'sources') loadReviewSources();
+}
+
+// ===== REVIEW TAB 1: CLIENT OVERVIEW =====
+
+function loadReviewOverview() {
+  if (!_reviewClientId) return;
+  var monthVal = mpReviewMonth ? mpReviewMonth.val() : '';
+  if (!monthVal) { toast('Select a month', 'error'); return; }
+
+  var parts = monthVal.split('-');
+  var year = parseInt(parts[0]);
+  var mon = parts[1];
+  var currPeriod = year + '.' + mon;
+  var prevPeriod = (year) + '.' + String(parseInt(mon) - 1).padStart(2, '0');
+  if (parseInt(mon) === 1) { prevPeriod = (year - 1) + '.12'; }
+  var yoyPeriod = (year - 1) + '.' + mon;
+
+  // Load data for: prevMonth, currentMonth, yoyMonth
+  var periodsNeeded = [prevPeriod, currPeriod, yoyPeriod];
+  var fromP = periodsNeeded.slice().sort()[0];
+  var toP = periodsNeeded.slice().sort().pop();
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('reviewMomTable').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
+        document.getElementById('reviewYoyTable').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
+        return;
+      }
+      _reviewData = rows;
+
+      // Filter for client rows only
+      var clientRows = {};
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].site_type === 'client') clientRows[rows[i].period] = rows[i];
+      }
+
+      var currRow = clientRows[currPeriod];
+      var prevRow = clientRows[prevPeriod];
+      var yoyRow = clientRows[yoyPeriod];
+
+      // Build MoM table
+      var mName = MONTH_NAMES[parseInt(mon) - 1];
+      document.getElementById('momSectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(prevRow ? getPeriodLabel(prevPeriod) : 'previous month');
+      document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(currRow, prevRow, mName + ' ' + year, prevRow ? getPeriodLabel(prevPeriod) : 'N/A');
+
+      // Build YoY table
+      document.getElementById('yoySectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(mName + ' ' + (year - 1));
+      document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(currRow, yoyRow, mName + ' ' + year, mName + ' ' + (year - 1));
+
+      // Auto-load raw data
+      loadReviewRawData();
+    })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .getClientReviewData(_reviewClientId, fromP, toP);
+}
+
+function getPeriodLabel(period) {
+  var parts = period.split('.');
+  return MONTH_NAMES[parseInt(parts[1]) - 1] + ' ' + parts[0];
+}
+
+function buildMetricComparisonTable(currRow, prevRow, currLabel, prevLabel) {
+  var allMetrics = REVIEW_METRICS.concat(TRAFFIC_SOURCES.map(function(s) {
+    return { key: s.key, label: s.label, icon: 'ti-route', format: 'number' };
+  }));
+
+  var html = '<table class="metric-cmp-table"><thead><tr>';
+  html += '<th style="width:40%">Metric</th>';
+  html += '<th style="width:20%">' + escHtml(prevLabel) + '</th>';
+  html += '<th style="width:20%">' + escHtml(currLabel) + '</th>';
+  html += '<th style="width:20%">Change</th>';
+  html += '</tr></thead><tbody>';
+
+  for (var i = 0; i < allMetrics.length; i++) {
+    var m = allMetrics[i];
+    var currVal = currRow ? parseNumericValue(currRow[m.key]) : null;
+    var prevVal = prevRow ? parseNumericValue(prevRow[m.key]) : null;
+    var pct = calcChange(currVal, prevVal);
+
+    // For bounce_rate, lower is better
+    var isInverse = m.key === 'bounce_rate';
+
+    html += '<tr>';
+    html += '<td><span class="metric-icon"><i class="ti ' + m.icon + '"></i> ' + escHtml(m.label) + '</span></td>';
+    html += '<td>' + formatReviewValue(prevVal, m.format) + '</td>';
+    html += '<td><strong>' + formatReviewValue(currVal, m.format) + '</strong></td>';
+    html += '<td>' + renderChange(pct, isInverse) + '</td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  return html;
+}
+
+function formatReviewValue(val, format) {
+  if (val === null || val === undefined || isNaN(val)) return '<span style="color:var(--text-secondary)">N/A</span>';
+  if (format === 'duration') {
+    var h = Math.floor(val / 3600);
+    var m = Math.floor((val % 3600) / 60);
+    var s = Math.floor(val % 60);
+    return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  if (format === 'percent') return val.toFixed(2) + '%';
+  if (format === 'decimal') return val.toFixed(2);
+  return formatMetricValue(val);
+}
+
+function renderChange(pct, isInverse) {
+  if (pct === null || pct === undefined || isNaN(pct)) return '<span class="change-flat">—</span>';
+  var positive = isInverse ? pct < 0 : pct > 0;
+  var negative = isInverse ? pct > 0 : pct < 0;
+  if (Math.abs(pct) < 0.01) return '<span class="change-flat">0%</span>';
+  if (positive) return '<span class="change-up"><i class="ti ti-trending-up" style="font-size:16px"></i> +' + Math.abs(pct).toFixed(1) + '%</span>';
+  return '<span class="change-down"><i class="ti ti-trending-down" style="font-size:16px"></i> -' + Math.abs(pct).toFixed(1) + '%</span>';
+}
+
+// Raw data table
+function loadReviewRawData() {
+  if (!_reviewClientId) return;
+  var fromVal = mpReviewDataFrom ? mpReviewDataFrom.val() : '';
+  var toVal = mpReviewDataTo ? mpReviewDataTo.val() : '';
+  if (!fromVal || !toVal) return;
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('reviewRawDataTable').innerHTML = '<div class="empty-state"><p>No data</p></div>';
+        return;
+      }
+      // Filter client rows only
+      var clientRows = rows.filter(function(r) { return r.site_type === 'client'; });
+      clientRows.sort(function(a, b) { return a.period < b.period ? -1 : 1; });
+
+      var cols = ['period'].concat(REVIEW_METRICS.map(function(m) { return m.key; })).concat(TRAFFIC_SOURCES.map(function(s) { return s.key; }));
+      var labels = ['Period'].concat(REVIEW_METRICS.map(function(m) { return m.label; })).concat(TRAFFIC_SOURCES.map(function(s) { return s.label; }));
+
+      var html = '<table class="metric-cmp-table"><thead><tr>';
+      for (var h = 0; h < labels.length; h++) {
+        html += '<th style="white-space:nowrap">' + escHtml(labels[h]) + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+
+      for (var r = 0; r < clientRows.length; r++) {
+        html += '<tr>';
+        for (var c = 0; c < cols.length; c++) {
+          var val = clientRows[r][cols[c]];
+          if (cols[c] === 'period') {
+            html += '<td><strong>' + escHtml(getPeriodLabel(val)) + '</strong></td>';
+          } else {
+            html += '<td>' + formatMetricValue(parseNumericValue(val)) + '</td>';
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('reviewRawDataTable').innerHTML = html;
+    })
+    .getClientReviewData(_reviewClientId, fromVal.replace('-', '.'), toVal.replace('-', '.'));
+}
+
+// ===== REVIEW TAB 2: COMPETITOR COMPARISON =====
+
+function loadReviewCompetitors() {
+  if (!_reviewClientId) return;
+  var periodVal = mpReviewCompPeriod ? mpReviewCompPeriod.val() : '';
+  if (!periodVal) return;
+  var period = periodVal.replace('-', '.');
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('compTrafficBars').innerHTML = '<div class="empty-state"><p>No data for selected period</p></div>';
+        return;
+      }
+      _reviewCompData = rows;
+
+      // Filter for this period only
+      var periodRows = rows.filter(function(r) { return r.period === period; });
+      var label = getPeriodLabel(period);
+      document.getElementById('compEngagementLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
+      document.getElementById('aiTrafficLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
+
+      buildTrafficBars(periodRows);
+      buildEngagementTable(periodRows);
+      buildAiTrafficChart(periodRows);
+
+      // Auto-load trend
+      loadCompTrendData();
+    })
+    .getClientReviewData(_reviewClientId, period, period);
+}
+
+function buildTrafficBars(rows) {
+  // Sort: client first, then by monthly_visits desc
+  rows.sort(function(a, b) {
+    if (a.site_type === 'client') return -1;
+    if (b.site_type === 'client') return 1;
+    return (parseNumericValue(b.monthly_visits) || 0) - (parseNumericValue(a.monthly_visits) || 0);
+  });
+
+  var maxVisits = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var v = parseNumericValue(rows[i].monthly_visits) || 0;
+    if (v > maxVisits) maxVisits = v;
+  }
+
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var visits = parseNumericValue(rows[i].monthly_visits) || 0;
+    var pct = maxVisits > 0 ? (visits / maxVisits * 100) : 0;
+    var color = COMP_COLORS[i % COMP_COLORS.length];
+    var isClient = rows[i].site_type === 'client';
+
+    html += '<div class="traffic-bar-row">';
+    html += '<div class="traffic-bar-domain"><span class="domain-dot" style="background:' + color + '"></span> ' + escHtml(rows[i].site) + '</div>';
+    html += '<div class="traffic-bar-wrap"><div class="traffic-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + color + '"></div></div>';
+    html += '<div class="traffic-bar-value">' + formatMetricValue(visits) + '</div>';
+    html += '</div>';
+  }
+  document.getElementById('compTrafficBars').innerHTML = html;
+}
+
+function buildEngagementTable(rows) {
+  // Sort: client first
+  rows.sort(function(a, b) {
+    if (a.site_type === 'client') return -1;
+    if (b.site_type === 'client') return 1;
+    return a.site.localeCompare(b.site);
+  });
+
+  var allMetrics = REVIEW_METRICS;
+
+  var html = '<table class="metric-cmp-table"><thead><tr><th>Metric</th>';
+  for (var s = 0; s < rows.length; s++) {
+    var color = COMP_COLORS[s % COMP_COLORS.length];
+    html += '<th><span style="display:inline-flex;align-items:center;gap:6px"><span class="domain-dot" style="background:' + color + '"></span> ' + escHtml(rows[s].site) + '</span></th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  for (var m = 0; m < allMetrics.length; m++) {
+    var metric = allMetrics[m];
+    html += '<tr><td><span class="metric-icon"><i class="ti ' + metric.icon + '"></i> ' + escHtml(metric.label) + '</span></td>';
+
+    // Find winner (max value, or min for bounce_rate)
+    var vals = [];
+    for (var s = 0; s < rows.length; s++) {
+      vals.push(parseNumericValue(rows[s][metric.key]));
+    }
+    var isInverse = metric.key === 'bounce_rate';
+    var bestIdx = -1;
+    var bestVal = isInverse ? Infinity : -Infinity;
+    for (var s = 0; s < vals.length; s++) {
+      if (vals[s] === null || isNaN(vals[s])) continue;
+      if (isInverse ? vals[s] < bestVal : vals[s] > bestVal) { bestVal = vals[s]; bestIdx = s; }
+    }
+
+    for (var s = 0; s < rows.length; s++) {
+      var isWinner = s === bestIdx && rows.length > 1;
+      html += '<td>';
+      if (isWinner) html += '<span class="val-winner">';
+      html += formatReviewValue(vals[s], metric.format);
+      if (isWinner) html += ' <span class="trophy">&#x1F3C6;</span></span>';
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('compEngagementTable').innerHTML = html;
+}
+
+function loadCompTrendData() {
+  if (!_reviewClientId) return;
+  var fromVal = mpReviewCompTrendFrom ? mpReviewCompTrendFrom.val() : '';
+  var toVal = mpReviewCompTrendTo ? mpReviewCompTrendTo.val() : '';
+  if (!fromVal || !toVal) return;
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      _reviewCompData = rows;
+      buildCompTrendChart();
+      buildChannelChart();
+    })
+    .getClientReviewData(_reviewClientId, fromVal.replace('-', '.'), toVal.replace('-', '.'));
+}
+
+function buildCompTrendChart() {
+  var rows = _reviewCompData;
+  if (!rows || !rows.length) return;
+
+  var metricKey = document.getElementById('compTrendMetric').value;
+  var metricLabel = document.getElementById('compTrendMetric').selectedOptions[0].textContent;
+
+  // Group data: { site: [{ period, value }] }
+  var siteMap = {};
+  var periods = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (!siteMap[r.site]) siteMap[r.site] = { type: r.site_type, data: {} };
+    siteMap[r.site].data[r.period] = parseNumericValue(r[metricKey]);
+    periods[r.period] = true;
+  }
+
+  var sortedPeriods = Object.keys(periods).sort();
+  var labels = sortedPeriods.map(function(p) { return getPeriodLabel(p); });
+
+  // Sort sites: client first, then alphabetical
+  var sites = Object.keys(siteMap).sort(function(a, b) {
+    if (siteMap[a].type === 'client') return -1;
+    if (siteMap[b].type === 'client') return 1;
+    return a.localeCompare(b);
+  });
+
+  var datasets = [];
+  var legendHtml = '';
+  for (var s = 0; s < sites.length; s++) {
+    var color = COMP_COLORS[s % COMP_COLORS.length];
+    var data = sortedPeriods.map(function(p) { return siteMap[sites[s]].data[p] !== undefined ? siteMap[sites[s]].data[p] : null; });
+    var total = data.reduce(function(sum, v) { return sum + (v || 0); }, 0);
+    datasets.push({
+      label: sites[s],
+      data: data,
+      borderColor: color,
+      backgroundColor: color + '15',
+      borderWidth: siteMap[sites[s]].type === 'client' ? 3 : 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      tension: 0.3,
+      fill: false
+    });
+    legendHtml += '<div class="chart-legend-item"><span class="legend-dot" style="background:' + color + '"></span> ' + escHtml(sites[s]) + '<span class="legend-value">' + formatMetricValue(total) + '</span></div>';
+  }
+
+  document.getElementById('compTrendLegend').innerHTML = legendHtml;
+
+  if (_compTrendChart) { _compTrendChart.destroy(); _compTrendChart = null; }
+  var canvas = document.getElementById('compTrendCanvas');
+  _compTrendChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 11 }, callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } } }
+      }
+    }
+  });
+}
+
+// Channel traffic chart
+function switchChannel(channel) {
+  _activeChannel = channel;
+  document.querySelectorAll('.channel-tab').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('[data-channel="' + channel + '"]');
+  if (btn) btn.classList.add('active');
+  buildChannelChart();
+}
+
+function buildChannelChart() {
+  var rows = _reviewCompData;
+  if (!rows || !rows.length) return;
+
+  var metricKey = _activeChannel;
+  var siteMap = {};
+  var periods = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (!siteMap[r.site]) siteMap[r.site] = { type: r.site_type, data: {} };
+    siteMap[r.site].data[r.period] = parseNumericValue(r[metricKey]);
+    periods[r.period] = true;
+  }
+
+  var sortedPeriods = Object.keys(periods).sort();
+  var labels = sortedPeriods.map(function(p) { return getPeriodLabel(p); });
+
+  var sites = Object.keys(siteMap).sort(function(a, b) {
+    if (siteMap[a].type === 'client') return -1;
+    if (siteMap[b].type === 'client') return 1;
+    return a.localeCompare(b);
+  });
+
+  var datasets = [];
+  var legendHtml = '';
+  for (var s = 0; s < sites.length; s++) {
+    var color = COMP_COLORS[s % COMP_COLORS.length];
+    var data = sortedPeriods.map(function(p) { return siteMap[sites[s]].data[p] !== undefined ? siteMap[sites[s]].data[p] : null; });
+    var latest = data[data.length - 1] || 0;
+    datasets.push({
+      label: sites[s], data: data,
+      borderColor: color, backgroundColor: color + '15',
+      borderWidth: siteMap[sites[s]].type === 'client' ? 3 : 2,
+      pointRadius: 4, pointHoverRadius: 6,
+      pointBackgroundColor: color, pointBorderColor: '#fff', pointBorderWidth: 2,
+      tension: 0.3, fill: false
+    });
+    legendHtml += '<div class="chart-legend-item"><span class="legend-dot" style="background:' + color + '"></span> ' + escHtml(sites[s]) + '<span class="legend-value">' + formatMetricValue(latest) + '</span></div>';
+  }
+
+  document.getElementById('channelLegend').innerHTML = legendHtml;
+
+  if (_channelChart) { _channelChart.destroy(); _channelChart = null; }
+  var canvas = document.getElementById('channelCanvas');
+  _channelChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 11 }, callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } } }
+      }
+    }
+  });
+}
+
+// AI Traffic bar chart
+function buildAiTrafficChart(periodRows) {
+  var sorted = periodRows.slice().sort(function(a, b) {
+    if (a.site_type === 'client') return -1;
+    if (b.site_type === 'client') return 1;
+    return (parseNumericValue(b.ai_traffic) || 0) - (parseNumericValue(a.ai_traffic) || 0);
+  });
+
+  var labels = [];
+  var data = [];
+  var colors = [];
+  var legendHtml = '';
+
+  for (var i = 0; i < sorted.length; i++) {
+    var val = parseNumericValue(sorted[i].ai_traffic) || 0;
+    var color = COMP_COLORS[i % COMP_COLORS.length];
+    labels.push(sorted[i].site);
+    data.push(val);
+    colors.push(color);
+    legendHtml += '<div class="chart-legend-item"><span class="legend-dot" style="background:' + color + '"></span> ' + escHtml(sorted[i].site) + '<span class="legend-value">' + formatMetricValue(val) + '</span></div>';
+  }
+
+  document.getElementById('aiTrafficLegend').innerHTML = legendHtml;
+
+  if (_aiTrafficChart) { _aiTrafficChart.destroy(); _aiTrafficChart = null; }
+  var canvas = document.getElementById('aiTrafficCanvas');
+  _aiTrafficChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ data: data, backgroundColor: colors, borderRadius: 6, barPercentage: 0.6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return 'AI Traffic: ' + formatMetricValue(ctx.parsed.y); } } } },
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 11 } } }
+      }
+    }
+  });
+}
+
+// ===== REVIEW TAB 3: TRAFFIC SOURCES =====
+
+function loadReviewSources() {
+  if (!_reviewClientId) return;
+  var periodVal = mpReviewSourcesPeriod ? mpReviewSourcesPeriod.val() : '';
+  if (!periodVal) return;
+  var period = periodVal.replace('-', '.');
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('sourcesDonutLegend').innerHTML = '<div class="empty-state"><p>No data</p></div>';
+        return;
+      }
+
+      // Find client row for this period
+      var clientRow = null;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].site_type === 'client' && rows[i].period === period) { clientRow = rows[i]; break; }
+      }
+
+      var label = getPeriodLabel(period);
+      document.getElementById('sourcesDistLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label) + ' — ' + escHtml(_reviewClientSite);
+
+      buildSourcesDonut(clientRow);
+      buildSourcesDetailTable(rows, period);
+
+      // Auto-load trend
+      loadSourcesTrend();
+    })
+    .getClientReviewData(_reviewClientId, period, period);
+}
+
+function buildSourcesDonut(clientRow) {
+  if (!clientRow) return;
+
+  var labels = [];
+  var data = [];
+  var colors = [];
+  var legendHtml = '';
+  var total = 0;
+
+  for (var i = 0; i < TRAFFIC_SOURCES.length; i++) {
+    var val = parseNumericValue(clientRow[TRAFFIC_SOURCES[i].key]) || 0;
+    total += val;
+  }
+
+  for (var i = 0; i < TRAFFIC_SOURCES.length; i++) {
+    var val = parseNumericValue(clientRow[TRAFFIC_SOURCES[i].key]) || 0;
+    var pct = total > 0 ? (val / total * 100).toFixed(1) : '0.0';
+    labels.push(TRAFFIC_SOURCES[i].label);
+    data.push(val);
+    colors.push(TRAFFIC_SOURCES[i].color);
+    legendHtml += '<div class="chart-legend-item" style="padding:8px 0;border-bottom:1px solid var(--border)">';
+    legendHtml += '<span class="legend-dot" style="background:' + TRAFFIC_SOURCES[i].color + '"></span>';
+    legendHtml += '<span>' + escHtml(TRAFFIC_SOURCES[i].label) + '</span>';
+    legendHtml += '<span class="legend-value">' + pct + '% <span style="font-weight:400;color:var(--text-secondary);font-size:12px">(' + formatMetricValue(val) + ')</span></span>';
+    legendHtml += '</div>';
+  }
+
+  document.getElementById('sourcesDonutLegend').innerHTML = legendHtml;
+
+  if (_sourcesDonutChart) { _sourcesDonutChart.destroy(); _sourcesDonutChart = null; }
+  var canvas = document.getElementById('sourcesDonutCanvas');
+  _sourcesDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { var pct = total > 0 ? (ctx.parsed / total * 100).toFixed(1) : '0'; return ctx.label + ': ' + formatMetricValue(ctx.parsed) + ' (' + pct + '%)'; } } }
+      }
+    }
+  });
+}
+
+function loadSourcesTrend() {
+  if (!_reviewClientId) return;
+  var fromVal = mpReviewSourcesTrendFrom ? mpReviewSourcesTrendFrom.val() : '';
+  var toVal = mpReviewSourcesTrendTo ? mpReviewSourcesTrendTo.val() : '';
+  if (!fromVal || !toVal) return;
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) return;
+
+      var clientRows = rows.filter(function(r) { return r.site_type === 'client'; });
+      clientRows.sort(function(a, b) { return a.period < b.period ? -1 : 1; });
+
+      var labels = clientRows.map(function(r) { return getPeriodLabel(r.period); });
+      var datasets = [];
+
+      for (var i = 0; i < TRAFFIC_SOURCES.length; i++) {
+        var src = TRAFFIC_SOURCES[i];
+        var data = clientRows.map(function(r) { return parseNumericValue(r[src.key]) || 0; });
+        datasets.push({
+          label: src.label, data: data,
+          backgroundColor: src.color + '40', borderColor: src.color,
+          borderWidth: 2, fill: true, tension: 0.3,
+          pointRadius: 3, pointBackgroundColor: src.color
+        });
+      }
+
+      if (_sourcesTrendChart) { _sourcesTrendChart.destroy(); _sourcesTrendChart = null; }
+      var canvas = document.getElementById('sourcesTrendCanvas');
+      _sourcesTrendChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 11 } } },
+            tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } },
+            y: { beginAtZero: true, stacked: false, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'Inter', size: 11 }, callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } } }
+          }
+        }
+      });
+    })
+    .getClientReviewData(_reviewClientId, fromVal.replace('-', '.'), toVal.replace('-', '.'));
+}
+
+function buildSourcesDetailTable(rows, period) {
+  var periodRows = rows.filter(function(r) { return r.period === period; });
+  periodRows.sort(function(a, b) {
+    if (a.site_type === 'client') return -1;
+    if (b.site_type === 'client') return 1;
+    return a.site.localeCompare(b.site);
+  });
+
+  var html = '<table class="metric-cmp-table"><thead><tr><th>Source</th>';
+  for (var s = 0; s < periodRows.length; s++) {
+    var color = COMP_COLORS[s % COMP_COLORS.length];
+    html += '<th><span style="display:inline-flex;align-items:center;gap:6px"><span class="domain-dot" style="background:' + color + '"></span>' + escHtml(periodRows[s].site) + '</span></th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  for (var i = 0; i < TRAFFIC_SOURCES.length; i++) {
+    var src = TRAFFIC_SOURCES[i];
+    html += '<tr><td><span class="metric-icon"><span class="domain-dot" style="background:' + src.color + ';width:8px;height:8px"></span> ' + escHtml(src.label) + '</span></td>';
+
+    var vals = [];
+    for (var s = 0; s < periodRows.length; s++) {
+      vals.push(parseNumericValue(periodRows[s][src.key]));
+    }
+    var bestIdx = -1;
+    var bestVal = -Infinity;
+    for (var s = 0; s < vals.length; s++) {
+      if (vals[s] !== null && !isNaN(vals[s]) && vals[s] > bestVal) { bestVal = vals[s]; bestIdx = s; }
+    }
+
+    for (var s = 0; s < periodRows.length; s++) {
+      var isWinner = s === bestIdx && periodRows.length > 1;
+      html += '<td>';
+      if (isWinner) html += '<span class="val-winner">';
+      html += formatMetricValue(vals[s] || 0);
+      if (isWinner) html += ' <span class="trophy">&#x1F3C6;</span></span>';
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('sourcesDetailTable').innerHTML = html;
+}
+
 // ===== INIT =====
 (function init() {
   loadConfig();
@@ -3185,6 +4304,17 @@ function markErrorResolved(errorId) {
   mpYoyMonth = new MonthPicker(document.getElementById('yoyMonth'), {
     placeholder: 'Select month...'
   });
+
+  // Review page pickers
+  mpReviewMonth = new MonthPicker(document.getElementById('reviewMonthPicker'), { placeholder: 'Select month...' });
+  mpReviewDataFrom = new MonthPicker(document.getElementById('reviewDataFrom'), { placeholder: 'From...' });
+  mpReviewDataTo = new MonthPicker(document.getElementById('reviewDataTo'), { placeholder: 'To...' });
+  mpReviewCompPeriod = new MonthPicker(document.getElementById('reviewCompPeriod'), { placeholder: 'Select month...' });
+  mpReviewCompTrendFrom = new MonthPicker(document.getElementById('reviewCompTrendFrom'), { placeholder: 'From...' });
+  mpReviewCompTrendTo = new MonthPicker(document.getElementById('reviewCompTrendTo'), { placeholder: 'To...' });
+  mpReviewSourcesPeriod = new MonthPicker(document.getElementById('reviewSourcesPeriod'), { placeholder: 'Select month...' });
+  mpReviewSourcesTrendFrom = new MonthPicker(document.getElementById('reviewSourcesTrendFrom'), { placeholder: 'From...' });
+  mpReviewSourcesTrendTo = new MonthPicker(document.getElementById('reviewSourcesTrendTo'), { placeholder: 'To...' });
 })();
 
 // Close modal on overlay click

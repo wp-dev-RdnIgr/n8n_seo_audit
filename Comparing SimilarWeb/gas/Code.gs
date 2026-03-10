@@ -356,3 +356,26 @@ function buildFullQueue() {
 function getDashboardStats() {
   return supabaseRpc('get_dashboard_stats');
 }
+
+// ============================================
+// REVIEW PAGE
+// ============================================
+
+function getClientReviewData(clientId, periodFrom, periodTo) {
+  // Get all similarweb_data for client + competitors in date range
+  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
+  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
+  if (periodFrom && periodTo) {
+    path += '&period=gte.' + periodFrom + '&period=lte.' + periodTo;
+  }
+  return supabaseGet(path);
+}
+
+function getClientWithCompetitors(clientId) {
+  var client = supabaseGet('/rest/v1/clients?id=eq.' + clientId + '&select=id,client_site,employee_email,client_status');
+  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&select=id,competitor_site&order=competitor_site.asc');
+  return {
+    client: (client && client.length) ? client[0] : null,
+    competitors: competitors || []
+  };
+}
