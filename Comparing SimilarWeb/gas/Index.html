@@ -1474,9 +1474,18 @@
         </div>
       </div>
 
-      <!-- ===== REVIEW TAB 2: COMPETITOR COMPARISON ===== -->
+      <!-- ===== REVIEW TAB 2: COMPETITOR COMPARISON (charts moved to Traffic Sources) ===== -->
       <div class="review-panel" id="rpanel-competitors">
+        <div class="empty-state">
+          <i class="ti ti-arrow-right"></i>
+          <p>Competitor charts have been moved to the <strong>Traffic Sources</strong> tab</p>
+        </div>
+      </div>
 
+      <!-- ===== REVIEW TAB 3: TRAFFIC SOURCES ===== -->
+      <div class="review-panel" id="rpanel-sources">
+
+        <!-- Competitor comparison filters -->
         <div class="review-filters">
           <div class="form-group" style="flex:0 0 180px">
             <label>From</label>
@@ -1512,7 +1521,7 @@
           <div id="compEngagementTable"></div>
         </div>
 
-        <!-- Traffic over time line chart (same as Charts > Trend) -->
+        <!-- Traffic over time line chart -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-chart-line" style="color:var(--primary)"></i> Traffic Over Time</div>
           <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
@@ -1543,57 +1552,6 @@
           </div>
         </div>
 
-        <!-- MoM comparison (bar chart) -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="section-title"><i class="ti ti-arrows-exchange" style="color:var(--primary)"></i> Month vs Month</div>
-          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
-            <div class="form-group" style="flex:0 0 180px">
-              <label>Metric</label>
-              <select id="compMomMetric" onchange="buildCompMomChart()">
-                <option value="monthly_visits">Monthly Visits</option>
-                <option value="unique_visitors">Unique Visitors</option>
-                <option value="page_views">Page Views</option>
-                <option value="bounce_rate">Bounce Rate</option>
-                <option value="direct">Direct</option>
-                <option value="organic_search">Organic Search</option>
-              </select>
-            </div>
-          </div>
-          <div style="position:relative;min-height:400px">
-            <canvas id="compMomCanvas"></canvas>
-          </div>
-          <div id="compMomTable" style="margin-top:16px"></div>
-        </div>
-
-        <!-- YoY comparison (bar chart) -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="section-title"><i class="ti ti-calendar-stats" style="color:var(--primary)"></i> Year vs Year</div>
-          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
-            <div class="form-group" style="flex:0 0 180px">
-              <label>Month</label>
-              <div id="compYoyPicker"></div>
-            </div>
-            <div class="form-group" style="flex:0 0 180px">
-              <label>Metric</label>
-              <select id="compYoyMetric" onchange="loadCompYoyData()">
-                <option value="monthly_visits">Monthly Visits</option>
-                <option value="unique_visitors">Unique Visitors</option>
-                <option value="page_views">Page Views</option>
-                <option value="bounce_rate">Bounce Rate</option>
-                <option value="direct">Direct</option>
-                <option value="organic_search">Organic Search</option>
-              </select>
-            </div>
-            <button class="btn btn-secondary" onclick="loadCompYoyData()">
-              <i class="ti ti-refresh"></i> Apply
-            </button>
-          </div>
-          <div style="position:relative;min-height:400px">
-            <canvas id="compYoyCanvas"></canvas>
-          </div>
-          <div id="compYoyTable" style="margin-top:16px"></div>
-        </div>
-
         <!-- Channel traffic with tabs -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-route" style="color:var(--primary)"></i> Channel Traffic</div>
@@ -1615,7 +1573,7 @@
         </div>
 
         <!-- AI Traffic bar comparison -->
-        <div class="card">
+        <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-robot" style="color:var(--primary)"></i> AI Traffic Distribution</div>
           <div class="section-subtitle" id="aiTrafficLabel"><i class="ti ti-calendar"></i> —</div>
           <div class="chart-with-legend">
@@ -1625,11 +1583,8 @@
             <div class="chart-legend" id="aiTrafficLegend"></div>
           </div>
         </div>
-      </div>
 
-      <!-- ===== REVIEW TAB 3: TRAFFIC SOURCES ===== -->
-      <div class="review-panel" id="rpanel-sources">
-
+        <!-- Traffic source filters -->
         <div class="review-filters">
           <div class="form-group" style="flex:0 0 180px">
             <label>Period</label>
@@ -3608,7 +3563,7 @@ var _reviewInfo = null;       // client + competitors info
 
 // Review MonthPicker references
 var mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo;
-var mpReviewCompFrom, mpReviewCompTo, mpCompYoyPicker;
+var mpReviewCompFrom, mpReviewCompTo;
 var mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo;
 
 // Metric dropdown state
@@ -3618,8 +3573,6 @@ var _reviewMetricDropdownOpen = { mom: false, yoy: false, raw: false };
 var _compTrendChart = null;
 var _channelChart = null;
 var _aiTrafficChart = null;
-var _compMomChart = null;
-var _compYoyChart = null;
 var _sourcesDonutChart = null;
 var _sourcesTrendChart = null;
 var _compSitesDropdownOpen = false;
@@ -3698,7 +3651,7 @@ function openReview(clientId) {
       var periods = rawPeriods.map(function(p) { return typeof p === 'string' ? p : (p.period || String(p)); });
       periods.sort();
       var months = periods.map(function(p) { return p.replace('.', '-'); });
-      var allPickers = [mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo, mpReviewCompFrom, mpReviewCompTo, mpCompYoyPicker, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo];
+      var allPickers = [mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo, mpReviewCompFrom, mpReviewCompTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo];
       allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
       var latest = periods[periods.length - 1].replace('.', '-');
       var earliest = periods[0].replace('.', '-');
@@ -3708,7 +3661,6 @@ function openReview(clientId) {
       if (mpReviewDataTo) mpReviewDataTo.val(latest);
       if (mpReviewCompFrom) mpReviewCompFrom.val(earliest);
       if (mpReviewCompTo) mpReviewCompTo.val(latest);
-      if (mpCompYoyPicker) mpCompYoyPicker.val(latest);
       if (mpReviewSourcesPeriod) mpReviewSourcesPeriod.val(latest);
       if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(earliest);
       if (mpReviewSourcesTrendTo) mpReviewSourcesTrendTo.val(latest);
@@ -3740,8 +3692,7 @@ function switchReviewTab(tabId) {
   var panel = document.getElementById('rpanel-' + tabId);
   if (panel) panel.classList.add('active');
 
-  if (tabId === 'competitors') loadReviewCompetitors();
-  if (tabId === 'sources') loadReviewSources();
+  if (tabId === 'sources') { loadReviewCompetitors(); loadReviewSources(); }
 }
 
 // ===== REVIEW TAB 1: CLIENT OVERVIEW =====
@@ -4084,7 +4035,6 @@ function rebuildCompViews() {
   buildEngagementTable(siteAgg);
   buildAiTrafficChart(siteAgg);
   buildCompTrendChart();
-  buildCompMomChart();
   buildChannelChart();
 }
 
@@ -4348,162 +4298,7 @@ function buildChannelChart() {
 }
 
 // AI Traffic bar chart
-// MoM bar chart for competitor tab (compares last 2 months)
-function buildCompMomChart() {
-  var rows = _reviewCompData;
-  if (!rows || !rows.length) return;
-  var selectedSites = getSelectedCompSites();
-  var metricKey = document.getElementById('compMomMetric').value;
-  var metricLabel = document.getElementById('compMomMetric').selectedOptions[0].textContent;
-
-  var periods = {};
-  for (var i = 0; i < rows.length; i++) { if (selectedSites[rows[i].site]) periods[rows[i].period] = true; }
-  var sorted = Object.keys(periods).sort();
-  if (sorted.length < 2) {
-    document.getElementById('compMomTable').innerHTML = '<div class="empty-state"><p>Need at least 2 months of data</p></div>';
-    return;
-  }
-  var prevP = sorted[sorted.length - 2];
-  var currP = sorted[sorted.length - 1];
-
-  // Gather data per site
-  var siteData = {};
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    if (!selectedSites[r.site]) continue;
-    if (r.period !== prevP && r.period !== currP) continue;
-    if (!siteData[r.site]) siteData[r.site] = { type: r.site_type, prev: null, curr: null };
-    if (r.period === prevP) siteData[r.site].prev = parseNumericValue(r[metricKey]);
-    if (r.period === currP) siteData[r.site].curr = parseNumericValue(r[metricKey]);
-  }
-
-  var sites = Object.keys(siteData).sort(function(a, b) {
-    if (siteData[a].type === 'client') return -1;
-    if (siteData[b].type === 'client') return 1;
-    return (siteData[b].curr || 0) - (siteData[a].curr || 0);
-  });
-
-  var labels = sites;
-  var prevData = sites.map(function(s) { return siteData[s].prev; });
-  var currData = sites.map(function(s) { return siteData[s].curr; });
-
-  if (_compMomChart) { _compMomChart.destroy(); _compMomChart = null; }
-  _compMomChart = new Chart(document.getElementById('compMomCanvas'), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: getPeriodLabel(prevP), data: prevData, backgroundColor: '#CBD5E1', borderRadius: 4, barPercentage: 0.7 },
-        { label: getPeriodLabel(currP), data: currData, backgroundColor: '#3B82F6', borderRadius: 4, barPercentage: 0.7 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        title: { display: true, text: metricLabel + ': ' + getPeriodLabel(prevP) + ' vs ' + getPeriodLabel(currP), font: { family: 'Inter', size: 14, weight: '600' } },
-        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, maxRotation: 45 } },
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } } }
-      }
-    }
-  });
-
-  // Table
-  var tHtml = '<table class="cmp-table"><thead><tr><th>Site</th><th>' + escHtml(getPeriodLabel(prevP)) + '</th><th>' + escHtml(getPeriodLabel(currP)) + '</th><th>Change</th></tr></thead><tbody>';
-  for (var s = 0; s < sites.length; s++) {
-    var d = siteData[sites[s]];
-    var pct = calcChange(d.curr, d.prev);
-    var isClient = d.type === 'client';
-    tHtml += '<tr' + (isClient ? ' style="background:var(--primary-light)"' : '') + '>';
-    tHtml += '<td><strong>' + escHtml(sites[s]) + '</strong></td>';
-    tHtml += '<td>' + formatMetricValue(d.prev || 0) + '</td>';
-    tHtml += '<td><strong>' + formatMetricValue(d.curr || 0) + '</strong></td>';
-    tHtml += '<td>' + renderChange(pct, metricKey === 'bounce_rate') + '</td>';
-    tHtml += '</tr>';
-  }
-  tHtml += '</tbody></table>';
-  document.getElementById('compMomTable').innerHTML = tHtml;
-}
-
-// YoY chart for competitor tab
-function loadCompYoyData() {
-  if (!_reviewClientId) return;
-  var monthVal = mpCompYoyPicker ? mpCompYoyPicker.val() : '';
-  if (!monthVal) { toast('Select a month', 'error'); return; }
-  var parts = monthVal.split('-');
-  var year = parseInt(parts[0]);
-  var mon = parts[1];
-  var currP = year + '.' + mon;
-  var prevP = (year - 1) + '.' + mon;
-
-  google.script.run
-    .withSuccessHandler(function(rows) {
-      if (!rows || !rows.length) {
-        document.getElementById('compYoyTable').innerHTML = '<div class="empty-state"><p>No data</p></div>';
-        return;
-      }
-      var selectedSites = getSelectedCompSites();
-      var metricKey = document.getElementById('compYoyMetric').value;
-      var metricLabel = document.getElementById('compYoyMetric').selectedOptions[0].textContent;
-
-      var siteData = {};
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        if (!selectedSites[r.site]) continue;
-        if (!siteData[r.site]) siteData[r.site] = { type: r.site_type, prev: null, curr: null };
-        if (r.period === prevP) siteData[r.site].prev = parseNumericValue(r[metricKey]);
-        if (r.period === currP) siteData[r.site].curr = parseNumericValue(r[metricKey]);
-      }
-
-      var sites = Object.keys(siteData).sort(function(a, b) {
-        if (siteData[a].type === 'client') return -1;
-        if (siteData[b].type === 'client') return 1;
-        return (siteData[b].curr || 0) - (siteData[a].curr || 0);
-      });
-
-      var mName = MONTH_NAMES[parseInt(mon) - 1];
-      if (_compYoyChart) { _compYoyChart.destroy(); _compYoyChart = null; }
-      _compYoyChart = new Chart(document.getElementById('compYoyCanvas'), {
-        type: 'bar',
-        data: {
-          labels: sites,
-          datasets: [
-            { label: mName + ' ' + (year - 1), data: sites.map(function(s) { return siteData[s].prev; }), backgroundColor: '#CBD5E1', borderRadius: 4, barPercentage: 0.7 },
-            { label: mName + ' ' + year, data: sites.map(function(s) { return siteData[s].curr; }), backgroundColor: '#3B82F6', borderRadius: 4, barPercentage: 0.7 }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            title: { display: true, text: metricLabel + ': ' + mName + ' ' + (year-1) + ' vs ' + mName + ' ' + year, font: { family: 'Inter', size: 14, weight: '600' } },
-            tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + formatMetricValue(ctx.parsed.y); } } }
-          },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, maxRotation: 45 } },
-            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { if (v >= 1000000) return (v/1000000).toFixed(1)+'M'; if (v >= 1000) return (v/1000).toFixed(0)+'K'; return v; } } }
-          }
-        }
-      });
-
-      var tHtml = '<table class="cmp-table"><thead><tr><th>Site</th><th>' + escHtml(mName + ' ' + (year-1)) + '</th><th>' + escHtml(mName + ' ' + year) + '</th><th>Change</th></tr></thead><tbody>';
-      for (var s = 0; s < sites.length; s++) {
-        var d = siteData[sites[s]];
-        var pct = calcChange(d.curr, d.prev);
-        var isClient = d.type === 'client';
-        tHtml += '<tr' + (isClient ? ' style="background:var(--primary-light)"' : '') + '>';
-        tHtml += '<td><strong>' + escHtml(sites[s]) + '</strong></td>';
-        tHtml += '<td>' + (d.prev !== null ? formatMetricValue(d.prev) : 'N/A') + '</td>';
-        tHtml += '<td><strong>' + (d.curr !== null ? formatMetricValue(d.curr) : 'N/A') + '</strong></td>';
-        tHtml += '<td>' + renderChange(pct, metricKey === 'bounce_rate') + '</td>';
-        tHtml += '</tr>';
-      }
-      tHtml += '</tbody></table>';
-      document.getElementById('compYoyTable').innerHTML = tHtml;
-    })
-    .getClientReviewData(_reviewClientId, prevP, currP);
-}
+// (MoM and YoY chart functions removed — charts deleted)
 
 function buildAiTrafficChart(periodRows) {
   var sorted = periodRows.slice().sort(function(a, b) {
@@ -4763,7 +4558,6 @@ function buildSourcesDetailTable(rows, period) {
   mpReviewDataTo = new MonthPicker(document.getElementById('reviewDataTo'), { placeholder: 'To...' });
   mpReviewCompFrom = new MonthPicker(document.getElementById('reviewCompFrom'), { placeholder: 'From...' });
   mpReviewCompTo = new MonthPicker(document.getElementById('reviewCompTo'), { placeholder: 'To...' });
-  mpCompYoyPicker = new MonthPicker(document.getElementById('compYoyPicker'), { placeholder: 'Select month...' });
   mpReviewSourcesPeriod = new MonthPicker(document.getElementById('reviewSourcesPeriod'), { placeholder: 'Select month...' });
   mpReviewSourcesTrendFrom = new MonthPicker(document.getElementById('reviewSourcesTrendFrom'), { placeholder: 'From...' });
   mpReviewSourcesTrendTo = new MonthPicker(document.getElementById('reviewSourcesTrendTo'), { placeholder: 'To...' });
