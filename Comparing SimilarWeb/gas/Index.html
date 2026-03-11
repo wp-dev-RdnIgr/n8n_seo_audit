@@ -1067,8 +1067,8 @@
           <input type="text" id="newClientSite" placeholder="example.com">
         </div>
         <div class="form-group">
-          <label>Manager Email (optional)</label>
-          <input type="email" id="newClientEmail" placeholder="manager@company.com">
+          <label>Manager Contact (optional)</label>
+          <input type="text" id="newClientEmail" placeholder="email or @telegram">
         </div>
         <button class="btn btn-primary" id="addClientBtn" onclick="addClient()">
           <i class="ti ti-plus"></i> Add
@@ -2255,7 +2255,7 @@ function renderClientsTable(clients) {
     return;
   }
   var html = '<div class="table-wrap"><table><thead><tr>'
-    + '<th>Domain</th><th>Email</th><th>Status</th><th>Created</th><th>Actions</th>'
+    + '<th>Domain</th><th>Contact</th><th>Status</th><th>Created</th><th>Actions</th>'
     + '</tr></thead><tbody>';
   for (var i = 0; i < clients.length; i++) {
     var c = clients[i];
