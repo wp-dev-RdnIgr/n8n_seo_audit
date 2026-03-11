@@ -2671,9 +2671,16 @@ function openReview(clientId) {
 
       // Build metric filter checkboxes
       initReviewMetricCheckboxes();
-      // Auto-load overview
+      // Auto-load all tabs data with default dates
       applyReviewMom();
       applyReviewYoy();
+      // Pre-load Competitor Comparison tab
+      loadCCMomData();
+      loadCCYoyData();
+      loadCCSummaryData();
+      // Pre-load Traffic Sources tab
+      loadReviewCompetitors();
+      loadReviewSources();
     })
     .withFailureHandler(function(err) { console.error('Failed to load review periods', err); })
     .getClientPeriods(clientId);
@@ -2701,7 +2708,9 @@ function switchReviewTab(tabId) {
   var panel = document.getElementById('rpanel-' + tabId);
   if (panel) panel.classList.add('active');
 
-  if (tabId === 'sources') { loadReviewCompetitors(); loadReviewSources(); }
+  // Reload data only if not already loaded (pre-loaded on client open)
+  if (tabId === 'sources' && !_reviewCompData) { loadReviewCompetitors(); loadReviewSources(); }
+  if (tabId === 'competitors' && !_ccMomDataRows) { loadCCMomData(); loadCCYoyData(); loadCCSummaryData(); }
 }
 
 // ===== REVIEW TAB 1: CLIENT OVERVIEW =====
