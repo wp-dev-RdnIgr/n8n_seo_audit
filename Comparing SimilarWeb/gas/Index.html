@@ -3731,6 +3731,9 @@ var _reviewClientId = null;
 var _reviewClientSite = '';
 var _reviewData = null;       // all data for current client
 var _reviewCompData = null;   // competitor trend data cache
+var _reviewMomCache = null;   // { currRow, prevRow, currLabel, prevLabel }
+var _reviewYoyCache = null;   // { currRow, yoyRow, currLabel, yoyLabel }
+var _reviewRawCache = null;   // raw data rows cache
 var _reviewInfo = null;       // client + competitors info
 
 // Review MonthPicker references
@@ -3920,7 +3923,7 @@ function initReviewMetricCheckboxes() {
     if (!container) return;
     var html = '';
     for (var i = 0; i < allMetrics.length; i++) {
-      html += '<label class="competitor-option"><input type="checkbox" class="' + prefix + '-metric-cb" value="' + allMetrics[i].key + '" checked onchange="updateReviewMetricLabel(\'' + prefix + '\')"> ' + escHtml(allMetrics[i].label) + '</label>';
+      html += '<label class="competitor-option"><input type="checkbox" class="' + prefix + '-metric-cb" value="' + allMetrics[i].key + '" checked onchange="updateReviewMetricLabel(\'' + prefix + '\'); rebuildReviewByPrefix(\'' + prefix + '\')"> ' + escHtml(allMetrics[i].label) + '</label>';
     }
     container.innerHTML = html;
     updateReviewMetricLabel(prefix);
@@ -3938,6 +3941,7 @@ function toggleAllReviewMetrics(prefix, checked) {
   var cbs = document.querySelectorAll('.' + prefix + '-metric-cb');
   for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
   updateReviewMetricLabel(prefix);
+  rebuildReviewByPrefix(prefix);
 }
 
 function updateReviewMetricLabel(prefix) {
@@ -3969,6 +3973,12 @@ document.addEventListener('click', function() {
   });
 });
 
+function rebuildReviewByPrefix(prefix) {
+  if (prefix === 'mom') rebuildReviewMom();
+  else if (prefix === 'yoy') rebuildReviewYoy();
+  else if (prefix === 'raw') rebuildReviewRaw();
+}
+
 // --- MoM Apply ---
 function applyReviewMom() {
   if (!_reviewClientId) return;
@@ -3998,11 +4008,20 @@ function applyReviewMom() {
       var currRow = clientRows[currPeriod];
       var prevRow = clientRows[prevPeriod];
       var mName = MONTH_NAMES[parseInt(mon) - 1];
-      document.getElementById('momSectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(prevRow ? getPeriodLabel(prevPeriod) : 'previous month');
-      document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(currRow, prevRow, mName + ' ' + year, prevRow ? getPeriodLabel(prevPeriod) : 'N/A', 'mom');
+      var currLabel = mName + ' ' + year;
+      var prevLabel = prevRow ? getPeriodLabel(prevPeriod) : 'N/A';
+      _reviewMomCache = { currRow: currRow, prevRow: prevRow, currLabel: currLabel, prevLabel: prevLabel };
+      document.getElementById('momSectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(currLabel) + ' vs ' + escHtml(prevRow ? getPeriodLabel(prevPeriod) : 'previous month');
+      document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(currRow, prevRow, currLabel, prevLabel, 'mom');
     })
     .withFailureHandler(function(err) { toast(err.message, 'error'); })
     .getClientReviewData(_reviewClientId, fromP, toP);
+}
+
+function rebuildReviewMom() {
+  if (!_reviewMomCache) return;
+  var c = _reviewMomCache;
+  document.getElementById('reviewMomTable').innerHTML = buildMetricComparisonTable(c.currRow, c.prevRow, c.currLabel, c.prevLabel, 'mom');
 }
 
 // --- YoY Apply ---
@@ -4033,11 +4052,20 @@ function applyReviewYoy() {
       var currRow = clientRows[currPeriod];
       var yoyRow = clientRows[yoyPeriod];
       var mName = MONTH_NAMES[parseInt(mon) - 1];
-      document.getElementById('yoySectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(mName + ' ' + year) + ' vs ' + escHtml(mName + ' ' + (year - 1));
-      document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(currRow, yoyRow, mName + ' ' + year, mName + ' ' + (year - 1), 'yoy');
+      var currLabel = mName + ' ' + year;
+      var yoyLabel = mName + ' ' + (year - 1);
+      _reviewYoyCache = { currRow: currRow, yoyRow: yoyRow, currLabel: currLabel, yoyLabel: yoyLabel };
+      document.getElementById('yoySectionLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(currLabel) + ' vs ' + escHtml(yoyLabel);
+      document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(currRow, yoyRow, currLabel, yoyLabel, 'yoy');
     })
     .withFailureHandler(function(err) { toast(err.message, 'error'); })
     .getClientReviewData(_reviewClientId, fromP, toP);
+}
+
+function rebuildReviewYoy() {
+  if (!_reviewYoyCache) return;
+  var c = _reviewYoyCache;
+  document.getElementById('reviewYoyTable').innerHTML = buildMetricComparisonTable(c.currRow, c.yoyRow, c.currLabel, c.yoyLabel, 'yoy');
 }
 
 function getPeriodLabel(period) {
@@ -4121,36 +4149,41 @@ function loadReviewRawData() {
       }
       var clientRows = rows.filter(function(r) { return r.site_type === 'client'; });
       clientRows.sort(function(a, b) { return a.period < b.period ? -1 : 1; });
-
-      var allMetrics = getAllReviewMetrics();
-      var selectedKeys = getSelectedReviewMetrics('raw');
-
-      var filteredMetrics = allMetrics.filter(function(m) { return selectedKeys[m.key]; });
-      var cols = ['period'].concat(filteredMetrics.map(function(m) { return m.key; }));
-      var labels = ['Period'].concat(filteredMetrics.map(function(m) { return m.label; }));
-
-      var html = '<table class="metric-cmp-table"><thead><tr>';
-      for (var h = 0; h < labels.length; h++) {
-        html += '<th style="white-space:nowrap">' + escHtml(labels[h]) + '</th>';
-      }
-      html += '</tr></thead><tbody>';
-
-      for (var r = 0; r < clientRows.length; r++) {
-        html += '<tr>';
-        for (var c = 0; c < cols.length; c++) {
-          var val = clientRows[r][cols[c]];
-          if (cols[c] === 'period') {
-            html += '<td><strong>' + escHtml(getPeriodLabel(val)) + '</strong></td>';
-          } else {
-            html += '<td>' + formatMetricValue(parseNumericValue(val)) + '</td>';
-          }
-        }
-        html += '</tr>';
-      }
-      html += '</tbody></table>';
-      document.getElementById('reviewRawDataTable').innerHTML = html;
+      _reviewRawCache = clientRows;
+      rebuildReviewRaw();
     })
     .getClientReviewData(_reviewClientId, fromVal.replace('-', '.'), toVal.replace('-', '.'));
+}
+
+function rebuildReviewRaw() {
+  var clientRows = _reviewRawCache;
+  if (!clientRows || !clientRows.length) return;
+
+  var allMetrics = getAllReviewMetrics();
+  var selectedKeys = getSelectedReviewMetrics('raw');
+  var filteredMetrics = allMetrics.filter(function(m) { return selectedKeys[m.key]; });
+  var cols = ['period'].concat(filteredMetrics.map(function(m) { return m.key; }));
+  var labels = ['Period'].concat(filteredMetrics.map(function(m) { return m.label; }));
+
+  var html = '<table class="metric-cmp-table"><thead><tr>';
+  for (var h = 0; h < labels.length; h++) {
+    html += '<th style="white-space:nowrap">' + escHtml(labels[h]) + '</th>';
+  }
+  html += '</tr></thead><tbody>';
+  for (var r = 0; r < clientRows.length; r++) {
+    html += '<tr>';
+    for (var c = 0; c < cols.length; c++) {
+      var val = clientRows[r][cols[c]];
+      if (cols[c] === 'period') {
+        html += '<td><strong>' + escHtml(getPeriodLabel(val)) + '</strong></td>';
+      } else {
+        html += '<td>' + formatMetricValue(parseNumericValue(val)) + '</td>';
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('reviewRawDataTable').innerHTML = html;
 }
 
 // ===== REVIEW TAB 2: COMPETITOR COMPARISON =====
@@ -4165,6 +4198,7 @@ function toggleAllCompSites(checked) {
   var cbs = document.querySelectorAll('.comp-site-cb');
   for (var i = 0; i < cbs.length; i++) cbs[i].checked = checked;
   updateCompSitesLabel();
+  rebuildCompViews();
 }
 function updateCompSitesLabel() {
   var cbs = document.querySelectorAll('.comp-site-cb');
@@ -4190,7 +4224,7 @@ function populateCompSitesDropdown(rows) {
   var html = '';
   for (var s = 0; s < sorted.length; s++) {
     var isClient = sites[sorted[s]] === 'client';
-    html += '<label class="competitor-option"><input type="checkbox" class="comp-site-cb" value="' + escHtml(sorted[s]) + '" checked onchange="updateCompSitesLabel()"> ' + escHtml(sorted[s]) + (isClient ? ' (client)' : '') + '</label>';
+    html += '<label class="competitor-option"><input type="checkbox" class="comp-site-cb" value="' + escHtml(sorted[s]) + '" checked onchange="updateCompSitesLabel(); rebuildCompViews()"> ' + escHtml(sorted[s]) + (isClient ? ' (client)' : '') + '</label>';
   }
   document.getElementById('compSitesCheckboxes').innerHTML = html;
   document.getElementById('compSitesSelectAll').checked = true;
@@ -4599,6 +4633,7 @@ function toggleAllCCSummaryComp(checked) {
   var boxes = document.querySelectorAll('#ccSummaryCompCheckboxes input[type="checkbox"]');
   boxes.forEach(function(cb) { cb.checked = checked; });
   updateCCSummaryCompLabel();
+  buildCCSummaryTable();
 }
 
 function updateCCSummaryCompLabel() {
@@ -4615,7 +4650,7 @@ function populateCCSummaryCompCheckboxes(sites) {
   var container = document.getElementById('ccSummaryCompCheckboxes');
   var html = '';
   for (var i = 0; i < sites.length; i++) {
-    html += '<label class="competitor-option"><input type="checkbox" checked value="' + escHtml(sites[i]) + '" onchange="updateCCSummaryCompLabel()"> ' + escHtml(sites[i]) + '</label>';
+    html += '<label class="competitor-option"><input type="checkbox" checked value="' + escHtml(sites[i]) + '" onchange="updateCCSummaryCompLabel(); buildCCSummaryTable()"> ' + escHtml(sites[i]) + '</label>';
   }
   container.innerHTML = html;
   updateCCSummaryCompLabel();
