@@ -685,15 +685,111 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ===== LOADING ===== */
-    .loading-overlay {
+    /* ===== MODERN PRELOADER ===== */
+    .preloader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      gap: 16px;
+    }
+    .preloader-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .preloader-dots span {
+      width: 10px; height: 10px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: preloaderBounce 1.4s ease-in-out infinite both;
+    }
+    .preloader-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .preloader-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .preloader-dots span:nth-child(3) { animation-delay: 0s; }
+    @keyframes preloaderBounce {
+      0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    .preloader-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .preloader-bar {
+      width: 120px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .preloader-bar::after {
+      content: '';
+      display: block;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #818CF8);
+      border-radius: 3px;
+      animation: preloaderSlide 1.2s ease-in-out infinite;
+    }
+    @keyframes preloaderSlide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    /* ===== CONFIRM MODAL ===== */
+    .confirm-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 300;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
+      padding: 24px;
+      animation: confirmFadeIn 0.15s ease-out;
+    }
+    @keyframes confirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .confirm-box {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: confirmSlideIn 0.2s ease-out;
+      text-align: center;
+    }
+    @keyframes confirmSlideIn { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .confirm-icon {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: #FEF2F2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .confirm-icon i { font-size: 24px; color: var(--error); }
+    .confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .confirm-text { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+    .confirm-actions .btn { min-width: 100px; }
+    .btn-danger { background: var(--error); color: #fff; border: none; }
+    .btn-danger:hover { background: #DC2626; }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
       color: var(--text-secondary);
-      font-size: 14px;
-      gap: 10px;
+      font-size: 13px;
+      gap: 16px;
     }
 
     /* ===== EXPAND ROW ===== */
@@ -1050,7 +1146,7 @@
         <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
       </div>
       <div id="dashboardClientsTable">
-        <div class="empty-state"><i class="ti ti-loader"></i><p>Loading clients...</p></div>
+        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1082,7 +1178,7 @@
         <button class="btn btn-sm btn-secondary" onclick="loadClients()"><i class="ti ti-refresh"></i> Refresh</button>
       </div>
       <div id="clientsTableWrap">
-        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading clients...</div>
+        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1375,7 +1471,7 @@
         </div>
       </div>
       <div id="queueTableWrap">
-        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading queue...</div>
+        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading queue...</div></div>
       </div>
     </div>
   </div>
@@ -1395,7 +1491,7 @@
         </div>
       </div>
       <div id="logsTableWrap">
-        <div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>
+        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading logs...</div></div>
       </div>
     </div>
   </div>
@@ -1409,7 +1505,7 @@
           <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
         </div>
         <div id="reviewClientsTable">
-          <div class="empty-state"><i class="ti ti-loader"></i><p>Loading clients...</p></div>
+          <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
         </div>
       </div>
     </div>
@@ -1872,10 +1968,47 @@
   </div>
 </div>
 
+<!-- ===== CONFIRM DIALOG ===== -->
+<div id="confirmDialog" class="confirm-overlay" style="display:none"></div>
+
 <!-- ===== TOAST ===== -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+
+// ===== PRELOADER HELPER =====
+function showPreloader(containerId, text) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var safeText = text ? text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+  el.innerHTML = '<div class="preloader">'
+    + '<div class="preloader-dots"><span></span><span></span><span></span></div>'
+    + '<div class="preloader-bar"></div>'
+    + (safeText ? '<div class="preloader-text">' + safeText + '</div>' : '')
+    + '</div>';
+}
+
+// ===== CONFIRM DIALOG =====
+function _esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+function showConfirm(opts) {
+  var overlay = document.getElementById('confirmDialog');
+  overlay.innerHTML = '<div class="confirm-box">'
+    + '<div class="confirm-icon"><i class="ti ' + (opts.icon || 'ti-alert-triangle') + '"></i></div>'
+    + '<div class="confirm-title">' + _esc(opts.title || 'Are you sure?') + '</div>'
+    + '<div class="confirm-text">' + (opts.message || '') + '</div>'
+    + '<div class="confirm-actions">'
+    + '<button class="btn btn-secondary" id="confirmCancelBtn">' + _esc(opts.cancelText || 'Cancel') + '</button>'
+    + '<button class="btn btn-danger" id="confirmOkBtn">' + _esc(opts.confirmText || 'Delete') + '</button>'
+    + '</div></div>';
+  overlay.style.display = 'flex';
+  document.getElementById('confirmCancelBtn').onclick = function() { overlay.style.display = 'none'; };
+  document.getElementById('confirmOkBtn').onclick = function() {
+    overlay.style.display = 'none';
+    if (opts.onConfirm) opts.onConfirm();
+  };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.style.display = 'none'; };
+}
+
 // ===== STATE =====
 var currentClientId = null;
 var clientsCache = [];
@@ -2233,7 +2366,7 @@ function updateConnectionStatus(connected) {
 // ===== CLIENTS =====
 function loadClients() {
   document.getElementById('clientsTableWrap').innerHTML =
-    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading clients...</div>';
+    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(clients) {
@@ -2306,15 +2439,22 @@ function addClient() {
 }
 
 function deleteClient(id, name) {
-  if (!confirm('Delete client "' + name + '" and all its competitors?')) return;
-
-  google.script.run
-    .withSuccessHandler(function() {
-      toast('Client deleted', 'success');
-      loadClients();
-    })
-    .withFailureHandler(function(err) { toast(err.message, 'error'); })
-    .deleteClient(id);
+  showConfirm({
+    icon: 'ti-trash',
+    title: 'Delete client?',
+    message: 'Are you sure you want to delete <strong>' + escHtml(name || 'this client') + '</strong> and all its competitors? This action cannot be undone.',
+    confirmText: 'Delete',
+    onConfirm: function() {
+      showPreloader('clientsTableWrap', 'Deleting client...');
+      google.script.run
+        .withSuccessHandler(function() {
+          toast('Client deleted', 'success');
+          loadClients();
+        })
+        .withFailureHandler(function(err) { toast(err.message, 'error'); loadClients(); })
+        .deleteClient(id);
+    }
+  });
 }
 
 // ===== COMPETITORS MODAL =====
@@ -2333,7 +2473,7 @@ function closeCompetitorModal() {
 
 function loadCompetitors(clientId) {
   document.getElementById('competitorsList').innerHTML =
-    '<div class="loading-overlay"><span class="spinner spinner-dark"></span></div>';
+    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div></div>';
 
   google.script.run
     .withSuccessHandler(function(comps) {
@@ -2346,7 +2486,7 @@ function loadCompetitors(clientId) {
       for (var i = 0; i < comps.length; i++) {
         html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border)">'
           + '<span style="font-size:13px">' + escHtml(comps[i].competitor_site) + '</span>'
-          + '<button class="btn-icon" onclick="deleteCompetitor(\'' + comps[i].id + '\')" title="Remove"><i class="ti ti-x" style="color:var(--error);font-size:14px"></i></button>'
+          + '<button class="btn-icon" onclick="deleteCompetitor(\'' + comps[i].id + '\',\'' + escHtml(comps[i].competitor_site) + '\')" title="Remove"><i class="ti ti-x" style="color:var(--error);font-size:14px"></i></button>'
           + '</div>';
       }
       wrap.innerHTML = html;
@@ -2361,6 +2501,7 @@ function loadCompetitors(clientId) {
 function addCompetitor() {
   var site = document.getElementById('newCompetitorSite').value.trim();
   if (!site || !currentClientId) { toast('Enter competitor domain', 'error'); return; }
+  showPreloader('competitorsList', 'Adding competitor...');
 
   google.script.run
     .withSuccessHandler(function(r) {
@@ -2376,14 +2517,26 @@ function addCompetitor() {
     .addCompetitor(currentClientId, site);
 }
 
-function deleteCompetitor(id) {
-  google.script.run
-    .withSuccessHandler(function() {
-      toast('Competitor removed', 'success');
-      if (currentClientId) loadCompetitors(currentClientId);
-    })
-    .withFailureHandler(function(err) { toast(err.message, 'error'); })
-    .deleteCompetitor(id);
+function deleteCompetitor(id, name) {
+  showConfirm({
+    icon: 'ti-trash',
+    title: 'Delete competitor?',
+    message: 'Are you sure you want to remove <strong>' + escHtml(name || 'this competitor') + '</strong>? This action cannot be undone.',
+    confirmText: 'Delete',
+    onConfirm: function() {
+      showPreloader('competitorsList', 'Removing competitor...');
+      google.script.run
+        .withSuccessHandler(function() {
+          toast('Competitor removed', 'success');
+          if (currentClientId) loadCompetitors(currentClientId);
+        })
+        .withFailureHandler(function(err) {
+          toast(err.message, 'error');
+          if (currentClientId) loadCompetitors(currentClientId);
+        })
+        .deleteCompetitor(id);
+    }
+  });
 }
 
 // ===== SELECTS =====
@@ -2514,7 +2667,7 @@ function loadDataForClient() {
   }
 
   document.getElementById('dataTableWrap').innerHTML =
-    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading data...</div>';
+    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3005,9 +3158,13 @@ function loadChartsData() {
 
   // Show loading in active sub-panel
   document.getElementById('chartsEmptyState').style.display = 'none';
+  document.getElementById('chartWrap').insertAdjacentHTML('afterbegin',
+    '<div id="chartPreloader" style="position:absolute;inset:0;z-index:10;background:var(--surface);border-radius:var(--radius-sm)">'
+    + '<div class="preloader" style="height:100%"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading chart data...</div></div></div>');
 
   google.script.run
     .withSuccessHandler(function(rows) {
+      var cp = document.getElementById('chartPreloader'); if (cp) cp.remove();
       _chartsDataRows = rows;
       window._lastDataRows = rows;
       if (rows && rows.length) {
@@ -3044,6 +3201,7 @@ function loadChartsData() {
       }
     })
     .withFailureHandler(function(err) {
+      var cp = document.getElementById('chartPreloader'); if (cp) cp.remove();
       toast(err.message, 'error');
     })
     .getSimilarwebData(clientId, periodFrom || null, periodTo || null);
@@ -3509,7 +3667,7 @@ function buildYoyChart() {
 function loadQueue() {
   var status = document.getElementById('queueStatusFilter').value;
   document.getElementById('queueTableWrap').innerHTML =
-    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading queue...</div>';
+    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading queue...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(tasks) { renderQueueTable(tasks); })
@@ -3593,18 +3751,27 @@ function createTasks() {
 }
 
 function retryTask(queueId) {
+  showPreloader('queueTableWrap', 'Re-queuing task...');
   google.script.run
     .withSuccessHandler(function() { toast('Task re-queued', 'success'); loadQueue(); })
-    .withFailureHandler(function(err) { toast(err.message, 'error'); })
+    .withFailureHandler(function(err) { toast(err.message, 'error'); loadQueue(); })
     .retryTask(queueId);
 }
 
 function deleteTask(id) {
-  if (!confirm('Delete this task?')) return;
-  google.script.run
-    .withSuccessHandler(function() { toast('Task deleted', 'success'); loadQueue(); })
-    .withFailureHandler(function(err) { toast(err.message, 'error'); })
-    .deleteTask(id);
+  showConfirm({
+    icon: 'ti-trash',
+    title: 'Delete task?',
+    message: 'Are you sure you want to delete this task?',
+    confirmText: 'Delete',
+    onConfirm: function() {
+      showPreloader('queueTableWrap', 'Deleting task...');
+      google.script.run
+        .withSuccessHandler(function() { toast('Task deleted', 'success'); loadQueue(); })
+        .withFailureHandler(function(err) { toast(err.message, 'error'); loadQueue(); })
+        .deleteTask(id);
+    }
+  });
 }
 
 // ===== BUILD QUEUE =====
@@ -3640,7 +3807,7 @@ function buildQueue() {
 function loadLogs() {
   var filter = document.getElementById('logsFilter').value;
   document.getElementById('logsTableWrap').innerHTML =
-    '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading logs...</div>';
+    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading logs...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(logs) {
@@ -3693,7 +3860,16 @@ function loadLogs() {
 }
 
 function retryErrorLog(errorId) {
-  if (!confirm('Retry this task? It will be reset to pending in the queue.')) return;
+  showConfirm({
+    icon: 'ti-refresh',
+    title: 'Retry task?',
+    message: 'This task will be reset to pending in the queue.',
+    confirmText: 'Retry',
+    onConfirm: function() { _doRetryError(errorId); }
+  });
+}
+function _doRetryError(errorId) {
+  showPreloader('logsTableWrap', 'Retrying task...');
   google.script.run
     .withSuccessHandler(function(result) {
       if (result.success) {
@@ -3994,6 +4170,7 @@ function applyReviewMom() {
 
   var fromP = prevPeriod < currPeriod ? prevPeriod : currPeriod;
   var toP = prevPeriod < currPeriod ? currPeriod : prevPeriod;
+  showPreloader('reviewMomTable', 'Loading MoM data...');
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4038,6 +4215,7 @@ function applyReviewYoy() {
 
   var fromP = yoyPeriod;
   var toP = currPeriod;
+  showPreloader('reviewYoyTable', 'Loading YoY data...');
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4140,6 +4318,7 @@ function loadReviewRawData() {
   var fromVal = mpReviewDataFrom ? mpReviewDataFrom.val() : '';
   var toVal = mpReviewDataTo ? mpReviewDataTo.val() : '';
   if (!fromVal || !toVal) return;
+  showPreloader('reviewRawDataTable', 'Loading data...');
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4255,7 +4434,7 @@ function loadCCMomData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccMomTableWrap').innerHTML = '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading data...</div>';
+  document.getElementById('ccMomTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4448,7 +4627,7 @@ function loadCCYoyData() {
   var currentPeriod = year + '.' + month;
   var prevPeriod = prevYear + '.' + month;
 
-  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading data...</div>';
+  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4677,7 +4856,7 @@ function loadCCSummaryData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="loading-overlay"><span class="spinner spinner-dark"></span> Loading data...</div>';
+  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4830,6 +5009,7 @@ function loadReviewCompetitors() {
   if (!fromVal || !toVal) { toast('Select date range', 'error'); return; }
   var periodFrom = fromVal.replace('-', '.');
   var periodTo = toVal.replace('-', '.');
+  showPreloader('compTrafficBars', 'Loading competitor data...');
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -5178,6 +5358,7 @@ function loadReviewSources() {
   var periodVal = mpReviewSourcesPeriod ? mpReviewSourcesPeriod.val() : '';
   if (!periodVal) return;
   var period = periodVal.replace('-', '.');
+  showPreloader('sourcesDonutLegend', 'Loading sources...');
 
   google.script.run
     .withSuccessHandler(function(rows) {
