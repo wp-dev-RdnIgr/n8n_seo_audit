@@ -1,4 +1,5 @@
 {
+  "name": "Comparing SimilarWeb - supa base",
   "nodes": [
     {
       "parameters": {
@@ -96,7 +97,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Проверка полноты данных за последние 13 месяцев\n// ОПТИМИЗАЦИЯ: Разбиваем конкурентов на группы по 5 сайтов (ограничение SimilarWeb)\n// v3: Проверяем ВСЕ записи в очереди (любой статус) для предотвращения дубликатов\nconst competitors = $('Читаем всех конкурентов').all();\n\n// Читаем существующую очередь чтобы не дублировать задачи\nlet existingQueue = [];\ntry {\n  existingQueue = $('Читаем очередь (проверка)').all();\n} catch (e) {\n  // Очередь может быть пустой\n}\n\n// Максимум сайтов в одном запросе SimilarWeb (клиент + 4 конкурента)\nconst MAX_SITES_PER_REQUEST = 5;\n\n// Функция нормализации домена (убираем https://, www., trailing slash)\nfunction normalizeDomain(url) {\n  if (!url) return '';\n  return url\n    .replace(/^https?:\\/\\//i, '')\n    .replace(/^www\\./i, '')\n    .replace(/\\/+$/, '')\n    .toLowerCase()\n    .trim();\n}\n\n// Генерируем список последних 13 месяцев (прошлый месяц + 12 назад)\n// SimilarWeb теперь отдаёт данные уже за прошлый месяц\nfunction getLast13Months() {\n  const months = [];\n  const now = new Date();\n  \n  // Начинаем с прошлого месяца (i=1) и берём 13 месяцев\n  for (let i = 1; i <= 13; i++) {\n    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);\n    const year = d.getFullYear();\n    const month = String(d.getMonth() + 1).padStart(2, '0');\n    months.push(`${year}.${month}`);\n  }\n  \n  return months;\n}\n\nconst last10Months = getLast13Months();\n\n// Группируем конкурентов по клиентам (с нормализацией доменов)\nconst clientCompetitors = new Map();\n\ncompetitors.forEach(row => {\n  const client = normalizeDomain(row.json.client_site);\n  const competitor = normalizeDomain(row.json.competitors_site);\n  \n  if (client && competitor) {\n    if (!clientCompetitors.has(client)) {\n      clientCompetitors.set(client, []);\n    }\n    if (!clientCompetitors.get(client).includes(competitor)) {\n      clientCompetitors.get(client).push(competitor);\n    }\n  }\n});\n\n// v3: Собираем ВСЕ существующие задачи в очереди (любой статус)\n// Это предотвращает создание дубликатов для уже выполненных задач\nconst existingQueueKeys = new Set();\nexistingQueue.forEach(row => {\n  // Учитываем ВСЕ записи независимо от статуса\n  const key = `${row.json.client_site}_${row.json.period}_${row.json.sites_list}`;\n  existingQueueKeys.add(key);\n});\n\n// Функция для разбиения массива на чанки\nfunction chunkArray(array, chunkSize) {\n  const chunks = [];\n  for (let i = 0; i < array.length; i += chunkSize) {\n    chunks.push(array.slice(i, i + chunkSize));\n  }\n  return chunks;\n}\n\n// Создаём задачи с разбиением на группы\nconst queueTasks = [];\n\nclientCompetitors.forEach((competitorsList, clientSite) => {\n  const competitorChunks = chunkArray(competitorsList, MAX_SITES_PER_REQUEST - 1);\n  \n  competitorChunks.forEach((chunk, chunkIndex) => {\n    last10Months.forEach((period, periodIndex) => {\n      const sitesInRequest = [clientSite, ...chunk];\n      const sitesList = sitesInRequest.join(',');\n      \n      // Проверяем, есть ли уже такая задача в очереди (любой статус)\n      const queueKey = `${clientSite}_${period}_${sitesList}`;\n      if (existingQueueKeys.has(queueKey)) {\n        return; // Пропускаем - задача уже существует\n      }\n      \n      // Создаём новую задачу\n      const taskId = `${clientSite}_${period}_chunk${chunkIndex}_${Date.now()}`;\n      \n      queueTasks.push({\n        queue_id: taskId,\n        client_site: clientSite,\n        sites_list: sitesList,\n        chunk_index: chunkIndex,\n        total_chunks: competitorChunks.length,\n        period: period,\n        status: 'pending',\n        priority: periodIndex,\n        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),\n        task_id: '',\n        error_message: ''\n      });\n    });\n  });\n});\n\nqueueTasks.sort((a, b) => b.priority - a.priority);\n\nconst summary = {\n  totalClients: clientCompetitors.size,\n  totalTasks: queueTasks.length,\n  skippedExisting: existingQueueKeys.size,\n  periods: last10Months,\n  maxSitesPerRequest: MAX_SITES_PER_REQUEST\n};\n\nconsole.log('Queue tasks summary:', summary);\n\nif (queueTasks.length === 0) {\n  return [{ json: { noNewTasks: true, summary } }];\n}\n\nreturn queueTasks.map(task => ({ json: task }));"
+        "jsCode": "// Проверка полноты данных за последние 13 месяцев\n// v4: Проверяем очередь + существующие данные в similarweb_data\nconst competitors = $('Читаем всех конкурентов').all();\n\nlet existingQueue = [];\ntry {\n  existingQueue = $('Читаем очередь (проверка)').all();\n} catch (e) {}\n\nlet existingSwData = [];\ntry {\n  existingSwData = $('Читаем существующие данные').all();\n} catch (e) {}\n\nconst MAX_SITES_PER_REQUEST = 5;\n\nfunction normalizeDomain(url) {\n  if (!url) return '';\n  return url.replace(/^https?:\\/\\//i, '').replace(/^www\\./i, '').replace(/\\/+$/, '').toLowerCase().trim();\n}\n\nfunction getLast13Months() {\n  const months = [];\n  const now = new Date();\n  for (let i = 1; i <= 13; i++) {\n    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);\n    const year = d.getFullYear();\n    const month = String(d.getMonth() + 1).padStart(2, '0');\n    months.push(`${year}.${month}`);\n  }\n  return months;\n}\n\nconst last10Months = getLast13Months();\n\nconst clientCompetitors = new Map();\ncompetitors.forEach(row => {\n  const client = normalizeDomain(row.json.client_site);\n  const competitor = normalizeDomain(row.json.competitors_site);\n  if (client && competitor) {\n    if (!clientCompetitors.has(client)) clientCompetitors.set(client, []);\n    if (!clientCompetitors.get(client).includes(competitor)) clientCompetitors.get(client).push(competitor);\n  }\n});\n\nconst existingQueueKeys = new Set();\nexistingQueue.forEach(row => {\n  const key = `${row.json.client_site}_${row.json.period}_${row.json.sites_list}`;\n  existingQueueKeys.add(key);\n});\n\n// v4: Build set of existing data keys \"site_period\"\nconst existingDataKeys = new Set();\nexistingSwData.forEach(row => {\n  const site = normalizeDomain(row.json.site);\n  const period = row.json.period;\n  if (site && period) existingDataKeys.add(`${site}_${period}`);\n});\n\nconsole.log(`Existing SW data entries: ${existingDataKeys.size}`);\n\nfunction chunkArray(array, chunkSize) {\n  const chunks = [];\n  for (let i = 0; i < array.length; i += chunkSize) chunks.push(array.slice(i, i + chunkSize));\n  return chunks;\n}\n\n// v4: Check if ALL sites in chunk already have data for this period\nfunction allSitesHaveData(sites, period) {\n  return sites.every(site => existingDataKeys.has(`${site}_${period}`));\n}\n\nconst queueTasks = [];\nlet skippedByData = 0;\nlet skippedByQueue = 0;\n\nclientCompetitors.forEach((competitorsList, clientSite) => {\n  const competitorChunks = chunkArray(competitorsList, MAX_SITES_PER_REQUEST - 1);\n  competitorChunks.forEach((chunk, chunkIndex) => {\n    last10Months.forEach((period, periodIndex) => {\n      const sitesInRequest = [clientSite, ...chunk];\n      const sitesList = sitesInRequest.join(',');\n\n      // v4: Skip if all sites already have data\n      if (allSitesHaveData(sitesInRequest, period)) {\n        skippedByData++;\n        return;\n      }\n\n      // v3: Skip if task already in queue\n      const queueKey = `${clientSite}_${period}_${sitesList}`;\n      if (existingQueueKeys.has(queueKey)) {\n        skippedByQueue++;\n        return;\n      }\n\n      const taskId = `${clientSite}_${period}_chunk${chunkIndex}_${Date.now()}`;\n      queueTasks.push({\n        queue_id: taskId,\n        client_site: clientSite,\n        sites_list: sitesList,\n        chunk_index: chunkIndex,\n        total_chunks: competitorChunks.length,\n        period: period,\n        status: 'pending',\n        priority: periodIndex,\n        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),\n        task_id: '',\n        error_message: ''\n      });\n    });\n  });\n});\n\nqueueTasks.sort((a, b) => b.priority - a.priority);\n\nconst summary = {\n  totalClients: clientCompetitors.size,\n  totalTasks: queueTasks.length,\n  skippedByExistingData: skippedByData,\n  skippedByExistingQueue: skippedByQueue,\n  periods: last10Months,\n  maxSitesPerRequest: MAX_SITES_PER_REQUEST\n};\n\nconsole.log('Queue tasks summary:', JSON.stringify(summary));\n\nif (queueTasks.length === 0) {\n  return [{ json: { noNewTasks: true, summary } }];\n}\n\nreturn queueTasks.map(task => ({ json: task }));"
       },
       "id": "ef85edbc-f878-4016-a7af-da5aa57fc71f",
       "name": "Анализ полноты данных",
@@ -931,6 +932,40 @@
       "id": "webhook-build-queue-001",
       "name": "Webhook: Build Queue",
       "webhookId": "27adbc76-58fa-4b6e-a6ea-3b6516c65712"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT site, period FROM similarweb_data WHERE client_id IN (SELECT id FROM clients WHERE deleted_at IS NULL)",
+        "options": {}
+      },
+      "id": "read-existing-sw-data",
+      "name": "Читаем существующие данные",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1856,
+        -672
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "pMaO4BlxABjfSxvT",
+          "name": "Postgres - supabase [ SimmilarWebCompair]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "merge-with-existing-data",
+      "name": "Merge: + существующие данные",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -1656,
+        -832
+      ]
     }
   ],
   "connections": {
@@ -944,6 +979,11 @@
           },
           {
             "node": "Читаем очередь (проверка)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Читаем существующие данные",
             "type": "main",
             "index": 0
           }
@@ -976,7 +1016,7 @@
       "main": [
         [
           {
-            "node": "Анализ полноты данных",
+            "node": "Merge: + существующие данные",
             "type": "main",
             "index": 0
           }
@@ -1385,11 +1425,36 @@
             "node": "Читаем очередь (проверка)",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Читаем существующие данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Читаем существующие данные": {
+      "main": [
+        [
+          {
+            "node": "Merge: + существующие данные",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge: + существующие данные": {
+      "main": [
+        [
+          {
+            "node": "Анализ полноты данных",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     }
-  },
-  "name": "Comparing SimilarWeb - supa base",
-  "id": "0CBCcR9vJbKc3kdH"
+  }
 }
