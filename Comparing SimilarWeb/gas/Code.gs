@@ -237,6 +237,15 @@ function createComparisonTasks(clientId, period) {
   var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&deleted_at=is.null&select=competitor_site');
   if (!competitors || competitors.length === 0) return { success: false, error: 'No competitors configured' };
 
+  // Check existing tasks for this client+period to avoid duplicates
+  var existingTasks = supabaseGet('/rest/v1/task_queue?client_site=eq.' + encodeURIComponent(client.client_site) + '&period=eq.' + encodeURIComponent(period) + '&select=chunk_index,status');
+  var existingChunks = {};
+  if (existingTasks && existingTasks.length > 0) {
+    for (var e = 0; e < existingTasks.length; e++) {
+      existingChunks[existingTasks[e].chunk_index] = existingTasks[e].status;
+    }
+  }
+
   // Build site list: client + all competitors
   var sites = [client.client_site];
   for (var i = 0; i < competitors.length; i++) {
@@ -251,9 +260,15 @@ function createComparisonTasks(clientId, period) {
   }
 
   var tasks = [];
+  var skipped = 0;
   for (var k = 0; k < chunks.length; k++) {
+    // Skip if task already exists (pending or done) for this chunk
+    if (existingChunks.hasOwnProperty(k)) {
+      skipped++;
+      continue;
+    }
     tasks.push({
-      queue_id: Utilities.getUuid(),
+      queue_id: client.client_site + '_' + period + '_chunk' + k,
       client_id: clientId,
       client_site: client.client_site,
       sites_list: chunks[k].join(','),
@@ -264,8 +279,12 @@ function createComparisonTasks(clientId, period) {
     });
   }
 
+  if (tasks.length === 0) {
+    return { success: true, tasksCreated: 0, skipped: skipped, message: 'All tasks already exist' };
+  }
+
   var result = supabasePost('/rest/v1/task_queue', tasks);
-  return { success: true, tasksCreated: tasks.length, data: result };
+  return { success: true, tasksCreated: tasks.length, skipped: skipped, data: result };
 }
 
 function retryTask(queueId) {
