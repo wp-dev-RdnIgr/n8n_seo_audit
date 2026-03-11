@@ -1650,7 +1650,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-var _urlClientId = <?!= JSON.stringify(urlClientId || '') ?>;
+var _urlClientId = <?!= JSON.stringify(typeof urlClientId !== 'undefined' ? urlClientId : '') ?>;
 
 // ===== PRELOADER HELPER =====
 function showPreloader(containerId, text) {
