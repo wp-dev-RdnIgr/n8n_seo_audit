@@ -756,7 +756,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "=UPDATE task_queue SET status = 'done', task_id = '{{ $json.task_id }}' WHERE queue_id = '{{ $json.queue_id }}'",
+        "query": "=UPDATE task_queue SET status = 'done', task_id = '{{ $json.task_id }}' WHERE queue_id = '{{ $json.queue_id }}' RETURNING queue_id",
         "options": {}
       },
       "id": "893956ee-a964-4d91-b717-c50457a3f8a5",
