@@ -40,7 +40,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT c.id as client_id, c.client_site, c.employee_email, array_agg(comp.competitor_site) as competitors FROM clients c LEFT JOIN competitors comp ON comp.client_id = c.id WHERE c.client_status = 'active' AND c.employee_email IS NOT NULL AND c.employee_email != '' GROUP BY c.id, c.client_site, c.employee_email",
+        "query": "SELECT c.id as client_id, c.client_site, c.employee_email, array_agg(comp.competitor_site) FILTER (WHERE comp.deleted_at IS NULL) as competitors FROM clients c LEFT JOIN competitors comp ON comp.client_id = c.id WHERE c.client_status = 'active' AND c.deleted_at IS NULL AND c.employee_email IS NOT NULL AND c.employee_email != '' GROUP BY c.id, c.client_site, c.employee_email",
         "options": {}
       },
       "id": "get-clients",
