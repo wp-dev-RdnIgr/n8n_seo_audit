@@ -693,50 +693,40 @@
       align-items: center;
       justify-content: center;
       padding: 48px 24px;
-      gap: 16px;
+      gap: 14px;
     }
-    .preloader-dots {
-      display: flex;
-      gap: 8px;
+    .preloader-logo {
+      position: relative;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: lowercase;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--border);
+      user-select: none;
     }
-    .preloader-dots span {
-      width: 10px; height: 10px;
-      background: var(--primary);
-      border-radius: 50%;
-      animation: preloaderBounce 1.4s ease-in-out infinite both;
+    .preloader-logo::after {
+      content: 'webpromo';
+      position: absolute;
+      left: 0; top: 0;
+      width: 0%;
+      overflow: hidden;
+      white-space: nowrap;
+      color: var(--primary);
+      -webkit-text-stroke: 0px;
+      animation: logoFill 2s ease-in-out infinite;
     }
-    .preloader-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .preloader-dots span:nth-child(2) { animation-delay: -0.16s; }
-    .preloader-dots span:nth-child(3) { animation-delay: 0s; }
-    @keyframes preloaderBounce {
-      0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
-      40% { transform: scale(1); opacity: 1; }
+    @keyframes logoFill {
+      0% { width: 0%; }
+      50% { width: 100%; }
+      100% { width: 0%; }
     }
     .preloader-text {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-secondary);
       font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-    .preloader-bar {
-      width: 120px;
-      height: 3px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .preloader-bar::after {
-      content: '';
-      display: block;
-      width: 40%;
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), #818CF8);
-      border-radius: 3px;
-      animation: preloaderSlide 1.2s ease-in-out infinite;
-    }
-    @keyframes preloaderSlide {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(350%); }
+      letter-spacing: 0.03em;
     }
 
     /* ===== CONFIRM MODAL ===== */
@@ -1147,7 +1137,7 @@
         <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
       </div>
       <div id="dashboardClientsTable">
-        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
+        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1179,7 +1169,7 @@
         <button class="btn btn-sm btn-secondary" onclick="loadClients()"><i class="ti ti-refresh"></i> Refresh</button>
       </div>
       <div id="clientsTableWrap">
-        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
+        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1472,7 +1462,7 @@
         </div>
       </div>
       <div id="queueTableWrap">
-        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading queue...</div></div>
+        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading queue...</div></div>
       </div>
     </div>
   </div>
@@ -1492,7 +1482,7 @@
         </div>
       </div>
       <div id="logsTableWrap">
-        <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading logs...</div></div>
+        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading logs...</div></div>
       </div>
     </div>
   </div>
@@ -1506,7 +1496,7 @@
           <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
         </div>
         <div id="reviewClientsTable">
-          <div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>
+          <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
         </div>
       </div>
     </div>
@@ -1983,8 +1973,7 @@ function showPreloader(containerId, text) {
   if (!el) return;
   var safeText = text ? text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
   el.innerHTML = '<div class="preloader">'
-    + '<div class="preloader-dots"><span></span><span></span><span></span></div>'
-    + '<div class="preloader-bar"></div>'
+    + '<div class="preloader-logo">webpromo</div>'
     + (safeText ? '<div class="preloader-text">' + safeText + '</div>' : '')
     + '</div>';
 }
@@ -2367,7 +2356,7 @@ function updateConnectionStatus(connected) {
 // ===== CLIENTS =====
 function loadClients() {
   document.getElementById('clientsTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading clients...</div></div>';
+    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(clients) {
@@ -2474,7 +2463,7 @@ function closeCompetitorModal() {
 
 function loadCompetitors(clientId) {
   document.getElementById('competitorsList').innerHTML =
-    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div></div>';
+    '<div class="preloader"><div class="preloader-logo">webpromo</div></div>';
 
   google.script.run
     .withSuccessHandler(function(comps) {
@@ -2668,7 +2657,7 @@ function loadDataForClient() {
   }
 
   document.getElementById('dataTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
+    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3161,7 +3150,7 @@ function loadChartsData() {
   document.getElementById('chartsEmptyState').style.display = 'none';
   document.getElementById('chartWrap').insertAdjacentHTML('afterbegin',
     '<div id="chartPreloader" style="position:absolute;inset:0;z-index:10;background:var(--surface);border-radius:var(--radius-sm)">'
-    + '<div class="preloader" style="height:100%"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading chart data...</div></div></div>');
+    + '<div class="preloader" style="height:100%"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading chart data...</div></div></div>');
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3668,7 +3657,7 @@ function buildYoyChart() {
 function loadQueue() {
   var status = document.getElementById('queueStatusFilter').value;
   document.getElementById('queueTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading queue...</div></div>';
+    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading queue...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(tasks) { renderQueueTable(tasks); })
@@ -3808,7 +3797,7 @@ function buildQueue() {
 function loadLogs() {
   var filter = document.getElementById('logsFilter').value;
   document.getElementById('logsTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading logs...</div></div>';
+    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading logs...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(logs) {
@@ -4435,7 +4424,7 @@ function loadCCMomData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccMomTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccMomTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4628,7 +4617,7 @@ function loadCCYoyData() {
   var currentPeriod = year + '.' + month;
   var prevPeriod = prevYear + '.' + month;
 
-  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4857,7 +4846,7 @@ function loadCCSummaryData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="preloader"><div class="preloader-dots"><span></span><span></span><span></span></div><div class="preloader-bar"></div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
