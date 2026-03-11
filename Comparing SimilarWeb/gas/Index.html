@@ -2629,6 +2629,12 @@ function openReview(clientId) {
   document.getElementById('reviewDetailPage').style.display = 'block';
   document.getElementById('reviewDetailPage').classList.add('active');
 
+  // Reset to overview tab and clear stale data from previous client
+  switchReviewTab('overview');
+  _reviewCompData = null;
+  document.getElementById('compTrafficBars').innerHTML = '';
+  document.getElementById('compEngagementTable').innerHTML = '';
+
   // Load client info
   google.script.run
     .withSuccessHandler(function(info) {
