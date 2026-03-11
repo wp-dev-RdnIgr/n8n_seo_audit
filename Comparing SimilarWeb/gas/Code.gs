@@ -3,8 +3,10 @@
 // Supabase REST API integration
 // ============================================
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+function doGet(e) {
+  var template = HtmlService.createTemplateFromFile('Index');
+  template.urlClientId = (e && e.parameter && e.parameter.clientId) ? e.parameter.clientId : '';
+  return template.evaluate()
     .setTitle('SimilarWeb Comparing')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

@@ -1650,6 +1650,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+var _urlClientId = <?!= JSON.stringify(urlClientId || '') ?>;
 
 // ===== PRELOADER HELPER =====
 function showPreloader(containerId, text) {
@@ -4167,6 +4168,13 @@ function buildSourcesDetailTable(rows, period) {
   mpCCMomMonth = new MonthPicker(document.getElementById('ccMomMonth'), { placeholder: 'Select month...' });
   mpCCYoyMonth = new MonthPicker(document.getElementById('ccYoyMonth'), { placeholder: 'Select month...' });
   mpCCSummaryMonth = new MonthPicker(document.getElementById('ccSummaryMonth'), { placeholder: 'Select month...' });
+  // Auto-open client review if clientId passed via URL parameter
+  if (_urlClientId) {
+    setTimeout(function() {
+      switchTab('reviews');
+      openReview(_urlClientId);
+    }, 500);
+  }
 })();
 
 // Close modal on overlay click
