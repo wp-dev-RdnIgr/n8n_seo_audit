@@ -123,7 +123,7 @@ function supabaseRpc(fnName, params) {
 // ============================================
 
 function getClients() {
-  return supabaseGet('/rest/v1/clients?select=id,client_site,employee_email,client_status,created_at&order=client_site.asc');
+  return supabaseGet('/rest/v1/clients?select=id,client_site,employee_email,client_status,created_at&deleted_at=is.null&order=client_site.asc');
 }
 
 function addClient(clientSite, employeeEmail) {
@@ -143,8 +143,10 @@ function updateClient(id, data) {
 }
 
 function deleteClient(id) {
-  supabaseDelete('/rest/v1/competitors?client_id=eq.' + id);
-  supabaseDelete('/rest/v1/clients?id=eq.' + id);
+  // Soft delete: set deleted_at timestamp instead of removing rows
+  var now = new Date().toISOString();
+  supabasePatch('/rest/v1/competitors?client_id=eq.' + id + '&deleted_at=is.null', { deleted_at: now });
+  supabasePatch('/rest/v1/clients?id=eq.' + id, { deleted_at: now });
   return { success: true };
 }
 
@@ -153,7 +155,7 @@ function deleteClient(id) {
 // ============================================
 
 function getCompetitors(clientId) {
-  return supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&select=*&order=competitor_site.asc');
+  return supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&deleted_at=is.null&select=*&order=competitor_site.asc');
 }
 
 function addCompetitor(clientId, competitorSite) {
@@ -167,7 +169,8 @@ function addCompetitor(clientId, competitorSite) {
 }
 
 function deleteCompetitor(id) {
-  supabaseDelete('/rest/v1/competitors?id=eq.' + id);
+  // Soft delete: set deleted_at timestamp instead of removing row
+  supabasePatch('/rest/v1/competitors?id=eq.' + id, { deleted_at: new Date().toISOString() });
   return { success: true };
 }
 
@@ -210,8 +213,8 @@ function createComparisonTasks(clientId, period) {
   if (!clients || clients.length === 0) return { success: false, error: 'Client not found' };
   var client = clients[0];
 
-  // Get competitors
-  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&select=competitor_site');
+  // Get competitors (exclude soft-deleted)
+  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&deleted_at=is.null&select=competitor_site');
   if (!competitors || competitors.length === 0) return { success: false, error: 'No competitors configured' };
 
   // Build site list: client + all competitors
@@ -372,8 +375,8 @@ function getClientReviewData(clientId, periodFrom, periodTo) {
 }
 
 function getClientWithCompetitors(clientId) {
-  var client = supabaseGet('/rest/v1/clients?id=eq.' + clientId + '&select=id,client_site,employee_email,client_status');
-  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&select=id,competitor_site&order=competitor_site.asc');
+  var client = supabaseGet('/rest/v1/clients?id=eq.' + clientId + '&deleted_at=is.null&select=id,client_site,employee_email,client_status');
+  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&deleted_at=is.null&select=id,competitor_site&order=competitor_site.asc');
   return {
     client: (client && client.length) ? client[0] : null,
     competitors: competitors || []
