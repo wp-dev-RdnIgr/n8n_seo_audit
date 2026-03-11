@@ -778,7 +778,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "=SELECT c.client_site, c.employee_email, COUNT(*) FILTER (WHERE tq.status IN ('pending', 'processing')) AS remaining, COUNT(*) AS total, COUNT(*) FILTER (WHERE tq.status = 'done') AS done FROM task_queue tq JOIN clients c ON c.id = tq.client_id WHERE tq.client_id = (SELECT client_id FROM task_queue WHERE queue_id = '{{ $json.queue_id }}' LIMIT 1) GROUP BY c.client_site, c.employee_email",
+        "query": "=SELECT c.id AS client_id, c.client_site, c.employee_email, COUNT(*) FILTER (WHERE tq.status IN ('pending', 'processing')) AS remaining, COUNT(*) AS total, COUNT(*) FILTER (WHERE tq.status = 'done') AS done FROM task_queue tq JOIN clients c ON c.id = tq.client_id WHERE tq.client_id = (SELECT client_id FROM task_queue WHERE queue_id = '{{ $json.queue_id }}' LIMIT 1) GROUP BY c.id, c.client_site, c.employee_email",
         "options": {}
       },
       "id": "check-all-done-001",
@@ -831,7 +831,7 @@
     {
       "parameters": {
         "chatId": "-5155756736",
-        "text": "=✅ <b>Все задачи клиента завершены!</b>\n\n🌐 Клиент: <b>{{ $json.client_site }}</b>\n👤 Менеджер: {{ $json.employee_email || '—' }}\n📊 Задач выполнено: {{ $json.done }} / {{ $json.total }}\n\n🎉 Данные Performance собраны полностью.",
+        "text": "=✅ <b>Все задачи клиента завершены!</b>\n\n🌐 Клиент: <b>{{ $json.client_site }}</b>\n👤 Менеджер: {{ $json.employee_email || '—' }}\n📊 Задач выполнено: {{ $json.done }} / {{ $json.total }}\n\n📋 <a href=\"{{ $vars.APP_URL }}?clientId={{ $json.client_id }}\">Открыть отчёт клиента</a>\n\n🎉 Данные Performance собраны полностью.",
         "additionalFields": {
           "parse_mode": "HTML"
         }
