@@ -86,7 +86,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = '${$json.period}'\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
+        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = '${$json.period}'\n    AND (sd.site_type = 'client' OR sd.site IN (\n      SELECT competitor_site FROM competitors\n      WHERE client_id = '${$json.client_id}' AND deleted_at IS NULL\n    ))\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
         "options": {}
       },
       "id": "get-sw-data",
@@ -104,7 +104,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = (\n      SELECT period FROM similarweb_data \n      WHERE client_id = '${$json.client_id}' \n        AND period < '${$json.period}'\n      ORDER BY period DESC LIMIT 1\n    )\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
+        "query": "={{ \n  `SELECT \n    sd.site,\n    sd.site_type,\n    sd.period,\n    sd.monthly_visits,\n    sd.unique_visitors,\n    sd.visit_duration,\n    sd.pages_per_visit,\n    sd.bounce_rate,\n    sd.direct,\n    sd.organic_search,\n    sd.paid_search,\n    sd.display_ads,\n    sd.social,\n    sd.email as email_channel,\n    sd.ai_traffic\n  FROM similarweb_data sd\n  WHERE sd.client_id = '${$json.client_id}'\n    AND sd.period = (\n      SELECT period FROM similarweb_data \n      WHERE client_id = '${$json.client_id}' \n        AND period < '${$json.period}'\n      ORDER BY period DESC LIMIT 1\n    )\n    AND (sd.site_type = 'client' OR sd.site IN (\n      SELECT competitor_site FROM competitors\n      WHERE client_id = '${$json.client_id}' AND deleted_at IS NULL\n    ))\n  ORDER BY sd.site_type ASC, sd.site ASC`\n}}",
         "options": {}
       },
       "id": "get-prev-data",
