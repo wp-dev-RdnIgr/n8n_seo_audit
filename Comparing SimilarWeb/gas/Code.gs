@@ -179,14 +179,32 @@ function deleteCompetitor(id) {
 // ============================================
 
 function getSimilarwebData(clientId, periodFrom, periodTo) {
+  // Get active sites (client + non-deleted competitors) to exclude soft-deleted
+  var activeSites = getActiveSitesForClient_(clientId);
+  if (!activeSites.length) return [];
+
   var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
-  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
+  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId
+    + '&site=in.(' + activeSites.map(encodeURIComponent).join(',') + ')'
+    + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
   if (periodFrom && periodTo) {
     path += '&period=gte.' + periodFrom + '&period=lte.' + periodTo;
   } else if (periodFrom) {
     path += '&period=eq.' + periodFrom;
   }
   return supabaseGet(path);
+}
+
+// Helper: returns array of active site domains for a client (client_site + non-deleted competitor_sites)
+function getActiveSitesForClient_(clientId) {
+  var clients = supabaseGet('/rest/v1/clients?id=eq.' + clientId + '&select=client_site');
+  var competitors = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&deleted_at=is.null&select=competitor_site');
+  var sites = [];
+  if (clients && clients.length) sites.push(clients[0].client_site);
+  if (competitors) {
+    for (var i = 0; i < competitors.length; i++) sites.push(competitors[i].competitor_site);
+  }
+  return sites;
 }
 
 function getAvailablePeriods() {
@@ -365,9 +383,14 @@ function getDashboardStats() {
 // ============================================
 
 function getClientReviewData(clientId, periodFrom, periodTo) {
-  // Get all similarweb_data for client + competitors in date range
+  // Get all similarweb_data for client + active (non-deleted) competitors in date range
+  var activeSites = getActiveSitesForClient_(clientId);
+  if (!activeSites.length) return [];
+
   var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
-  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
+  var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId
+    + '&site=in.(' + activeSites.map(encodeURIComponent).join(',') + ')'
+    + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
   if (periodFrom && periodTo) {
     path += '&period=gte.' + periodFrom + '&period=lte.' + periodTo;
   }
