@@ -1070,7 +1070,6 @@
     <!-- Quick actions inline -->
     <div class="dash-actions">
       <button class="btn btn-primary" onclick="switchTab('clients')"><i class="ti ti-plus"></i> Add Client</button>
-      <button class="btn btn-secondary" onclick="switchTab('data')"><i class="ti ti-chart-bar"></i> Data</button>
       <button class="btn btn-secondary" onclick="switchTab('queue')"><i class="ti ti-list-check"></i> Queue</button>
       <button class="btn btn-secondary" onclick="loadDashboard();loadReviewClients()"><i class="ti ti-refresh"></i> Refresh</button>
       <button class="btn btn-warning" id="buildQueueBtn" onclick="buildQueue()"><i class="ti ti-playlist-add"></i> Build Queue</button>
@@ -1358,7 +1357,7 @@
             <canvas id="ccMomChart"></canvas>
           </div>
           <!-- MoM Details Table -->
-          <div id="ccMomTableWrap" style="margin-top:16px">
+          <div id="ccMomTableWrap" style="margin-top:16px;overflow-x:auto">
             <div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a month and click Load to compare</p></div>
           </div>
         </div>
@@ -1400,7 +1399,7 @@
             <canvas id="ccYoyChart"></canvas>
           </div>
           <!-- YoY Details Table -->
-          <div id="ccYoyTableWrap" style="margin-top:16px">
+          <div id="ccYoyTableWrap" style="margin-top:16px;overflow-x:auto">
             <div class="empty-state"><i class="ti ti-chart-dots"></i><p>Select a month and click Load to compare</p></div>
           </div>
         </div>
@@ -1473,7 +1472,7 @@
           <div class="section-title"><i class="ti ti-chart-bar" style="color:var(--primary)"></i> Traffic & Engagement</div>
           <div class="section-subtitle" id="compEngagementLabel"><i class="ti ti-calendar"></i> —</div>
           <div id="compTrafficBars" style="margin-bottom:20px"></div>
-          <div id="compEngagementTable"></div>
+          <div id="compEngagementTable" style="overflow-x:auto"></div>
         </div>
 
         <!-- Traffic over time line chart -->
@@ -1586,7 +1585,7 @@
         <!-- Source comparison table -->
         <div class="card">
           <div class="section-title"><i class="ti ti-table" style="color:var(--primary)"></i> Source Details</div>
-          <div id="sourcesDetailTable"></div>
+          <div id="sourcesDetailTable" style="overflow-x:auto"></div>
         </div>
       </div>
 
@@ -1944,7 +1943,7 @@ function renderUpdateStatus(client) {
     }
     return '<span class="badge-status badge-done"><i class="ti ti-check"></i> Done</span>' + dateStr;
   }
-  return '<span class="badge-status badge-active">' + escHtml(client.client_status || 'active') + '</span>';
+  return '<span class="badge-status badge-pending"><i class="ti ti-clock"></i> New</span>';
 }
 
 // ===== TAB SWITCHING =====
