@@ -535,8 +535,11 @@
     .badge-done { background: var(--success-light); color: #065F46; }
     .badge-error { background: var(--error-light); color: var(--error); }
     .badge-active { background: var(--success-light); color: #065F46; }
+    .badge-updating { background: var(--primary-light); color: var(--primary); }
+    .badge-updating .ti { animation: spin 1s linear infinite; }
     .badge-client { background: var(--primary-light); color: var(--primary); }
     .badge-competitor { background: #F3F4F6; color: #6B7280; }
+    .update-meta { display: block; font-size: 10px; color: var(--text-secondary); font-weight: 400; margin-top: 2px; }
 
     /* ===== EMPTY STATE ===== */
     .empty-state {
@@ -1928,6 +1931,22 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderUpdateStatus(client) {
+  var us = client.update_status;
+  if (us === 'updating') {
+    return '<span class="badge-status badge-updating"><i class="ti ti-refresh"></i> Updating</span>';
+  }
+  if (us === 'done') {
+    var dateStr = '';
+    if (client.last_done_at) {
+      var d = new Date(client.last_done_at);
+      dateStr = '<span class="update-meta">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</span>';
+    }
+    return '<span class="badge-status badge-done"><i class="ti ti-check"></i> Done</span>' + dateStr;
+  }
+  return '<span class="badge-status badge-active">' + escHtml(client.client_status || 'active') + '</span>';
+}
+
 // ===== TAB SWITCHING =====
 document.querySelectorAll('.tab-btn').forEach(function(btn) {
   btn.addEventListener('click', function() { switchTab(btn.dataset.tab); });
@@ -2071,7 +2090,7 @@ function renderClientsTable(clients) {
     html += '<tr>'
       + '<td><strong>' + escHtml(c.client_site) + '</strong></td>'
       + '<td>' + escHtml(c.employee_email || '—') + '</td>'
-      + '<td><span class="badge-status badge-active">' + escHtml(c.client_status || 'active') + '</span></td>'
+      + '<td>' + renderUpdateStatus(c) + '</td>'
       + '<td style="color:var(--text-secondary);font-size:12px">' + date + '</td>'
       + '<td><div class="td-actions">'
       + '<button class="btn-icon" title="Manage competitors" onclick="openCompetitorModal(\'' + c.id + '\',\'' + escHtml(c.client_site) + '\')"><i class="ti ti-users-group"></i></button>'
@@ -2607,7 +2626,7 @@ function loadReviewClients() {
         html += '<tr>';
         html += '<td><strong>' + escHtml(c.client_site) + '</strong></td>';
         html += '<td style="color:var(--text-secondary);font-size:12px">' + escHtml(c.employee_email || '—') + '</td>';
-        html += '<td><span class="badge-status badge-' + c.client_status + '">' + escHtml(c.client_status) + '</span></td>';
+        html += '<td>' + renderUpdateStatus(c) + '</td>';
         html += '<td><button class="btn btn-primary btn-sm" onclick="openReview(\'' + c.id + '\')"><i class="ti ti-report-analytics"></i> Review</button></td>';
         html += '</tr>';
       }
@@ -2622,7 +2641,7 @@ function loadReviewClients() {
           dHtml += '<tr>';
           dHtml += '<td><strong>' + escHtml(c.client_site) + '</strong></td>';
           dHtml += '<td style="color:var(--text-secondary);font-size:12px">' + escHtml(c.employee_email || '—') + '</td>';
-          dHtml += '<td><span class="badge-status badge-' + c.client_status + '">' + escHtml(c.client_status) + '</span></td>';
+          dHtml += '<td>' + renderUpdateStatus(c) + '</td>';
           dHtml += '<td><button class="btn btn-primary btn-sm" onclick="openReviewFromDashboard(\'' + c.id + '\')"><i class="ti ti-report-analytics"></i> Review</button></td>';
           dHtml += '</tr>';
         }
