@@ -163,6 +163,18 @@ function getCompetitors(clientId) {
 function addCompetitor(clientId, competitorSite) {
   var site = competitorSite.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase().trim();
   if (!site || !site.includes('.')) return { success: false, error: 'Invalid domain' };
+
+  // Check if competitor already exists (including soft-deleted)
+  var existing = supabaseGet('/rest/v1/competitors?client_id=eq.' + clientId + '&competitor_site=eq.' + encodeURIComponent(site) + '&select=id,deleted_at');
+  if (existing && existing.length > 0) {
+    if (!existing[0].deleted_at) {
+      return { success: false, error: 'Competitor already exists' };
+    }
+    // Restore soft-deleted competitor
+    var restored = supabasePatch('/rest/v1/competitors?id=eq.' + existing[0].id, { deleted_at: null });
+    return { success: true, data: restored };
+  }
+
   var result = supabasePost('/rest/v1/competitors', {
     client_id: clientId,
     competitor_site: site
