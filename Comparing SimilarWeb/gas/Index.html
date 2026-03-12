@@ -1315,6 +1315,27 @@
           </div>
           <div id="reviewRawDataTable" style="overflow-x:auto"></div>
         </div>
+
+        <!-- Source trends over time (stacked area chart) — moved from Traffic Sources -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-area-line" style="color:var(--primary)"></i> Source Trends Over Time</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>From</label>
+              <div id="reviewSourcesTrendFrom"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>To</label>
+              <div id="reviewSourcesTrendTo"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="loadSourcesTrend()">
+              <i class="ti ti-search"></i> Load
+            </button>
+          </div>
+          <div style="position:relative;min-height:380px">
+            <canvas id="sourcesTrendCanvas"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- ===== REVIEW TAB 2: COMPETITOR COMPARISON ===== -->
@@ -1558,27 +1579,6 @@
               <canvas id="sourcesDonutCanvas"></canvas>
             </div>
             <div id="sourcesDonutLegend" style="flex:1;min-width:200px"></div>
-          </div>
-        </div>
-
-        <!-- Source trends over time (stacked area chart) -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="section-title"><i class="ti ti-chart-area-line" style="color:var(--primary)"></i> Source Trends Over Time</div>
-          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
-            <div class="form-group" style="flex:0 0 180px">
-              <label>From</label>
-              <div id="reviewSourcesTrendFrom"></div>
-            </div>
-            <div class="form-group" style="flex:0 0 180px">
-              <label>To</label>
-              <div id="reviewSourcesTrendTo"></div>
-            </div>
-            <button class="btn btn-secondary" onclick="loadSourcesTrend()">
-              <i class="ti ti-search"></i> Load
-            </button>
-          </div>
-          <div style="position:relative;min-height:380px">
-            <canvas id="sourcesTrendCanvas"></canvas>
           </div>
         </div>
 
