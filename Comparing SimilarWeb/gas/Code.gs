@@ -125,7 +125,36 @@ function supabaseRpc(fnName, params) {
 // ============================================
 
 function getClients() {
-  return supabaseGet('/rest/v1/clients?select=id,client_site,employee_email,client_status,created_at&deleted_at=is.null&order=client_site.asc');
+  var clients = supabaseGet('/rest/v1/clients?select=id,client_site,employee_email,client_status,created_at&deleted_at=is.null&order=client_site.asc');
+  if (!clients || !clients.length) return clients;
+
+  // Compute update_status from task_queue
+  var tasks = supabaseGet('/rest/v1/task_queue?select=client_id,status,updated_at');
+  var statusMap = {};
+  if (tasks && tasks.length) {
+    for (var i = 0; i < tasks.length; i++) {
+      var t = tasks[i];
+      if (!statusMap[t.client_id]) statusMap[t.client_id] = { pending: 0, done: 0, last_done: null };
+      var m = statusMap[t.client_id];
+      if (t.status === 'pending' || t.status === 'processing') m.pending++;
+      if (t.status === 'done') {
+        m.done++;
+        if (!m.last_done || t.updated_at > m.last_done) m.last_done = t.updated_at;
+      }
+    }
+  }
+
+  for (var j = 0; j < clients.length; j++) {
+    var s = statusMap[clients[j].id];
+    if (s) {
+      clients[j].update_status = s.pending > 0 ? 'updating' : 'done';
+      clients[j].last_done_at = s.last_done;
+    } else {
+      clients[j].update_status = null;
+      clients[j].last_done_at = null;
+    }
+  }
+  return clients;
 }
 
 function addClient(clientSite, employeeEmail) {
