@@ -2683,6 +2683,9 @@ function openReview(clientId) {
       if (mpReviewSourcesPeriod) mpReviewSourcesPeriod.val(latest);
       if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(earliest);
       if (mpReviewSourcesTrendTo) mpReviewSourcesTrendTo.val(latest);
+      if (mpCCMomMonth) mpCCMomMonth.val(latest);
+      if (mpCCYoyMonth) mpCCYoyMonth.val(latest);
+      if (mpCCSummaryMonth) mpCCSummaryMonth.val(latest);
 
       // Build metric filter checkboxes
       initReviewMetricCheckboxes();
