@@ -636,34 +636,43 @@
       align-items: center;
       justify-content: center;
       padding: 48px 24px;
-      gap: 14px;
+      gap: 16px;
     }
-    .preloader-logo {
-      position: relative;
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: lowercase;
-      color: transparent;
-      -webkit-text-stroke: 1.5px var(--border);
-      user-select: none;
+    .preloader-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 48px;
+      padding: 0 4px;
     }
-    .preloader-logo::after {
-      content: 'webpromo';
-      position: absolute;
-      left: 0; top: 0;
-      width: 0%;
-      overflow: hidden;
-      white-space: nowrap;
-      color: var(--primary);
-      -webkit-text-stroke: 0px;
-      animation: logoFill 2s ease-in-out infinite;
+    .preloader-bar {
+      width: 8px;
+      border-radius: 3px 3px 0 0;
+      background: var(--primary);
+      transform-origin: bottom;
+      animation: barRise 2.4s ease-in-out infinite;
     }
-    @keyframes logoFill {
-      0% { width: 0%; }
-      50% { width: 100%; }
-      100% { width: 0%; }
+    .preloader-bar:nth-child(1) { animation-delay: 0s; }
+    .preloader-bar:nth-child(2) { animation-delay: 0.15s; }
+    .preloader-bar:nth-child(3) { animation-delay: 0.3s; }
+    .preloader-bar:nth-child(4) { animation-delay: 0.45s; }
+    .preloader-bar:nth-child(5) { animation-delay: 0.6s; }
+    .preloader-bar:nth-child(6) { animation-delay: 0.75s; }
+    .preloader-bar:nth-child(7) { animation-delay: 0.9s; }
+    @keyframes barRise {
+      0% { height: 6px; opacity: 0.4; }
+      15% { height: var(--bar-h, 32px); opacity: 1; }
+      50% { height: var(--bar-h, 32px); opacity: 1; }
+      58% { height: 6px; opacity: 0.4; transform: scaleX(1.4) scaleY(0.3); }
+      65% { height: 10px; opacity: 0.6; transform: scaleX(1) scaleY(1); }
+      70% { height: 6px; opacity: 0.4; transform: scaleX(1.1) scaleY(0.7); }
+      75% { height: 6px; opacity: 0.4; transform: scaleX(1) scaleY(1); }
+      100% { height: 6px; opacity: 0.4; }
+    }
+    .preloader-axis {
+      width: 76px;
+      height: 1px;
+      background: var(--border);
     }
     .preloader-text {
       font-size: 12px;
@@ -1070,7 +1079,7 @@
         <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
       </div>
       <div id="dashboardClientsTable">
-        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
+        <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1102,7 +1111,7 @@
         <button class="btn btn-sm btn-secondary" onclick="loadClients()"><i class="ti ti-refresh"></i> Refresh</button>
       </div>
       <div id="clientsTableWrap">
-        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
+        <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading clients...</div></div>
       </div>
     </div>
   </div>
@@ -1146,7 +1155,7 @@
         </div>
       </div>
       <div id="queueTableWrap">
-        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading queue...</div></div>
+        <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading queue...</div></div>
       </div>
     </div>
   </div>
@@ -1166,7 +1175,7 @@
         </div>
       </div>
       <div id="logsTableWrap">
-        <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading logs...</div></div>
+        <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading logs...</div></div>
       </div>
     </div>
   </div>
@@ -1180,7 +1189,7 @@
           <div class="card-title"><i class="ti ti-report-analytics"></i> Client Reviews</div>
         </div>
         <div id="reviewClientsTable">
-          <div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>
+          <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading clients...</div></div>
         </div>
       </div>
     </div>
@@ -1657,8 +1666,14 @@ function showPreloader(containerId, text) {
   var el = document.getElementById(containerId);
   if (!el) return;
   var safeText = text ? text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+  var heights = [28, 40, 20, 48, 34, 24, 42];
+  var bars = '';
+  for (var i = 0; i < heights.length; i++) {
+    bars += '<div class="preloader-bar" style="--bar-h:' + heights[i] + 'px"></div>';
+  }
   el.innerHTML = '<div class="preloader">'
-    + '<div class="preloader-logo">webpromo</div>'
+    + '<div class="preloader-chart">' + bars + '</div>'
+    + '<div class="preloader-axis"></div>'
     + (safeText ? '<div class="preloader-text">' + safeText + '</div>' : '')
     + '</div>';
 }
@@ -2026,7 +2041,7 @@ function updateConnectionStatus(connected) {
 // ===== CLIENTS =====
 function loadClients() {
   document.getElementById('clientsTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading clients...</div></div>';
+    '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading clients...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(clients) {
@@ -2133,7 +2148,7 @@ function closeCompetitorModal() {
 
 function loadCompetitors(clientId) {
   document.getElementById('competitorsList').innerHTML =
-    '<div class="preloader"><div class="preloader-logo">webpromo</div></div>';
+    '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div></div>';
 
   google.script.run
     .withSuccessHandler(function(comps) {
@@ -2282,7 +2297,7 @@ function formatPct(pct) {
 function loadQueue() {
   var status = document.getElementById('queueStatusFilter').value;
   document.getElementById('queueTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading queue...</div></div>';
+    '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading queue...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(tasks) { renderQueueTable(tasks); })
@@ -2422,7 +2437,7 @@ function buildQueue() {
 function loadLogs() {
   var filter = document.getElementById('logsFilter').value;
   document.getElementById('logsTableWrap').innerHTML =
-    '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading logs...</div></div>';
+    '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading logs...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(logs) {
@@ -3064,7 +3079,7 @@ function loadCCMomData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccMomTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccMomTableWrap').innerHTML = '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3257,7 +3272,7 @@ function loadCCYoyData() {
   var currentPeriod = year + '.' + month;
   var prevPeriod = prevYear + '.' + month;
 
-  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccYoyTableWrap').innerHTML = '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3486,7 +3501,7 @@ function loadCCSummaryData() {
   var currentPeriod = year + '.' + String(month).padStart(2, '0');
   var prevPeriod = prevYear + '.' + String(prevMonth).padStart(2, '0');
 
-  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="preloader"><div class="preloader-logo">webpromo</div><div class="preloader-text">Loading data...</div></div>';
+  document.getElementById('ccSummaryTableWrap').innerHTML = '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading data...</div></div>';
 
   google.script.run
     .withSuccessHandler(function(rows) {
