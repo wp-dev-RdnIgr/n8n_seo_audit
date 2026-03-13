@@ -1226,6 +1226,49 @@
       <!-- ===== REVIEW TAB 1: CLIENT OVERVIEW ===== -->
       <div class="review-panel active" id="rpanel-overview">
 
+        <!-- Source Trends Over Time (stacked area chart) -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-area-line" style="color:var(--primary)"></i> Source Trends Over Time</div>
+          <div class="section-subtitle" id="sourcesTrendLabel"><i class="ti ti-calendar"></i> —</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>From</label>
+              <div id="reviewSourcesTrendFrom"></div>
+            </div>
+            <div class="form-group" style="flex:0 0 180px">
+              <label>To</label>
+              <div id="reviewSourcesTrendTo"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="loadSourcesTrend()">
+              <i class="ti ti-search"></i> Load
+            </button>
+          </div>
+          <div style="position:relative;min-height:380px">
+            <canvas id="sourcesTrendCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Traffic Source Distribution (donut chart) -->
+        <div class="review-filters">
+          <div class="form-group" style="flex:0 0 180px">
+            <label>Period</label>
+            <div id="reviewSourcesPeriod"></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadReviewSources()">
+            <i class="ti ti-refresh"></i> Update
+          </button>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title"><i class="ti ti-chart-donut" style="color:var(--primary)"></i> Traffic Source Distribution</div>
+          <div class="section-subtitle" id="sourcesDistLabel"><i class="ti ti-calendar"></i> —</div>
+          <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+            <div style="position:relative;width:300px;height:300px">
+              <canvas id="sourcesDonutCanvas"></canvas>
+            </div>
+            <div id="sourcesDonutLegend" style="flex:1;min-width:200px"></div>
+          </div>
+        </div>
+
         <!-- MoM Section -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-arrows-exchange" style="color:var(--primary)"></i> Month over Month Changes</div>
@@ -1287,6 +1330,7 @@
         <!-- Raw data table -->
         <div class="card">
           <div class="section-title"><i class="ti ti-table" style="color:var(--primary)"></i> All Metrics Data</div>
+          <div class="section-subtitle" id="rawDataLabel"><i class="ti ti-calendar"></i> —</div>
           <div class="review-filters" style="margin-top:12px;border:none;padding:0;margin-bottom:8px;background:none">
             <div class="form-group" style="flex:0 0 180px">
               <label>From</label>
@@ -1316,26 +1360,6 @@
           <div id="reviewRawDataTable" style="overflow-x:auto"></div>
         </div>
 
-        <!-- Source trends over time (stacked area chart) — moved from Traffic Sources -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="section-title"><i class="ti ti-chart-area-line" style="color:var(--primary)"></i> Source Trends Over Time</div>
-          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
-            <div class="form-group" style="flex:0 0 180px">
-              <label>From</label>
-              <div id="reviewSourcesTrendFrom"></div>
-            </div>
-            <div class="form-group" style="flex:0 0 180px">
-              <label>To</label>
-              <div id="reviewSourcesTrendTo"></div>
-            </div>
-            <button class="btn btn-secondary" onclick="loadSourcesTrend()">
-              <i class="ti ti-search"></i> Load
-            </button>
-          </div>
-          <div style="position:relative;min-height:380px">
-            <canvas id="sourcesTrendCanvas"></canvas>
-          </div>
-        </div>
       </div>
 
       <!-- ===== REVIEW TAB 2: COMPETITOR COMPARISON ===== -->
@@ -1499,6 +1523,7 @@
         <!-- Traffic over time line chart -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-chart-line" style="color:var(--primary)"></i> Traffic Over Time</div>
+          <div class="section-subtitle" id="compTrendLabel"><i class="ti ti-calendar"></i> —</div>
           <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
             <div class="form-group" style="flex:0 0 180px">
               <label>Metric</label>
@@ -1530,6 +1555,7 @@
         <!-- Channel traffic with tabs -->
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-route" style="color:var(--primary)"></i> Channel Traffic</div>
+          <div class="section-subtitle" id="channelTrafficLabel"><i class="ti ti-calendar"></i> —</div>
           <div class="channel-tabs" id="channelTabs">
             <button class="channel-tab active" data-channel="direct" onclick="switchChannel('direct')">Direct</button>
             <button class="channel-tab" data-channel="organic_search" onclick="switchChannel('organic_search')">Organic Search</button>
@@ -1559,32 +1585,19 @@
           </div>
         </div>
 
-        <!-- Traffic source filters -->
-        <div class="review-filters">
-          <div class="form-group" style="flex:0 0 180px">
-            <label>Period</label>
-            <div id="reviewSourcesPeriod"></div>
-          </div>
-          <button class="btn btn-primary" onclick="loadReviewSources()">
-            <i class="ti ti-refresh"></i> Update
-          </button>
-        </div>
-
-        <!-- Traffic source distribution (donut chart) -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="section-title"><i class="ti ti-chart-donut" style="color:var(--primary)"></i> Traffic Source Distribution</div>
-          <div class="section-subtitle" id="sourcesDistLabel"><i class="ti ti-calendar"></i> —</div>
-          <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
-            <div style="position:relative;width:300px;height:300px">
-              <canvas id="sourcesDonutCanvas"></canvas>
-            </div>
-            <div id="sourcesDonutLegend" style="flex:1;min-width:200px"></div>
-          </div>
-        </div>
-
         <!-- Source comparison table -->
         <div class="card">
           <div class="section-title"><i class="ti ti-table" style="color:var(--primary)"></i> Source Details</div>
+          <div class="section-subtitle" id="sourcesDetailLabel"><i class="ti ti-calendar"></i> —</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>Period</label>
+              <div id="reviewSourcesDetailPeriod"></div>
+            </div>
+            <button class="btn btn-primary" onclick="loadSourceDetails()">
+              <i class="ti ti-refresh"></i> Update
+            </button>
+          </div>
           <div id="sourcesDetailTable" style="overflow-x:auto"></div>
         </div>
       </div>
@@ -2563,7 +2576,7 @@ var _reviewInfo = null;       // client + competitors info
 // Review MonthPicker references
 var mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo;
 var mpReviewCompFrom, mpReviewCompTo;
-var mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo;
+var mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo, mpReviewSourcesDetailPeriod;
 
 // Metric dropdown state
 var _reviewMetricDropdownOpen = { mom: false, yoy: false, raw: false };
@@ -2688,10 +2701,18 @@ function openReview(clientId) {
       var periods = rawPeriods.map(function(p) { return typeof p === 'string' ? p : (p.period || String(p)); });
       periods.sort();
       var months = periods.map(function(p) { return p.replace('.', '-'); });
-      var allPickers = [mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo, mpReviewCompFrom, mpReviewCompTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo, mpCCMomMonth, mpCCYoyMonth, mpCCSummaryMonth];
+      var allPickers = [mpReviewMom, mpReviewYoy, mpReviewDataFrom, mpReviewDataTo, mpReviewCompFrom, mpReviewCompTo, mpReviewSourcesPeriod, mpReviewSourcesTrendFrom, mpReviewSourcesTrendTo, mpReviewSourcesDetailPeriod, mpCCMomMonth, mpCCYoyMonth, mpCCSummaryMonth];
       allPickers.forEach(function(mp) { if (mp) mp.setAllowedMonths(months); });
       var latest = periods[periods.length - 1].replace('.', '-');
       var earliest = periods[0].replace('.', '-');
+      // Calculate 1 year ago from latest for Source Trends default
+      var latestParts = latest.split('-');
+      var oneYearAgo = (parseInt(latestParts[0]) - 1) + '-' + latestParts[1];
+      // Find closest available month to 1 year ago
+      var trendFrom = earliest;
+      for (var pi = 0; pi < months.length; pi++) {
+        if (months[pi] >= oneYearAgo) { trendFrom = months[pi]; break; }
+      }
       if (mpReviewMom) mpReviewMom.val(latest);
       if (mpReviewYoy) mpReviewYoy.val(latest);
       if (mpReviewDataFrom) mpReviewDataFrom.val(earliest);
@@ -2699,8 +2720,9 @@ function openReview(clientId) {
       if (mpReviewCompFrom) mpReviewCompFrom.val(earliest);
       if (mpReviewCompTo) mpReviewCompTo.val(latest);
       if (mpReviewSourcesPeriod) mpReviewSourcesPeriod.val(latest);
-      if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(earliest);
+      if (mpReviewSourcesTrendFrom) mpReviewSourcesTrendFrom.val(trendFrom);
       if (mpReviewSourcesTrendTo) mpReviewSourcesTrendTo.val(latest);
+      if (mpReviewSourcesDetailPeriod) mpReviewSourcesDetailPeriod.val(latest);
       if (mpCCMomMonth) mpCCMomMonth.val(latest);
       if (mpCCYoyMonth) mpCCYoyMonth.val(latest);
       if (mpCCSummaryMonth) mpCCSummaryMonth.val(latest);
@@ -2710,13 +2732,16 @@ function openReview(clientId) {
       // Auto-load all tabs data with default dates
       applyReviewMom();
       applyReviewYoy();
+      // Pre-load Source Trends and Traffic Source Distribution (now on tab 1)
+      loadSourcesTrend();
+      loadReviewSources();
       // Pre-load Competitor Comparison tab
       loadCCMomData();
       loadCCYoyData();
       loadCCSummaryData();
       // Pre-load Traffic Sources tab
       loadReviewCompetitors();
-      loadReviewSources();
+      loadSourceDetails();
     })
     .withFailureHandler(function(err) { console.error('Failed to load review periods', err); })
     .getClientPeriods(clientId);
@@ -2745,7 +2770,7 @@ function switchReviewTab(tabId) {
   if (panel) panel.classList.add('active');
 
   // Reload data only if not already loaded (pre-loaded on client open)
-  if (tabId === 'sources' && !_reviewCompData) { loadReviewCompetitors(); loadReviewSources(); }
+  if (tabId === 'sources' && !_reviewCompData) { loadReviewCompetitors(); }
   if (tabId === 'competitors' && !_ccMomDataRows) { loadCCMomData(); loadCCYoyData(); loadCCSummaryData(); }
 }
 
@@ -2985,6 +3010,15 @@ function loadReviewRawData() {
   var toVal = mpReviewDataTo ? mpReviewDataTo.val() : '';
   if (!fromVal || !toVal) return;
   showPreloader('reviewRawDataTable', 'Loading data...');
+
+  // Update period label
+  var fromP = fromVal.replace('-', '.');
+  var toP = toVal.replace('-', '.');
+  var rawLabel = getPeriodLabel(fromP) + ' — ' + getPeriodLabel(toP);
+  if (fromP === toP) rawLabel = getPeriodLabel(fromP);
+  rawLabel += ' — ' + _reviewClientSite;
+  var rawLabelEl = document.getElementById('rawDataLabel');
+  if (rawLabelEl) rawLabelEl.innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(rawLabel);
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -3690,6 +3724,10 @@ function loadReviewCompetitors() {
       if (periodFrom === periodTo) label = getPeriodLabel(periodFrom);
       document.getElementById('compEngagementLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
       document.getElementById('aiTrafficLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
+      var compTrendLabelEl = document.getElementById('compTrendLabel');
+      if (compTrendLabelEl) compTrendLabelEl.innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
+      var channelLabelEl = document.getElementById('channelTrafficLabel');
+      if (channelLabelEl) channelLabelEl.innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
 
       rebuildCompViews();
     })
@@ -4043,10 +4081,6 @@ function loadReviewSources() {
       document.getElementById('sourcesDistLabel').innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label) + ' — ' + escHtml(_reviewClientSite);
 
       buildSourcesDonut(clientRow);
-      buildSourcesDetailTable(rows, period);
-
-      // Auto-load trend
-      loadSourcesTrend();
     })
     .getClientReviewData(_reviewClientId, period, period);
 }
@@ -4101,6 +4135,15 @@ function loadSourcesTrend() {
   var fromVal = mpReviewSourcesTrendFrom ? mpReviewSourcesTrendFrom.val() : '';
   var toVal = mpReviewSourcesTrendTo ? mpReviewSourcesTrendTo.val() : '';
   if (!fromVal || !toVal) return;
+
+  // Update period label
+  var fromPeriod = fromVal.replace('-', '.');
+  var toPeriod = toVal.replace('-', '.');
+  var trendLabel = getPeriodLabel(fromPeriod) + ' — ' + getPeriodLabel(toPeriod);
+  if (fromPeriod === toPeriod) trendLabel = getPeriodLabel(fromPeriod);
+  trendLabel += ' — ' + _reviewClientSite;
+  var labelEl = document.getElementById('sourcesTrendLabel');
+  if (labelEl) labelEl.innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(trendLabel);
 
   google.script.run
     .withSuccessHandler(function(rows) {
@@ -4188,6 +4231,29 @@ function buildSourcesDetailTable(rows, period) {
   document.getElementById('sourcesDetailTable').innerHTML = html;
 }
 
+function loadSourceDetails() {
+  if (!_reviewClientId) return;
+  var periodVal = mpReviewSourcesDetailPeriod ? mpReviewSourcesDetailPeriod.val() : '';
+  if (!periodVal) return;
+  var period = periodVal.replace('-', '.');
+  showPreloader('sourcesDetailTable', 'Loading source details...');
+
+  // Update period label
+  var label = getPeriodLabel(period);
+  var labelEl = document.getElementById('sourcesDetailLabel');
+  if (labelEl) labelEl.innerHTML = '<i class="ti ti-calendar"></i> ' + escHtml(label);
+
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      if (!rows || !rows.length) {
+        document.getElementById('sourcesDetailTable').innerHTML = '<div class="empty-state"><p>No data</p></div>';
+        return;
+      }
+      buildSourcesDetailTable(rows, period);
+    })
+    .getClientReviewData(_reviewClientId, period, period);
+}
+
 // ===== INIT =====
 (function init() {
   loadConfig();
@@ -4214,6 +4280,7 @@ function buildSourcesDetailTable(rows, period) {
   mpReviewSourcesPeriod = new MonthPicker(document.getElementById('reviewSourcesPeriod'), { placeholder: 'Select month...' });
   mpReviewSourcesTrendFrom = new MonthPicker(document.getElementById('reviewSourcesTrendFrom'), { placeholder: 'From...' });
   mpReviewSourcesTrendTo = new MonthPicker(document.getElementById('reviewSourcesTrendTo'), { placeholder: 'To...' });
+  mpReviewSourcesDetailPeriod = new MonthPicker(document.getElementById('reviewSourcesDetailPeriod'), { placeholder: 'Select month...' });
 
   // Competitor Comparison MoM/YoY pickers
   mpCCMomMonth = new MonthPicker(document.getElementById('ccMomMonth'), { placeholder: 'Select month...' });
