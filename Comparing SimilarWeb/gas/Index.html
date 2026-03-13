@@ -1249,18 +1249,18 @@
         </div>
 
         <!-- Traffic Source Distribution (donut chart) -->
-        <div class="review-filters">
-          <div class="form-group" style="flex:0 0 180px">
-            <label>Period</label>
-            <div id="reviewSourcesPeriod"></div>
-          </div>
-          <button class="btn btn-primary" onclick="loadReviewSources()">
-            <i class="ti ti-refresh"></i> Update
-          </button>
-        </div>
         <div class="card" style="margin-bottom:16px">
           <div class="section-title"><i class="ti ti-chart-donut" style="color:var(--primary)"></i> Traffic Source Distribution</div>
           <div class="section-subtitle" id="sourcesDistLabel"><i class="ti ti-calendar"></i> —</div>
+          <div class="review-filters" style="border:none;padding:0;margin-bottom:8px;background:none">
+            <div class="form-group" style="flex:0 0 180px">
+              <label>Period</label>
+              <div id="reviewSourcesPeriod"></div>
+            </div>
+            <button class="btn btn-primary" onclick="loadReviewSources()">
+              <i class="ti ti-refresh"></i> Update
+            </button>
+          </div>
           <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
             <div style="position:relative;width:300px;height:300px">
               <canvas id="sourcesDonutCanvas"></canvas>
