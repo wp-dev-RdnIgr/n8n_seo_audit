@@ -108,6 +108,76 @@ function extractFileIdFromUrl(url) {
 }
 
 // ============================================
+// БЕКЕНД: GKP Розширення семантики
+// ============================================
+
+function submitGKPIdeas(formData) {
+  if (!formData.source_spreadsheet_id) {
+    return { success: false, error: 'Вставте посилання на таблицю з seed-фразами' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-ideas';
+
+  var payload = {
+    doc_name: formData.doc_name || 'GKP Ideas - ' + new Date().toISOString().slice(0, 10),
+    language: formData.language || '1036',
+    geo_target: formData.geo_target || '2804',
+    source_spreadsheet_id: formData.source_spreadsheet_id
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    timeout: 600
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+    return { success: true, spreadsheetUrl: result.spreadsheetUrl || result.url || '', message: 'Розширення семантики завершено' };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
+// БЕКЕНД: GKP Метрики ключових слів
+// ============================================
+
+function submitGKPMetrics(formData) {
+  if (!formData.source_spreadsheet_id) {
+    return { success: false, error: 'Вставте посилання на таблицю з ключовими словами' };
+  }
+
+  var webhookUrl = 'https://n8n.rnd.webpromo.tools/webhook/gkp-metrics';
+
+  var payload = {
+    doc_name: formData.doc_name || 'GKP Metrics - ' + new Date().toISOString().slice(0, 10),
+    language: formData.language || '1036',
+    geo_target: formData.geo_target || '2804',
+    source_spreadsheet_id: formData.source_spreadsheet_id
+  };
+
+  var options = {
+    method: 'POST',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+    timeout: 600
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(webhookUrl, options);
+    var result = JSON.parse(response.getContentText());
+    return { success: true, spreadsheetUrl: result.spreadsheetUrl || result.url || '', message: 'Метрики отримано' };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+// ============================================
 // БЕКЕНД: AI Аналіз таблиці
 // ============================================
 

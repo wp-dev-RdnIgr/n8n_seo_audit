@@ -631,28 +631,29 @@
       </div>
       <div class="sb-step" data-step="3" onclick="sidebarClick(3)">
         <div class="sb-circle">3</div>
-        <div class="sb-label">Розширення семантики</div>
+        <div class="sb-label">PageSpeed</div>
       </div>
       <div class="sb-step" data-step="4" onclick="sidebarClick(4)">
         <div class="sb-circle">4</div>
-        <div class="sb-label">Метрики ключових слів</div>
-      </div>
-      <div class="sb-step" data-step="5" onclick="sidebarClick(5)">
-        <div class="sb-circle">5</div>
-        <div class="sb-label">PageSpeed</div>
-      </div>
-      <div class="sb-step" data-step="6" onclick="sidebarClick(6)">
-        <div class="sb-circle">6</div>
         <div class="sb-label">Запуск аналізу</div>
       </div>
       <div class="sb-group-label">Етап 2 — Обробка</div>
+      <div class="sb-step" data-step="5" onclick="sidebarClick(5)">
+        <div class="sb-circle">5</div>
+        <div class="sb-label">AI аналіз</div>
+      </div>
+      <div class="sb-step" data-step="6" onclick="sidebarClick(6)">
+        <div class="sb-circle">6</div>
+        <div class="sb-label">PDF парсинг</div>
+      </div>
+      <div class="sb-group-label">GKP Інструменти</div>
       <div class="sb-step" data-step="7" onclick="sidebarClick(7)">
         <div class="sb-circle">7</div>
-        <div class="sb-label">AI аналіз</div>
+        <div class="sb-label">Розширення семантики</div>
       </div>
       <div class="sb-step" data-step="8" onclick="sidebarClick(8)">
         <div class="sb-circle">8</div>
-        <div class="sb-label">PDF парсинг</div>
+        <div class="sb-label">Метрики ключових слів</div>
       </div>
       <div class="sb-group-label">Етап 3 — Тех. аудит</div>
       <div class="sb-step" data-step="9" onclick="sidebarClick(9)">
@@ -730,8 +731,8 @@
           </div>
         </section>
 
-        <!-- STEP 3: Розширення семантики (GKP Ideas) -->
-        <section class="step-panel" data-step="3">
+        <!-- STEP 7: Розширення семантики (GKP Ideas) — незалежний інструмент -->
+        <section class="step-panel" data-step="7">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-plant-2"></i></div>
@@ -800,11 +801,15 @@
                 </select>
               </div>
             </div>
+            <button class="btn-launch" id="btnSemantic" onclick="launchSemantic()">
+              <i class="ti ti-plant-2"></i> <span>Запустити розширення семантики</span>
+            </button>
+            <div class="result-card hidden" id="semanticIndResult"></div>
           </div>
         </section>
 
-        <!-- STEP 4: Метрики ключових слів (GKP Metrics) -->
-        <section class="step-panel" data-step="4">
+        <!-- STEP 8: Метрики ключових слів (GKP Metrics) — незалежний інструмент -->
+        <section class="step-panel" data-step="8">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-chart-bar"></i></div>
@@ -872,11 +877,15 @@
                 </select>
               </div>
             </div>
+            <button class="btn-launch" id="btnMetrics" onclick="launchMetrics()">
+              <i class="ti ti-chart-bar"></i> <span>Запустити отримання метрик</span>
+            </button>
+            <div class="result-card hidden" id="metricsIndResult"></div>
           </div>
         </section>
 
-        <!-- STEP 5: PageSpeed -->
-        <section class="step-panel" data-step="5">
+        <!-- STEP 3: PageSpeed -->
+        <section class="step-panel" data-step="3">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-gauge"></i></div>
@@ -919,8 +928,8 @@
           </div>
         </section>
 
-        <!-- STEP 6: Запуск аналізу -->
-        <section class="step-panel" data-step="6">
+        <!-- STEP 4: Запуск аналізу -->
+        <section class="step-panel" data-step="4">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon" style="background:linear-gradient(135deg,var(--color-accent-light),#C7D2FE);color:var(--color-accent-hover);">
@@ -942,14 +951,12 @@
             <div class="result-card hidden" id="phase1Result"></div>
             <div class="result-card hidden" id="clientResult"></div>
             <div class="result-card hidden" id="competitorsResult"></div>
-            <div class="result-card hidden" id="semanticResult"></div>
-            <div class="result-card hidden" id="metricsResult"></div>
             <div class="result-card hidden" id="pagespeedResult"></div>
           </div>
         </section>
 
-        <!-- STEP 7: AI аналіз конкурентів -->
-        <section class="step-panel" data-step="7">
+        <!-- STEP 5: AI аналіз конкурентів -->
+        <section class="step-panel" data-step="5">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-brain"></i></div>
@@ -987,8 +994,8 @@
           </div>
         </section>
 
-        <!-- STEP 8: PDF парсинг -->
-        <section class="step-panel" data-step="8">
+        <!-- STEP 6: PDF парсинг -->
+        <section class="step-panel" data-step="6">
           <div class="step-card">
             <div class="step-card-header">
               <div class="step-card-icon"><i class="ti ti-file-type-pdf"></i></div>
@@ -1120,15 +1127,18 @@
 // STATE
 // =========================================
 var currentStep = 1;
+var totalSteps = 8;
+// Step mapping: 1=Основні дані, 2=Конкуренти, 3=PageSpeed, 4=Запуск, 5=AI, 6=PDF, 7=Розширення семантики (GKP), 8=Метрики (GKP)
+// Main flow: steps 1-4. Independent tools: steps 5-8.
+var MAIN_FLOW_STEPS = 4; // next/prev only within 1..4
+var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
 var totalSteps = 9;
 // Step mapping: 1=Основні дані, 2=Конкуренти, 3=Розширення семантики, 4=Метрики, 5=PageSpeed, 6=Запуск (усе через оркестратор), 7=AI, 8=PDF, 9=Тех.аудит SF
 var stepStatus = ['active','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming','upcoming'];
 var phase1Done = false;
-var stepData = { email:'', domain:'', competitors:[], semantic:null, metrics:null, pagespeed:null, phase1Results:null };
+var stepData = { email:'', domain:'', competitors:[], pagespeed:null, phase1Results:null };
 
 // Steps that require data entry or explicit action to be marked completed
-// Step 1: required (email+domain), step 6: requires phase1 launch
-// Steps 2,3,4,5,7,8: optional (can be skipped)
 var REQUIRED_STEPS = [1];
 
 // =========================================
@@ -1139,9 +1149,9 @@ var REQUIRED_STEPS = [1];
 function sidebarClick(n) {
   if (n < 1 || n > totalSteps) return;
   // Can only click on: current, completed, skipped, or the next upcoming step
-  // Steps 7-8 (AI, PDF) are always accessible from sidebar — they are independent tools
+  // Steps 5-8 (AI, PDF, GKP) are always accessible from sidebar — they are independent tools
   var targetStatus = stepStatus[n - 1];
-  if (n <= 6 && targetStatus === 'upcoming' && n > currentStep + 1) return;
+  if (n <= MAIN_FLOW_STEPS && targetStatus === 'upcoming' && n > currentStep + 1) return;
 
   saveStepData(currentStep);
 
@@ -1160,12 +1170,12 @@ function sidebarClick(n) {
   showStep(n);
   updateSidebar();
   updateNav();
-  if (n === 6) buildSummary();
+  if (n === 4) buildSummary();
   prefillFromPhase1(n);
 }
 
 function nextStep() {
-  if (currentStep === totalSteps) return;
+  if (currentStep >= MAIN_FLOW_STEPS) return;
   if (!validateStep(currentStep)) return;
   saveStepData(currentStep);
 
@@ -1177,7 +1187,7 @@ function nextStep() {
   showStep(currentStep);
   updateSidebar();
   updateNav();
-  if (currentStep === 6) buildSummary();
+  if (currentStep === 4) buildSummary();
   prefillFromPhase1(currentStep);
 }
 
@@ -1195,25 +1205,21 @@ function prevStep() {
 }
 
 function skipStep() {
-  // Can't skip required steps (1 and 6)
+  // Can't skip required steps; can't skip beyond main flow
   if (REQUIRED_STEPS.indexOf(currentStep) !== -1) return;
+  if (currentStep >= MAIN_FLOW_STEPS) return;
   stepStatus[currentStep - 1] = 'skipped';
   currentStep++;
-  if (currentStep > totalSteps) { currentStep = totalSteps; return; }
   stepStatus[currentStep - 1] = 'active';
   showStep(currentStep);
   updateSidebar();
   updateNav();
-  if (currentStep === 6) buildSummary();
+  if (currentStep === 4) buildSummary();
 }
 
 function prefillFromPhase1(n) {
   if (!stepData.phase1Results) return;
-  if (n === 4 && stepData.phase1Results.semantic) {
-    var el = document.getElementById('fMetUrl');
-    if (!el.value) el.value = stepData.phase1Results.semantic;
-  }
-  if (n === 7 && stepData.phase1Results.client) {
+  if (n === 5 && stepData.phase1Results.client) {
     var el = document.getElementById('fAiUrl');
     if (!el.value) el.value = stepData.phase1Results.client;
   }
@@ -1243,30 +1249,6 @@ function saveStepData(n) {
     stepData.domain = normalizeDomain(document.getElementById('fDomain').value);
   }
   if (n === 3) {
-    var url = document.getElementById('fSemUrl').value.trim();
-    if (url && url.includes('docs.google.com/spreadsheets')) {
-      stepData.semantic = {
-        url: url,
-        lang: document.getElementById('fSemLang').value,
-        geo: document.getElementById('fSemGeo').value
-      };
-    } else {
-      stepData.semantic = null;
-    }
-  }
-  if (n === 4) {
-    var url = document.getElementById('fMetUrl').value.trim();
-    if (url && url.includes('docs.google.com/spreadsheets')) {
-      stepData.metrics = {
-        url: url,
-        lang: document.getElementById('fMetLang').value,
-        geo: document.getElementById('fMetGeo').value
-      };
-    } else {
-      stepData.metrics = null;
-    }
-  }
-  if (n === 5) {
     var url = document.getElementById('fPsUrl').value.trim();
     if (url && url.includes('docs.google.com/spreadsheets')) {
       stepData.pagespeed = {
@@ -1303,7 +1285,7 @@ function validateStep(n) {
     }
     return ok;
   }
-  if (n === 6) {
+  if (n === 4) {
     return true;
   }
   return true;
@@ -1351,14 +1333,11 @@ function updateNav() {
   // Back
   back.style.visibility = currentStep > 1 ? 'visible' : 'hidden';
 
-  // Skip — hide for required steps (1 and 6)
-  skip.style.display = (REQUIRED_STEPS.indexOf(currentStep) !== -1) ? 'none' : '';
+  // Skip — hide for required steps and non-main-flow steps
+  skip.style.display = (REQUIRED_STEPS.indexOf(currentStep) !== -1 || currentStep > MAIN_FLOW_STEPS) ? 'none' : '';
 
-  // Next
-  if (currentStep === 6) {
-    next.innerHTML = 'Далі <i class="ti ti-arrow-right"></i>';
-    next.disabled = false;
-  } else if (currentStep === totalSteps) {
+  // Next — only visible within main flow (steps 1..3), hidden on step 4+ and independent tools
+  if (currentStep >= MAIN_FLOW_STEPS || currentStep > MAIN_FLOW_STEPS) {
     next.style.display = 'none';
   } else {
     next.style.display = '';
@@ -1371,7 +1350,7 @@ function updateNav() {
 // STEP 6: SUMMARY + LAUNCH
 // =========================================
 function buildSummary() {
-  saveStepData(3); saveStepData(4); saveStepData(5);
+  saveStepData(3);
   var el = document.getElementById('summaryList');
   var html = '';
 
@@ -1387,31 +1366,13 @@ function buildSummary() {
     html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Конкуренти: не додано</div>';
   }
 
-  // Semantic
-  if (stepData.semantic) {
-    html += '<div class="summary-item active"><i class="ti ti-plant-2"></i> Розширення семантики: <strong>таблиця додана</strong></div>';
-  } else if (stepStatus[2] === 'skipped') {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: пропущено</div>';
-  } else {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Розширення семантики: не заповнено</div>';
-  }
-
-  // Metrics
-  if (stepData.metrics) {
-    html += '<div class="summary-item active"><i class="ti ti-chart-bar"></i> Метрики ключових слів: <strong>таблиця додана</strong></div>';
-  } else if (stepStatus[3] === 'skipped') {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Метрики ключових слів: пропущено</div>';
-  } else {
-    html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> Метрики ключових слів: не заповнено</div>';
-  }
-
-  // PageSpeed
+  // PageSpeed (step 3, index 2)
   if (stepData.pagespeed) {
     var psTypes = [];
     if (stepData.pagespeed.testMobile) psTypes.push('Mobile');
     if (stepData.pagespeed.testDesktop) psTypes.push('Desktop');
     html += '<div class="summary-item active"><i class="ti ti-gauge"></i> PageSpeed: <strong>' + (psTypes.join(' + ') || 'таблиця додана') + '</strong></div>';
-  } else if (stepStatus[4] === 'skipped') {
+  } else if (stepStatus[2] === 'skipped') {
     html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> PageSpeed: пропущено</div>';
   } else {
     html += '<div class="summary-item skipped"><i class="ti ti-minus"></i> PageSpeed: не заповнено</div>';
@@ -1434,22 +1395,6 @@ function launchPhase1() {
   if (stepData.competitors.length > 0) {
     formData.competitors = stepData.competitors.slice();
   }
-  if (stepData.semantic) {
-    formData.semantic_expansion = {
-      report_name: 'Розширення семантичного ядра',
-      spreadsheet_url: stepData.semantic.url,
-      language: stepData.semantic.lang,
-      geo_target: stepData.semantic.geo
-    };
-  }
-  if (stepData.metrics) {
-    formData.metrics_collection = {
-      report_name: 'Метрики ключових слів',
-      spreadsheet_url: stepData.metrics.url,
-      language: stepData.metrics.lang,
-      geo_target: stepData.metrics.geo
-    };
-  }
   if (stepData.pagespeed) {
     formData.pagespeed = {
       spreadsheet_url: stepData.pagespeed.url,
@@ -1461,7 +1406,7 @@ function launchPhase1() {
   var btn = document.getElementById('btnLaunch1');
   btn.disabled = true;
   btn.classList.add('btn-loading');
-  hideResults(['phase1Result','clientResult','competitorsResult','semanticResult','metricsResult','pagespeedResult']);
+  hideResults(['phase1Result','clientResult','competitorsResult','pagespeedResult']);
 
   google.script.run
     .withSuccessHandler(function(r) {
@@ -1510,19 +1455,6 @@ function onPhase1Success(data) {
   // Competitors
   if (d.competitors_analysis && d.competitors_analysis.length > 0) {
     showCompetitorsResult(d.competitors_analysis);
-  }
-
-  // Semantic
-  if (d.semantic_expansion) {
-    var extra = d.semantic_expansion.total_keywords ? ' (' + d.semantic_expansion.total_keywords + ' ключових слів)' : '';
-    showResultSuccess('semanticResult', 'Семантичне ядро' + extra, d.semantic_expansion.spreadsheet_url);
-    if (d.semantic_expansion.spreadsheet_url) stepData.phase1Results.semantic = d.semantic_expansion.spreadsheet_url;
-  }
-
-  // Metrics
-  if (d.metrics_collection) {
-    var mExtra = d.metrics_collection.total_keywords ? ' (' + d.metrics_collection.total_keywords + ' ключових слів)' : '';
-    showResultSuccess('metricsResult', 'Метрики ключових слів' + mExtra, d.metrics_collection.spreadsheet_url);
   }
 
   // PageSpeed
@@ -1679,6 +1611,73 @@ function launchPDF() {
       showResultError('pdfResult', e.toString());
     })
     .submitPdfAuditParse({ pdfUrl: url, manager_email: stepData.email });
+}
+
+// =========================================
+// GKP INDEPENDENT LAUNCHES (Steps 7, 8)
+// =========================================
+function launchSemantic() {
+  var url = document.getElementById('fSemUrl').value.trim();
+  if (!url || !url.includes('docs.google.com/spreadsheets')) {
+    showResultError('semanticIndResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  }
+  var ssId = extractSpreadsheetId(url);
+  if (!ssId) {
+    showResultError('semanticIndResult', 'Не вдалося отримати ID таблиці з URL'); return;
+  }
+  var btn = document.getElementById('btnSemantic');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('semanticIndResult', 'Генерація ідей ключових слів...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var extra = r.totalKeywords ? ' (' + r.totalKeywords + ' ключових слів)' : '';
+        showResultSuccess('semanticIndResult', 'Розширення семантики завершено' + extra, r.spreadsheetUrl);
+      } else { showResultError('semanticIndResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('semanticIndResult', e.toString());
+    })
+    .submitGKPIdeas({
+      source_spreadsheet_id: ssId,
+      language: document.getElementById('fSemLang').value,
+      geo_target: document.getElementById('fSemGeo').value
+    });
+}
+
+function launchMetrics() {
+  var url = document.getElementById('fMetUrl').value.trim();
+  if (!url || !url.includes('docs.google.com/spreadsheets')) {
+    showResultError('metricsIndResult', 'Вкажіть коректне посилання на Google таблицю'); return;
+  }
+  var ssId = extractSpreadsheetId(url);
+  if (!ssId) {
+    showResultError('metricsIndResult', 'Не вдалося отримати ID таблиці з URL'); return;
+  }
+  var btn = document.getElementById('btnMetrics');
+  btn.disabled = true; btn.classList.add('btn-loading');
+  showResultLoading('metricsIndResult', 'Отримання метрик...');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      if (r.success) {
+        var extra = r.totalKeywords ? ' (' + r.totalKeywords + ' ключових слів)' : '';
+        showResultSuccess('metricsIndResult', 'Метрики отримано' + extra, r.spreadsheetUrl);
+      } else { showResultError('metricsIndResult', r.error || 'Помилка'); }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; btn.classList.remove('btn-loading');
+      showResultError('metricsIndResult', e.toString());
+    })
+    .submitGKPMetrics({
+      source_spreadsheet_id: ssId,
+      language: document.getElementById('fMetLang').value,
+      geo_target: document.getElementById('fMetGeo').value
+    });
 }
 
 // =========================================
@@ -2003,9 +2002,10 @@ document.getElementById('fTaDomain').addEventListener('focus', function() {
 // =========================================
 document.getElementById('fEmail').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fDomain').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
-document.getElementById('fSemUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
-document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
 document.getElementById('fPsUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') nextStep(); });
+document.getElementById('fAiUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchAI(); });
+document.getElementById('fSemUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchSemantic(); });
+document.getElementById('fMetUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchMetrics(); });
 // AI URLs use dynamic inputs — no single fAiUrl
 document.getElementById('fPdfUrl').addEventListener('keypress', function(e) { if (e.key === 'Enter') launchPDF(); });
 
