@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: #64748b;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .card-icon.blue { background: #eff6ff; }
+    .card-icon.purple { background: #f5f3ff; }
+    .card-icon.green { background: #f0fdf4; }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .card .desc {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      color: #fff;
+    }
+
+    .btn-primary.blue { background: #3b82f6; }
+    .btn-primary.blue:hover { background: #2563eb; }
+
+    .btn-primary.purple { background: #7c3aed; }
+    .btn-primary.purple:hover { background: #6d28d9; }
+
+    .btn-primary.green { background: #16a34a; }
+    .btn-primary.green:hover { background: #15803d; }
+
+    .btn-secondary {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .badge.active {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge.active::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: #f1f5f9;
+      margin: 16px 0;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    /* Arrow icon for external links */
+    .arrow-icon {
+      transition: transform 0.2s ease;
+    }
+    .btn:hover .arrow-icon {
+      transform: translateX(2px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>SEO Tools Hub</h1>
+    <p>Центральна панель доступу до інструментів аналітики та SEO-аудиту</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- Card 1: Metabase -->
+    <div class="card">
+      <span class="badge active">Online</span>
+      <div class="card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      <h2>Дашборди Metabase</h2>
+      <div class="desc">
+        Інтерактивні дашборди з ключовими метриками: трафік, позиції, конверсії. Дані оновлюються автоматично.
+      </div>
+      <div class="card-actions">
+        <a href="https://dash.rnd.webpromo.tools/dashboard/65-hot-view?tab=104-%D0%B2%D1%96%D0%B4%D0%B4%D1%96%D0%BB-pm" class="btn btn-primary blue" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Відкрити дашборд
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 2: SimilarWeb Comparing -->
+    <div class="card">
+      <span class="badge active">Online</span>
+      <div class="card-icon purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <h2>SimilarWeb Comparing</h2>
+      <div class="desc">
+        Порівняння сайтів за даними SimilarWeb: трафік, джерела, поведінкові метрики, конкуренти.
+      </div>
+      <div class="card-actions">
+        <a href="https://script.google.com/a/macros/web-promo.com.ua/s/AKfycbxSzsUyhi_TblrLszMKMkJ6fe-DnXH_koB84BVVpu64DiKl5HbCfBRGa9GDsUVJfgJA/exec" class="btn btn-primary purple" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Відкрити платформу
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <a href="https://docs.google.com/document/d/16mY-AVASGdj2fDBRMdJNXnX8ARoOUX3mcT1o6TZAfT0/edit?tab=t.0" class="btn btn-secondary" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Інструкція
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 3: SEO Audit -->
+    <div class="card">
+      <span class="badge active">Online</span>
+      <div class="card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <h2>SEO Аудит</h2>
+      <div class="desc">
+        Комплексний аналіз сайту: технічний аудит, мета-теги, структура, конкуренти, семантика, AI-звіти.
+      </div>
+      <div class="card-actions">
+        <a href="https://sites.google.com/web-promo.com.ua/seo-audit/%D0%B3%D0%BE%D0%BB%D0%BE%D0%B2%D0%BD%D0%B0/flow-new?authuser=0" class="btn btn-primary green" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Відкрити платформу
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    WebPromo · SEO Tools · 2025
+  </div>
+
+</body>
+</html>
