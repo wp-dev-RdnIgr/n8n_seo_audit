@@ -268,6 +268,9 @@ function getTaskQueue(statusFilter) {
   return supabaseGet(path);
 }
 
+var MAX_SITES_PER_REQUEST = 5;
+var MIN_SITES_PER_REQUEST = 2;
+
 function createComparisonTasks(clientId, period) {
   // Get client
   var clients = supabaseGet('/rest/v1/clients?id=eq.' + clientId + '&select=*');
@@ -287,34 +290,41 @@ function createComparisonTasks(clientId, period) {
     }
   }
 
-  // Build site list: client + all competitors
-  var sites = [client.client_site];
-  for (var i = 0; i < competitors.length; i++) {
-    sites.push(competitors[i].competitor_site);
-  }
-
-  // Chunk into groups of 5
-  var chunkSize = 5;
-  var chunks = [];
-  for (var j = 0; j < sites.length; j += chunkSize) {
-    chunks.push(sites.slice(j, j + chunkSize));
+  // Chunk competitors only; client_site is prepended to every chunk so each
+  // request contains the client + up to (MAX-1) competitors.
+  var competitorChunkSize = MAX_SITES_PER_REQUEST - 1;
+  var competitorChunks = [];
+  for (var j = 0; j < competitors.length; j += competitorChunkSize) {
+    competitorChunks.push(competitors.slice(j, j + competitorChunkSize));
   }
 
   var tasks = [];
   var skipped = 0;
-  for (var k = 0; k < chunks.length; k++) {
+  for (var k = 0; k < competitorChunks.length; k++) {
+    var sitesInRequest = [client.client_site];
+    for (var c = 0; c < competitorChunks[k].length; c++) {
+      sitesInRequest.push(competitorChunks[k][c].competitor_site);
+    }
+
+    // SimilarWeb requires at least 2 sites for comparison
+    if (sitesInRequest.length < MIN_SITES_PER_REQUEST) {
+      skipped++;
+      continue;
+    }
+
     // Skip if task already exists (pending or done) for this chunk
     if (existingChunks.hasOwnProperty(k)) {
       skipped++;
       continue;
     }
+
     tasks.push({
       queue_id: client.client_site + '_' + period + '_chunk' + k,
       client_id: clientId,
       client_site: client.client_site,
-      sites_list: chunks[k].join(','),
+      sites_list: sitesInRequest.join(','),
       chunk_index: k,
-      total_chunks: chunks.length,
+      total_chunks: competitorChunks.length,
       period: period,
       status: 'pending'
     });
