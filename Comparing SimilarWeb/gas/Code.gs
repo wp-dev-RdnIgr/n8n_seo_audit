@@ -226,7 +226,7 @@ function getSimilarwebData(clientId, periodFrom, periodTo) {
   var activeSites = getActiveSitesForClient_(clientId);
   if (!activeSites.length) return [];
 
-  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
+  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social_organic,social_paid,email,affiliates,gen_ai,ai_traffic';
   var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId
     + '&site=in.(' + activeSites.map(encodeURIComponent).join(',') + ')'
     + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';
@@ -449,7 +449,7 @@ function getClientReviewData(clientId, periodFrom, periodTo) {
   var activeSites = getActiveSitesForClient_(clientId);
   if (!activeSites.length) return [];
 
-  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social,email,ai_traffic';
+  var cols = 'id,site,site_type,period,monthly_visits,unique_visitors,visits_per_visitor,deduplicated_audience,page_views,visit_duration,pages_per_visit,bounce_rate,direct,organic_search,paid_search,display_ads,social_organic,social_paid,email,affiliates,gen_ai,ai_traffic';
   var path = '/rest/v1/similarweb_data?client_id=eq.' + clientId
     + '&site=in.(' + activeSites.map(encodeURIComponent).join(',') + ')'
     + '&select=' + cols + '&order=period.asc,site_type.asc,site.asc';

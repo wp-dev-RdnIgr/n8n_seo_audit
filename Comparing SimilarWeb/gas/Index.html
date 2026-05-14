@@ -1388,8 +1388,11 @@
                 <option value="organic_search">Organic Search</option>
                 <option value="paid_search">Paid Search</option>
                 <option value="display_ads">Display Ads</option>
-                <option value="social">Social</option>
+                <option value="social_organic">Social Organic</option>
+                <option value="social_paid">Social Paid</option>
                 <option value="email">Email</option>
+                <option value="affiliates">Affiliates</option>
+                <option value="gen_ai">Gen AI</option>
                 <option value="ai_traffic">AI Traffic</option>
               </select>
             </div>
@@ -1430,8 +1433,11 @@
                 <option value="organic_search">Organic Search</option>
                 <option value="paid_search">Paid Search</option>
                 <option value="display_ads">Display Ads</option>
-                <option value="social">Social</option>
+                <option value="social_organic">Social Organic</option>
+                <option value="social_paid">Social Paid</option>
                 <option value="email">Email</option>
+                <option value="affiliates">Affiliates</option>
+                <option value="gen_ai">Gen AI</option>
                 <option value="ai_traffic">AI Traffic</option>
               </select>
             </div>
@@ -1538,8 +1544,11 @@
                 <option value="organic_search">Organic Search</option>
                 <option value="paid_search">Paid Search</option>
                 <option value="display_ads">Display Ads</option>
-                <option value="social">Social</option>
+                <option value="social_organic">Social Organic</option>
+                <option value="social_paid">Social Paid</option>
                 <option value="email">Email</option>
+                <option value="affiliates">Affiliates</option>
+                <option value="gen_ai">Gen AI</option>
                 <option value="ai_traffic">AI Traffic</option>
               </select>
             </div>
@@ -1561,8 +1570,11 @@
             <button class="channel-tab" data-channel="organic_search" onclick="switchChannel('organic_search')">Organic Search</button>
             <button class="channel-tab" data-channel="paid_search" onclick="switchChannel('paid_search')">Paid Search</button>
             <button class="channel-tab" data-channel="display_ads" onclick="switchChannel('display_ads')">Display Ads</button>
-            <button class="channel-tab" data-channel="social" onclick="switchChannel('social')">Social</button>
+            <button class="channel-tab" data-channel="social_organic" onclick="switchChannel('social_organic')">Social Organic</button>
+            <button class="channel-tab" data-channel="social_paid" onclick="switchChannel('social_paid')">Social Paid</button>
             <button class="channel-tab" data-channel="email" onclick="switchChannel('email')">Email</button>
+            <button class="channel-tab" data-channel="affiliates" onclick="switchChannel('affiliates')">Affiliates</button>
+            <button class="channel-tab" data-channel="gen_ai" onclick="switchChannel('gen_ai')">Gen AI</button>
             <button class="channel-tab" data-channel="ai_traffic" onclick="switchChannel('ai_traffic')">AI Traffic</button>
           </div>
           <div class="chart-with-legend">
@@ -1643,7 +1655,7 @@
       </p>
       <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">
         <div>Tables: <code>clients</code>, <code>competitors</code>, <code>similarweb_data</code>, <code>task_queue</code>, <code>error_logs</code></div>
-        <div style="margin-top:4px">Metrics: monthly_visits, unique_visitors, visit_duration, pages_per_visit, bounce_rate, visits_per_visitor, deduplicated_audience, page_views, direct, organic_search, paid_search, display_ads, social, email, ai_traffic</div>
+        <div style="margin-top:4px">Metrics: monthly_visits, unique_visitors, visit_duration, pages_per_visit, bounce_rate, visits_per_visitor, deduplicated_audience, page_views, direct, organic_search, paid_search, display_ads, social_organic, social_paid, email, affiliates, gen_ai, ai_traffic</div>
       </div>
     </div>
   </div>
@@ -2616,8 +2628,11 @@ var TRAFFIC_SOURCES = [
   { key: 'organic_search', label: 'Organic Search', color: '#10B981' },
   { key: 'paid_search', label: 'Paid Search', color: '#F59E0B' },
   { key: 'display_ads', label: 'Display Ads', color: '#8B5CF6' },
-  { key: 'social', label: 'Social', color: '#EC4899' },
+  { key: 'social_organic', label: 'Social Organic', color: '#EC4899' },
+  { key: 'social_paid', label: 'Social Paid', color: '#DB2777' },
   { key: 'email', label: 'Email', color: '#06B6D4' },
+  { key: 'affiliates', label: 'Affiliates', color: '#84CC16' },
+  { key: 'gen_ai', label: 'Gen AI', color: '#A855F7' },
   { key: 'ai_traffic', label: 'AI Traffic', color: '#EF4444' }
 ];
 
