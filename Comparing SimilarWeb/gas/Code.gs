@@ -287,23 +287,26 @@ function createComparisonTasks(clientId, period) {
     }
   }
 
-  // Build site list: client + all competitors
-  var sites = [client.client_site];
-  for (var i = 0; i < competitors.length; i++) {
-    sites.push(competitors[i].competitor_site);
-  }
+  // SimilarWeb shows a different (single-site) UI when only 1 site is queried —
+  // parsers expect the multi-site compare layout. Each task must contain at
+  // least 2 sites: chunk competitors into groups of MAX_SITES_PER_REQUEST - 1
+  // and prepend client_site to every chunk. Mirrors n8n "Анализ полноты данных" v6.
+  var MAX_SITES_PER_REQUEST = 5;
+  var MIN_SITES_PER_REQUEST = 2;
+  var competitorChunkSize = MAX_SITES_PER_REQUEST - 1;
 
-  // Chunk into groups of 5
-  var chunkSize = 5;
-  var chunks = [];
-  for (var j = 0; j < sites.length; j += chunkSize) {
-    chunks.push(sites.slice(j, j + chunkSize));
+  var competitorSites = competitors.map(function(c) { return c.competitor_site; });
+  var competitorChunks = [];
+  for (var j = 0; j < competitorSites.length; j += competitorChunkSize) {
+    competitorChunks.push(competitorSites.slice(j, j + competitorChunkSize));
   }
 
   var tasks = [];
   var skipped = 0;
-  for (var k = 0; k < chunks.length; k++) {
-    // Skip if task already exists (pending or done) for this chunk
+  for (var k = 0; k < competitorChunks.length; k++) {
+    if (competitorChunks[k].length === 0) continue;
+    var sitesInRequest = [client.client_site].concat(competitorChunks[k]);
+    if (sitesInRequest.length < MIN_SITES_PER_REQUEST) continue;
     if (existingChunks.hasOwnProperty(k)) {
       skipped++;
       continue;
@@ -312,9 +315,9 @@ function createComparisonTasks(clientId, period) {
       queue_id: client.client_site + '_' + period + '_chunk' + k,
       client_id: clientId,
       client_site: client.client_site,
-      sites_list: chunks[k].join(','),
+      sites_list: sitesInRequest.join(','),
       chunk_index: k,
-      total_chunks: chunks.length,
+      total_chunks: competitorChunks.length,
       period: period,
       status: 'pending'
     });
