@@ -262,10 +262,36 @@ function getClientPeriods(clientId) {
 // TASK QUEUE
 // ============================================
 
-function getTaskQueue(statusFilter) {
-  var path = '/rest/v1/task_queue?select=id,queue_id,client_site,sites_list,period,chunk_index,total_chunks,status,error_message,created_at&order=created_at.desc&limit=100';
+function getTaskQueue(statusFilter, offset, pageSize) {
+  offset   = parseInt(offset, 10)   || 0;
+  pageSize = parseInt(pageSize, 10) || 50;
+
+  // Page of rows (sorted by creation, newest first)
+  var path = '/rest/v1/task_queue?select=id,queue_id,client_site,sites_list,period,chunk_index,total_chunks,status,error_message,created_at'
+    + '&order=created_at.desc&limit=' + pageSize + '&offset=' + offset;
   if (statusFilter && statusFilter !== 'all') path += '&status=eq.' + statusFilter;
-  return supabaseGet(path);
+  var rows = supabaseGet(path) || [];
+
+  // Cheap full counter: just status column for ALL rows (task_queue is small)
+  var allStatuses = supabaseGet('/rest/v1/task_queue?select=status&limit=10000') || [];
+  var counters = { pending: 0, processing: 0, done: 0, error: 0, total: 0 };
+  for (var i = 0; i < allStatuses.length; i++) {
+    var st = allStatuses[i].status;
+    if (counters.hasOwnProperty(st)) counters[st]++;
+    counters.total++;
+  }
+
+  var filteredTotal = (!statusFilter || statusFilter === 'all')
+    ? counters.total
+    : (counters[statusFilter] || 0);
+
+  return {
+    tasks: rows,
+    counters: counters,
+    filteredTotal: filteredTotal,
+    offset: offset,
+    pageSize: pageSize
+  };
 }
 
 function createComparisonTasks(clientId, period) {

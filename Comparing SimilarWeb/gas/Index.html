@@ -1146,7 +1146,7 @@
       <div class="card-header">
         <div class="card-title"><i class="ti ti-list-check"></i> Task Queue</div>
         <div style="display:flex;gap:8px;align-items:center">
-          <select id="queueStatusFilter" onchange="loadQueue()" style="width:auto;padding:6px 10px;font-size:12px">
+          <select id="queueStatusFilter" onchange="onQueueFilterChange()" style="width:auto;padding:6px 10px;font-size:12px">
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="processing">Processing</option>
@@ -1159,6 +1159,7 @@
       <div id="queueTableWrap">
         <div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading queue...</div></div>
       </div>
+      <div id="queuePagination" style="margin-top:12px"></div>
     </div>
   </div>
 
@@ -2337,27 +2338,50 @@ function formatPct(pct) {
 }
 
 // ===== QUEUE =====
+var _queueState = { page: 1, pageSize: 50 };
+
+function onQueueFilterChange() {
+  _queueState.page = 1;
+  loadQueue();
+}
+
+function queueGoToPage(p) {
+  _queueState.page = Math.max(1, p);
+  loadQueue();
+}
+
 function loadQueue() {
   var status = document.getElementById('queueStatusFilter').value;
+  var offset = (_queueState.page - 1) * _queueState.pageSize;
   document.getElementById('queueTableWrap').innerHTML =
     '<div class="preloader"><div class="preloader-chart"><div class="preloader-bar" style="--bar-h:28px"></div><div class="preloader-bar" style="--bar-h:40px"></div><div class="preloader-bar" style="--bar-h:20px"></div><div class="preloader-bar" style="--bar-h:48px"></div><div class="preloader-bar" style="--bar-h:34px"></div><div class="preloader-bar" style="--bar-h:24px"></div><div class="preloader-bar" style="--bar-h:42px"></div></div><div class="preloader-axis"></div><div class="preloader-text">Loading queue...</div></div>';
 
   google.script.run
-    .withSuccessHandler(function(tasks) { renderQueueTable(tasks); })
+    .withSuccessHandler(function(res) { renderQueueTable(res); })
     .withFailureHandler(function(err) {
       document.getElementById('queueTableWrap').innerHTML =
         '<div class="empty-state"><i class="ti ti-alert-triangle"></i><p>' + escHtml(err.message) + '</p></div>';
+      document.getElementById('queuePagination').innerHTML = '';
     })
-    .getTaskQueue(status);
+    .getTaskQueue(status, offset, _queueState.pageSize);
 }
 
-function renderQueueTable(tasks) {
-  if (!tasks || tasks.length === 0) {
+function renderQueueTable(res) {
+  res = res || {};
+  var tasks         = res.tasks || [];
+  var counters      = res.counters || { pending: 0, total: 0 };
+  var filteredTotal = res.filteredTotal || 0;
+  var pageSize      = res.pageSize || _queueState.pageSize;
+
+  // Always-correct badge: full pending count, not a slice
+  document.getElementById('queueBadge').textContent = counters.pending || 0;
+
+  if (!tasks.length) {
     document.getElementById('queueTableWrap').innerHTML =
       '<div class="empty-state"><i class="ti ti-list-check"></i><p>No tasks in queue</p></div>';
+    document.getElementById('queuePagination').innerHTML = '';
     return;
   }
-  document.getElementById('queueBadge').textContent = tasks.filter(function(t) { return t.status === 'pending'; }).length;
 
   var html = '<div class="table-wrap"><table><thead><tr>'
     + '<th>Client</th><th>Sites</th><th>Period</th><th>Chunk</th><th>Status</th><th>Created</th><th>Actions</th>'
@@ -2392,6 +2416,32 @@ function renderQueueTable(tasks) {
   }
   html += '</tbody></table></div>';
   document.getElementById('queueTableWrap').innerHTML = html;
+  renderQueuePagination(_queueState.page, pageSize, filteredTotal);
+}
+
+function renderQueuePagination(currentPage, pageSize, total) {
+  var wrap = document.getElementById('queuePagination');
+  if (!wrap) return;
+  var totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+
+  var rangeStart = (currentPage - 1) * pageSize + 1;
+  var rangeEnd   = Math.min(currentPage * pageSize, total);
+
+  var disPrev = currentPage <= 1            ? 'disabled' : '';
+  var disNext = currentPage >= totalPages   ? 'disabled' : '';
+
+  wrap.innerHTML = ''
+    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 4px">'
+    +   '<div style="font-size:12px;color:var(--text-secondary)">Showing ' + rangeStart + '–' + rangeEnd + ' of ' + total + '</div>'
+    +   '<div style="display:flex;align-items:center;gap:4px">'
+    +     '<button class="btn btn-sm btn-secondary" ' + disPrev + ' onclick="queueGoToPage(1)" title="First">«</button>'
+    +     '<button class="btn btn-sm btn-secondary" ' + disPrev + ' onclick="queueGoToPage(' + (currentPage - 1) + ')" title="Previous">‹</button>'
+    +     '<span style="font-size:12px;padding:0 8px;min-width:90px;text-align:center">Page ' + currentPage + ' / ' + totalPages + '</span>'
+    +     '<button class="btn btn-sm btn-secondary" ' + disNext + ' onclick="queueGoToPage(' + (currentPage + 1) + ')" title="Next">›</button>'
+    +     '<button class="btn btn-sm btn-secondary" ' + disNext + ' onclick="queueGoToPage(' + totalPages + ')" title="Last">»</button>'
+    +   '</div>'
+    + '</div>';
 }
 
 function createTasks() {
